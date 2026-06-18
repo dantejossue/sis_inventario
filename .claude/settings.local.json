@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm add *)",
+      "Bash(php -l app/Http/Controllers/UbicacionController.php)",
+      "Bash(php artisan *)"
+    ]
+  }
+}

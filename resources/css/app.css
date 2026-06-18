@@ -1,0 +1,169 @@
+body {
+  font-family: 'Nunito', sans-serif !important;
+  font-weight: 600;
+}
+
+/* =========================================================
+   BOTONES DE ACCIÓN CIRCULARES (ESTILO SNEAT: LABEL -> SÓLIDO)
+   ========================================================= */
+.btn-action-icon {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  border: none;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+  padding: 0;
+}
+
+.btn-action-icon i {
+  font-size: 1.25rem;
+}
+
+/* 1. EDITAR (Primary) */
+.btn-action-icon.action-edit {
+  background-color: rgba(var(--bs-primary-rgb), 0.16);
+  color: var(--bs-primary);
+}
+.btn-action-icon.action-edit:hover {
+  background-color: var(--bs-primary);
+  color: #fff;
+  box-shadow: 0 0.125rem 0.25rem 0 rgba(var(--bs-primary-rgb), 0.4);
+  transform: translateY(-1px);
+}
+
+/* 2. CONTRASEÑA (Warning) */
+.btn-action-icon.action-password {
+  background-color: rgba(var(--bs-warning-rgb), 0.16);
+  color: var(--bs-warning);
+}
+.btn-action-icon.action-password:hover {
+  background-color: var(--bs-warning);
+  color: #fff;
+  box-shadow: 0 0.125rem 0.25rem 0 rgba(var(--bs-warning-rgb), 0.4);
+  transform: translateY(-1px);
+}
+
+/* 3. ACTIVAR (Success) */
+.btn-action-icon.action-activate {
+  background-color: rgba(var(--bs-success-rgb), 0.16);
+  color: var(--bs-success);
+}
+.btn-action-icon.action-activate:hover {
+  background-color: var(--bs-success);
+  color: #fff;
+  box-shadow: 0 0.125rem 0.25rem 0 rgba(var(--bs-success-rgb), 0.4);
+  transform: translateY(-1px);
+}
+
+/* 4. DESACTIVAR (Danger) */
+.btn-action-icon.action-deactivate {
+  background-color: rgba(var(--bs-danger-rgb), 0.16);
+  color: var(--bs-danger);
+}
+.btn-action-icon.action-deactivate:hover {
+  background-color: var(--bs-danger);
+  color: #fff;
+  box-shadow: 0 0.125rem 0.25rem 0 rgba(var(--bs-danger-rgb), 0.4);
+  transform: translateY(-1px);
+}
+
+/* Disabled — propio usuario */
+.btn-action-icon:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.swal2-container {
+  z-index: 99999 !important; /* Fuerza a la alerta a estar por encima de TODO */
+}
+
+/* =========================================================
+   DATATABLES - USUARIOS
+   ========================================================= */
+
+#miTablaUsuarios_wrapper .dt-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+#miTablaUsuarios_wrapper .dataTables_filter {
+  text-align: right;
+}
+
+#miTablaUsuarios_wrapper .dataTables_filter input {
+  min-width: 260px;
+  margin-left: 0;
+  border-radius: var(--bs-border-radius);
+}
+
+#miTablaUsuarios_wrapper .dataTables_info {
+  color: var(--bs-secondary-color);
+  font-size: 0.875rem;
+}
+
+div.dt-button-collection {
+  min-width: 140px !important;
+  width: auto !important;
+}
+
+div.dt-button-collection .dropdown-menu {
+  min-width: 140px !important;
+}
+
+div.dt-button-collection {
+  border-radius: 0.5rem;
+  overflow: hidden;
+  padding: 0.5rem;
+}
+
+div.dt-buttons {
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 767.98px) {
+  #miTablaUsuarios_wrapper .dataTables_filter,
+  #miTablaUsuarios_wrapper .pagination {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  #miTablaUsuarios_wrapper .dataTables_filter input {
+    width: 100%;
+    min-width: 0;
+  }
+}
+
+.input-group-invalid .form-control,
+.input-group-invalid .input-group-text {
+  border-color: #ff3e1d;
+}
+
+.input-group-invalid .input-group-text {
+  color: #ff3e1d;
+}
+
+.form-password-toggle .invalid-feedback {
+  display: block;
+}
+
+.select2-container--default .select2-selection.is-invalid {
+  border-color: #ff3e1d;
+}
+
+.swal2-title {
+  line-height: 1.3 !important;
+}
+
+.swal2-html-container {
+  line-height: 1.4 !important;
+}
+
+.swal2-actions {
+  margin-top: 1rem !important;
+}

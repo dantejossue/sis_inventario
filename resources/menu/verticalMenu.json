@@ -1,0 +1,267 @@
+{
+  "menu": [
+    {
+      "url": "home",
+      "name": "Dashboard",
+      "icon": "menu-icon icon-base bx bx-home-smile",
+      "slug": "home",
+      "roles": [
+        "ADMINISTRADOR",
+        "ALMACEN",
+        "SERVICIOS_GENERALES"
+      ]
+    },
+    {
+      "url": "proveedor/dashboard",
+      "name": "Dashboard",
+      "icon": "menu-icon icon-base bx bx-home-smile",
+      "slug": "proveedor.dashboard",
+      "roles": [
+        "PROVEEDOR"
+      ]
+    },
+    {
+      "menuHeader": "Gestión Patrimonial",
+      "roles": [
+        "ADMINISTRADOR",
+        "ALMACEN",
+        "SERVICIOS_GENERALES"
+      ]
+    },
+    {
+      "url": "activos",
+      "name": "Equipos de TI",
+      "icon": "menu-icon icon-base bx bx-desktop",
+      "slug": "activos",
+      "roles": [
+        "ADMINISTRADOR",
+        "ALMACEN",
+        "SERVICIOS_GENERALES"
+      ],
+      "submenu": [
+        {
+          "url": "activos",
+          "name": "Lista",
+          "slug": "activos.index"
+        },
+        {
+          "url": "activos/crear",
+          "name": "Agregar",
+          "slug": "activos.create"
+        },
+        {
+          "url": "javascript:void(0)",
+          "name": "Editar",
+          "slug": "activos.edit"
+        }
+      ]
+    },
+    {
+      "name": "Catálogos",
+      "icon": "menu-icon icon-base bx bx-collection",
+      "slug": [
+        "categorias",
+        "marcas",
+        "estados"
+      ],
+      "roles": [
+        "ADMINISTRADOR",
+        "ALMACEN"
+      ],
+      "submenu": [
+        {
+          "url": "categorias",
+          "name": "Categorías",
+          "slug": "categorias.index"
+        },
+        {
+          "url": "marcas",
+          "name": "Marcas y Modelos",
+          "slug": "marcas.index"
+        },
+        {
+          "url": "estados",
+          "name": "Estados y Condiciones",
+          "slug": "estados.index"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Operaciones y Soporte",
+      "roles": [
+        "ADMINISTRADOR",
+        "ALMACEN"
+      ]
+    },
+    {
+      "url": "movimientos",
+      "name": "Movimientos",
+      "icon": "menu-icon icon-base bx bx-transfer",
+      "slug": "movimientos.index",
+      "roles": [
+        "ADMINISTRADOR",
+        "ALMACEN"
+      ]
+    },
+    {
+      "url": "mantenimientos",
+      "name": "Mantenimientos",
+      "icon": "menu-icon icon-base bx bx-wrench",
+      "slug": "mantenimientos.index",
+      "roles": [
+        "ADMINISTRADOR",
+        "ALMACEN"
+      ]
+    },
+    {
+      "url": "bajas",
+      "name": "Bajas de Equipos",
+      "icon": "menu-icon icon-base bx bx-down-arrow-circle",
+      "slug": "bajas.index",
+      "roles": [
+        "ADMINISTRADOR",
+        "ALMACEN"
+      ]
+    },
+    {
+      "menuHeader": "Organización Institucional",
+      "roles": [
+        "ADMINISTRADOR"
+      ]
+    },
+    {
+      "name": "Infraestructura",
+      "icon": "menu-icon icon-base bx bx-buildings",
+      "slug": [
+        "sedes",
+        "dependencias",
+        "ubicaciones"
+      ],
+      "roles": [
+        "ADMINISTRADOR"
+      ],
+      "submenu": [
+        {
+          "url": "sedes",
+          "name": "Sedes (Campus)",
+          "slug": "sedes.index"
+        },
+        {
+          "url": "dependencias",
+          "name": "Dependencias",
+          "slug": "dependencias.index"
+        },
+        {
+          "url": "ubicaciones",
+          "name": "Ubicaciones (Aulas/Oficinas)",
+          "slug": "ubicaciones.index"
+        }
+      ]
+    },
+    {
+      "name": "Colaboradores",
+      "icon": "menu-icon icon-base bx bx-group",
+      "slug": "colaboradores",
+      "roles": [
+        "ADMINISTRADOR"
+      ],
+      "submenu": [
+        {
+          "url": "colaboradores",
+          "name": "Lista",
+          "slug": "colaboradores.index"
+        },
+        {
+          "url": "colaboradores/crear",
+          "name": "Agregar",
+          "slug": "colaboradores.create"
+        },
+        {
+          "url": "javascript:void(0)",
+          "name": "Editar",
+          "slug": "colaboradores.edit"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Administración del Sistema",
+      "roles": [
+        "ADMINISTRADOR"
+      ]
+    },
+    {
+      "name": "Accesos",
+      "icon": "menu-icon icon-base bx bx-shield-quarter",
+      "slug": [
+        "usuarios",
+        "roles"
+      ],
+      "roles": [
+        "ADMINISTRADOR"
+      ],
+      "submenu": [
+        {
+          "url": "usuarios",
+          "name": "Usuarios",
+          "slug": "usuarios.index"
+        },
+        {
+          "url": "roles",
+          "name": "Roles y Permisos",
+          "slug": "roles.index"
+        }
+      ]
+    },
+    {
+      "menuHeader": "Reportería y Auditoría",
+      "roles": [
+        "ADMINISTRADOR",
+        "SERVICIOS_GENERALES"
+      ]
+    },
+    {
+      "url": "reportes",
+      "name": "Reportes y KPIs",
+      "icon": "menu-icon icon-base bx bx-bar-chart-alt-2",
+      "slug": "reportes.index",
+      "roles": [
+        "ADMINISTRADOR",
+        "SERVICIOS_GENERALES"
+      ]
+    },
+    {
+      "url": "auditoria",
+      "name": "Auditoría de Cambios",
+      "icon": "menu-icon icon-base bx bx-history",
+      "slug": "auditoria.index",
+      "roles": [
+        "ADMINISTRADOR",
+        "SERVICIOS_GENERALES"
+      ]
+    },
+    {
+      "menuHeader": "Portal Proveedor",
+      "roles": [
+        "PROVEEDOR"
+      ]
+    },
+    {
+      "url": "garantias",
+      "name": "Garantías",
+      "icon": "menu-icon icon-base bx bx-certification",
+      "slug": "garantias.index",
+      "roles": [
+        "PROVEEDOR"
+      ]
+    },
+    {
+      "url": "ordenes",
+      "name": "Órdenes de Compra",
+      "icon": "menu-icon icon-base bx bx-receipt",
+      "slug": "ordenes.index",
+      "roles": [
+        "PROVEEDOR"
+      ]
+    }
+  ]
+}
