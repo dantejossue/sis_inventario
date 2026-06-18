@@ -63,7 +63,7 @@ export default defineConfig({
     host: '0.0.0.0',
     cors: true, // Permite que sneat.test lea los JS sin problemas
     hmr: {
-      host: '192.168.0.100' // tu IP local
+      host: '127.0.0.1' // tu IP local
     }
   },
   resolve: {
