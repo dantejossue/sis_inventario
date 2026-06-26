@@ -75,7 +75,7 @@
                     <label class="form-check-label" for="remember-me"> Recuérdame </label>
                   </div>
                   <a href="{{ url('auth/forgot-password-basic') }}">
-                    <span>Forgot Password?</span>
+                    <span>¿Olvidaste tu contraseña?</span>
                   </a>
                 </div>
               </div>
@@ -92,12 +92,12 @@
               </div>
             </form>
 
-            <p class="text-center">
+            {{-- <p class="text-center">
               <span>New on our platform?</span>
               <a href="{{ url('auth/register-basic') }}">
                 <span>Create an account</span>
               </a>
-            </p>
+            </p> --}}
           </div>
         </div>
         <!-- /Register -->

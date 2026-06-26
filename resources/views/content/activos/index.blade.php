@@ -261,7 +261,7 @@
 
             <div class="col-12">
               <p class="text-muted small mb-1">Ruta completa</p>
-              <p class="fw-semibold mb-0 d-flex align-items-center" id="ubic-ruta">—</p>
+              <p class="fw-semibold mb-0" id="ubic-ruta">—</p>
             </div>
 
             <div class="col-md-6">

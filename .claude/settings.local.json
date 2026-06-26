@@ -3,7 +3,13 @@
     "allow": [
       "Bash(pnpm add *)",
       "Bash(php -l app/Http/Controllers/UbicacionController.php)",
-      "Bash(php artisan *)"
+      "Bash(php artisan *)",
+      "Bash(php -l app/Http/Controllers/MovimientoController.php)",
+      "Bash(cp resources/js/pages/activos/activos-acciones.js /tmp/_chk.mjs)",
+      "Bash(node --check /tmp/_chk.mjs)",
+      "Bash(rm -f /tmp/_chk.mjs)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

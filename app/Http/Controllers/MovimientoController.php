@@ -29,6 +29,28 @@ class MovimientoController extends Controller
         'BAJA'          => ['colaborador' => false, 'ubicacion' => false, 'devolucion' => false, 'situacion' => 'DADO_DE_BAJA', 'estado_mov' => 'CERRADO'],
     ];
 
+    /**
+     * Situaciones "entregables": el activo está libre y listo para asignar o
+     * prestar. Para el negocio, DISPONIBLE = operativo y guardado en almacén,
+     * por lo que esos tres estados se tratan como equivalentes.
+     */
+    private const ENTREGABLE = ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO'];
+
+    /**
+     * Máquina de estados: situación ACTUAL del activo permitida como ORIGEN de
+     * cada tipo de movimiento. Si la situación del activo no está en la lista,
+     * el movimiento se rechaza. Un activo DADO_DE_BAJA es terminal: no aparece
+     * en ninguna lista, así que no admite ningún movimiento.
+     */
+    private const TRANSICIONES = [
+        'ASIGNAR'       => self::ENTREGABLE,
+        'TRANSFERENCIA' => ['ASIGNADO'],
+        'PRESTAMO'      => self::ENTREGABLE,
+        'DEVOLUCION'    => ['EN_PRESTAMO'],
+        'REUBICACION'   => ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO', 'ASIGNADO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO'],
+        'BAJA'          => ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO', 'ASIGNADO', 'EN_MANTENIMIENTO'],
+    ];
+
     public function index()
     {
         $movimientos = Movimiento::with([
@@ -78,7 +100,25 @@ class MovimientoController extends Controller
         $colaboradorDestino = $request->id_colaborador_destino ?: null;
         $ubicacionDestino   = $request->id_ubicacion_destino ?: null;
 
-        $activos = Activo::whereIn('id_activo', $request->activo_ids)->get();
+        $activos = Activo::with('situacion:id_estado_activo,nombre')
+            ->whereIn('id_activo', $request->activo_ids)
+            ->get();
+
+        // Regla de negocio: el movimiento solo procede si la situación ACTUAL de
+        // cada activo lo admite (máquina de estados). Se valida todo el lote para
+        // que ninguno avance si alguno es inválido.
+        $permitidas = self::TRANSICIONES[$tipo];
+        $invalidos  = $activos->filter(fn($a) => !in_array($a->situacion?->nombre, $permitidas, true));
+
+        if ($invalidos->isNotEmpty()) {
+            $detalle = $invalidos
+                ->map(fn($a) => $a->codigo_interno . ' (' . str_replace('_', ' ', $a->situacion?->nombre ?? 'SIN SITUACIÓN') . ')')
+                ->implode(', ');
+
+            throw ValidationException::withMessages([
+                'activo_ids' => "No se puede registrar «{$tipo}» por la situación actual de: {$detalle}. " . $this->motivoRegla($tipo),
+            ]);
+        }
 
         DB::transaction(function () use ($request, $tipo, $cfg, $colaboradorDestino, $ubicacionDestino, $activos) {
             // Origen para la cabecera: solo si es homogéneo entre los activos del lote.
@@ -165,6 +205,19 @@ class MovimientoController extends Controller
         return (int) EstadoActivo::where('tipo_estado', 'SITUACION')
             ->where('nombre', $nombre)
             ->value('id_estado_activo');
+    }
+
+    /** Mensaje legible que explica por qué un tipo de movimiento fue rechazado. */
+    private function motivoRegla(string $tipo): string
+    {
+        return match ($tipo) {
+            'ASIGNAR', 'PRESTAMO' => 'Solo se permite con activos disponibles (operativos y en almacén).',
+            'TRANSFERENCIA'       => 'Solo se permite con activos que estén ASIGNADOS.',
+            'DEVOLUCION'          => 'Solo se permite con activos que estén EN PRÉSTAMO.',
+            'BAJA'                => 'No se permite si el activo está EN PRÉSTAMO (devuélvelo primero) o ya está DADO DE BAJA.',
+            'REUBICACION'         => 'No se permite con activos DADOS DE BAJA.',
+            default               => '',
+        };
     }
 
     private function formatMovimiento(Movimiento $m): array

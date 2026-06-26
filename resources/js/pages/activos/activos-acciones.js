@@ -5,31 +5,31 @@ import QRCode from 'qrcode';
 
 $(function () {
   const condicionBadge = {
-    BUENO:    'bg-success',
-    REGULAR:  'bg-warning',
-    MALO:     'bg-danger',
-    OBSOLETO: 'bg-secondary',
+    BUENO: 'bg-success',
+    REGULAR: 'bg-warning',
+    MALO: 'bg-danger',
+    OBSOLETO: 'bg-secondary'
   };
 
   const situacionBadge = {
-    DISPONIBLE:       'bg-success',
-    OPERATIVO:        'bg-success',
+    DISPONIBLE: 'bg-success',
+    OPERATIVO: 'bg-success',
     EN_MANTENIMIENTO: 'bg-warning',
-    EN_PRESTAMO:      'bg-info',
-    ASIGNADO:         'bg-primary',
-    EN_ALMACEN:       'bg-secondary',
-    DADO_DE_BAJA:     'bg-danger',
+    EN_PRESTAMO: 'bg-info',
+    ASIGNADO: 'bg-primary',
+    EN_ALMACEN: 'bg-secondary',
+    DADO_DE_BAJA: 'bg-danger'
   };
 
   const tipoUbicacionBadge = {
-    EDIFICIO:    'bg-label-primary',
-    PABELLON:    'bg-label-primary',
-    PISO:        'bg-label-info',
-    OFICINA:     'bg-label-secondary',
-    AULA:        'bg-label-secondary',
+    EDIFICIO: 'bg-label-primary',
+    PABELLON: 'bg-label-primary',
+    PISO: 'bg-label-info',
+    OFICINA: 'bg-label-secondary',
+    AULA: 'bg-label-secondary',
     LABORATORIO: 'bg-label-warning',
-    ALMACEN:     'bg-label-warning',
-    OTRO:        'bg-label-dark',
+    ALMACEN: 'bg-label-warning',
+    OTRO: 'bg-label-dark'
   };
 
   // ═══════════════════════════════════════════
@@ -37,10 +37,14 @@ $(function () {
   // ═══════════════════════════════════════════
   $(document).on('click', '.btn-ver-ubicacion', function () {
     const id = parseInt($(this).data('id'));
-    const a  = window.activos.find(x => x.id_activo === id);
+    const a = window.activos.find(x => x.id_activo === id);
     if (!a) return;
 
     const modal = bootstrap.Modal.getOrCreateInstance(document.getElementById('modalUbicacion'));
+
+    const ruta = a.ubicacion_ruta ?? '';
+    const partes = ruta.split(' › ');
+    const ultimo = partes.pop();
 
     if (!a.id_ubicacion) {
       $('#ubic-detalle').addClass('d-none');
@@ -53,7 +57,9 @@ $(function () {
     $('#ubic-detalle').removeClass('d-none');
 
     $('#ubic-activo').text(`${a.codigo_interno} — ${a.modelo_nombre}`);
-    $('#ubic-ruta').text(a.ubicacion_ruta || a.ubicacion_nombre || '—');
+    $('#ubic-ruta').html(
+      partes.length ? `${partes.join(' › ')} › <strong>${ultimo}</strong>` : `<strong>${ultimo}</strong>`
+    );
     $('#ubic-sede').text(a.sede_nombre && a.sede_nombre !== '—' ? a.sede_nombre : '—');
     $('#ubic-direccion').text(a.sede_direccion || '—');
     $('#ubic-nombre').text(a.ubicacion_nombre && a.ubicacion_nombre !== '—' ? a.ubicacion_nombre : '—');
@@ -119,27 +125,28 @@ $(function () {
     const barcodeEl = document.getElementById('info-barcode');
     try {
       JsBarcode(barcodeEl, activo.codigo_patrimonial, {
-        format: 'CODE128', displayValue: true, fontSize: 13, height: 40, margin: 0, width: 1.4,
+        format: 'CODE128',
+        displayValue: true,
+        fontSize: 13,
+        height: 40,
+        margin: 0,
+        width: 1.4
       });
     } catch (e) {
       barcodeEl.innerHTML = '';
     }
 
-    $('#info-btn-etiqueta').attr(
-      'href',
-      `${window.routes.etiquetas}?ids=${activo.id_activo}`
-    );
+    $('#info-btn-etiqueta').attr('href', `${window.routes.etiquetas}?ids=${activo.id_activo}`);
 
     const offcanvas = bootstrap.Offcanvas.getOrCreateInstance(document.getElementById('offcanvasMasInfo'));
     offcanvas.show();
   }
 
-
   // ═══════════════════════════════════════════
   // ELIMINAR
   // ═══════════════════════════════════════════
   $(document).on('click', '.btn-eliminar-activo', function () {
-    const id     = parseInt($(this).data('id'));
+    const id = parseInt($(this).data('id'));
     const codigo = $(this).data('codigo');
 
     Swal.fire({
@@ -149,12 +156,12 @@ $(function () {
       showCancelButton: true,
       confirmButtonText: 'Sí, eliminar',
       cancelButtonText: 'Cancelar',
-      confirmButtonColor: '#d33',
+      confirmButtonColor: '#d33'
     }).then(result => {
       if (!result.isConfirmed) return;
 
       $.ajax({
-        url:  window.routes.destroy.replace('{id}', id),
+        url: window.routes.destroy.replace('{id}', id),
         type: 'DELETE',
         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
 
@@ -172,7 +179,7 @@ $(function () {
             title: 'Eliminado',
             text: res.message,
             timer: 2000,
-            showConfirmButton: false,
+            showConfirmButton: false
           });
         },
 
@@ -183,27 +190,89 @@ $(function () {
     });
   });
 
-
   // ═══════════════════════════════════════════
   // MOVER — Modal
   // ═══════════════════════════════════════════
-  const modalMover  = $('#modalMover');
-  const formMover   = $('#formMover');
-  const btnMover    = $('#btnConfirmarMover');
-  const spinnerMov  = btnMover.find('.spinner-border');
+  const modalMover = $('#modalMover');
+  const formMover = $('#formMover');
+  const btnMover = $('#btnConfirmarMover');
+  const spinnerMov = btnMover.find('.spinner-border');
 
   // Qué campos exige/permite cada tipo de movimiento (espejo de MovimientoController).
   // colaborador / ubicacion: 'req' (obligatorio), 'opt' (opcional) o false (oculto).
   const MOV_CONFIG = {
-    ASIGNAR:       { colaborador: 'req', ubicacion: 'opt', devolucion: false, ayuda: 'Asigna el activo a un colaborador (queda ASIGNADO).' },
-    TRANSFERENCIA: { colaborador: 'req', ubicacion: 'opt', devolucion: false, ayuda: 'Cambia el colaborador responsable (y opcionalmente la ubicación).' },
-    PRESTAMO:      { colaborador: 'req', ubicacion: 'opt', devolucion: true,  ayuda: 'Préstamo temporal; requiere fecha de devolución programada.' },
-    DEVOLUCION:    { colaborador: false, ubicacion: 'opt', devolucion: false, ayuda: 'Devuelve el activo: queda DISPONIBLE y sin colaborador.' },
-    REUBICACION:   { colaborador: false, ubicacion: 'req', devolucion: false, ayuda: 'Solo cambia la ubicación física del activo.' },
-    BAJA:          { colaborador: false, ubicacion: false, devolucion: false, ayuda: 'Da de baja el activo (situación DADO_DE_BAJA).' }
+    ASIGNAR: {
+      colaborador: 'req',
+      ubicacion: 'opt',
+      devolucion: false,
+      ayuda: 'Asigna el activo a un colaborador (queda ASIGNADO).'
+    },
+    TRANSFERENCIA: {
+      colaborador: 'req',
+      ubicacion: 'opt',
+      devolucion: false,
+      ayuda: 'Cambia el colaborador responsable (y opcionalmente la ubicación).'
+    },
+    PRESTAMO: {
+      colaborador: 'req',
+      ubicacion: 'opt',
+      devolucion: true,
+      ayuda: 'Préstamo temporal; requiere fecha de devolución programada.'
+    },
+    DEVOLUCION: {
+      colaborador: false,
+      ubicacion: 'opt',
+      devolucion: false,
+      ayuda: 'Devuelve el activo: queda DISPONIBLE y sin colaborador.'
+    },
+    REUBICACION: {
+      colaborador: false,
+      ubicacion: 'req',
+      devolucion: false,
+      ayuda: 'Solo cambia la ubicación física del activo.'
+    },
+    BAJA: {
+      colaborador: false,
+      ubicacion: false,
+      devolucion: false,
+      ayuda: 'Da de baja el activo (situación DADO_DE_BAJA).'
+    }
+  };
+
+  // Máquina de estados (espejo de MovimientoController::TRANSICIONES): situación
+  // ACTUAL del activo permitida como origen de cada tipo. Sirve para deshabilitar
+  // en el modal los movimientos que no apliquen a los activos seleccionados.
+  const ENTREGABLE = ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO'];
+  const MOV_DESDE = {
+    ASIGNAR: ENTREGABLE,
+    TRANSFERENCIA: ['ASIGNADO'],
+    PRESTAMO: ENTREGABLE,
+    DEVOLUCION: ['EN_PRESTAMO'],
+    REUBICACION: ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO', 'ASIGNADO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO'],
+    BAJA: ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO', 'ASIGNADO', 'EN_MANTENIMIENTO']
   };
 
   let idsParaMover = [];
+
+  // Habilita solo los tipos válidos para TODOS los activos seleccionados.
+  // Devuelve true si queda al menos un movimiento posible.
+  function actualizarTiposDisponibles(ids) {
+    const situaciones = ids
+      .map(id => window.activos.find(x => x.id_activo === id)?.situacion_nombre)
+      .filter(Boolean);
+
+    let hayValido = false;
+    $('#mover-tipo option').each(function () {
+      if (!this.value) return; // placeholder
+      if (!this.dataset.label) this.dataset.label = this.textContent;
+      const permitidas = MOV_DESDE[this.value] || [];
+      const valido = situaciones.length > 0 && situaciones.every(s => permitidas.includes(s));
+      this.disabled = !valido;
+      this.textContent = valido ? this.dataset.label : `${this.dataset.label} — no aplica`;
+      if (valido) hayValido = true;
+    });
+    return hayValido;
+  }
 
   function ocultarCamposMover() {
     $('#mover-colaborador-wrap, #mover-ubicacion-wrap, #mover-devolucion-wrap').addClass('d-none');
@@ -217,13 +286,32 @@ $(function () {
     ocultarCamposMover();
 
     // Renderizar chips de activos seleccionados
-    const lista = ids.map(id => {
-      const a = window.activos.find(x => x.id_activo === id);
-      return a
-        ? `<span class="badge bg-label-primary">${a.codigo_interno}</span>`
-        : `<span class="badge bg-label-secondary">#${id}</span>`;
-    }).join('');
+    const lista = ids
+      .map(id => {
+        const a = window.activos.find(x => x.id_activo === id);
+        return a
+          ? `<span class="badge bg-label-primary">${a.codigo_interno}</span>`
+          : `<span class="badge bg-label-secondary">#${id}</span>`;
+      })
+      .join('');
     $('#mover-lista-activos').html(lista);
+
+    // Ajustar los tipos según la situación de los activos seleccionados.
+    const hayValido = actualizarTiposDisponibles(ids);
+    $('#mover-tipo').val('');
+
+    if (!hayValido) {
+      const situaciones = [...new Set(
+        ids.map(id => window.activos.find(x => x.id_activo === id)?.situacion_nombre).filter(Boolean)
+      )].map(s => s.replace(/_/g, ' ')).join(', ');
+      Swal.fire({
+        icon: 'info',
+        title: 'Sin movimientos disponibles',
+        html: `Por su situación actual (<strong>${situaciones || '—'}</strong>) no hay ningún movimiento ` +
+          `aplicable a la selección. Revisa que no estén DADOS DE BAJA o que mezcles situaciones incompatibles.`
+      });
+      return;
+    }
 
     modalMover.modal('show');
   }
@@ -250,8 +338,8 @@ $(function () {
 
     $('#mover-tipo-ayuda').text(cfg.ayuda);
     if (cfg.colaborador) $('#mover-colaborador-wrap').removeClass('d-none');
-    if (cfg.ubicacion)   $('#mover-ubicacion-wrap').removeClass('d-none');
-    if (cfg.devolucion)  $('#mover-devolucion-wrap').removeClass('d-none');
+    if (cfg.ubicacion) $('#mover-ubicacion-wrap').removeClass('d-none');
+    if (cfg.devolucion) $('#mover-devolucion-wrap').removeClass('d-none');
   });
 
   function marcarError(sel, msg) {
@@ -265,11 +353,11 @@ $(function () {
     e.preventDefault();
     limpiarErroresMover();
 
-    const tipo       = $('#mover-tipo').val();
-    const colabDest  = $('#mover-colaborador').val();
-    const ubicDest   = $('#mover-ubicacion').val();
-    const fechaDev   = $('#mover-devolucion').val();
-    const motivo     = $('#mover-motivo').val();
+    const tipo = $('#mover-tipo').val();
+    const colabDest = $('#mover-colaborador').val();
+    const ubicDest = $('#mover-ubicacion').val();
+    const fechaDev = $('#mover-devolucion').val();
+    const motivo = $('#mover-motivo').val();
 
     if (!tipo) {
       marcarError('#mover-tipo', 'Selecciona un tipo de movimiento.');
@@ -294,16 +382,16 @@ $(function () {
     spinnerMov.removeClass('d-none');
 
     $.ajax({
-      url:  window.routes.mover,
+      url: window.routes.mover,
       type: 'POST',
       headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
       data: {
-        activo_ids:                  idsParaMover,
-        tipo:                        tipo,
-        id_colaborador_destino:      (cfg.colaborador && colabDest) ? colabDest : null,
-        id_ubicacion_destino:        (cfg.ubicacion && ubicDest) ? ubicDest : null,
+        activo_ids: idsParaMover,
+        tipo: tipo,
+        id_colaborador_destino: cfg.colaborador && colabDest ? colabDest : null,
+        id_ubicacion_destino: cfg.ubicacion && ubicDest ? ubicDest : null,
         fecha_devolucion_programada: cfg.devolucion ? fechaDev : null,
-        motivo:                      motivo || null,
+        motivo: motivo || null
       },
 
       success: function (res) {
@@ -330,7 +418,7 @@ $(function () {
           title: 'Movimiento registrado',
           text: res.message,
           timer: 2500,
-          showConfirmButton: false,
+          showConfirmButton: false
         });
       },
 
@@ -345,6 +433,11 @@ $(function () {
             input.addClass('is-invalid');
             input.closest('.form-floating').find('.invalid-feedback').text(errors[campo][0]);
           });
+          // Errores sin campo visible en el form (p. ej. la regla de situación
+          // sobre 'activo_ids'): mostrarlos en un aviso para que no se pierdan.
+          if (errors.activo_ids) {
+            Swal.fire({ icon: 'warning', title: 'Movimiento no permitido', text: errors.activo_ids[0] });
+          }
           return;
         }
 
@@ -358,7 +451,6 @@ $(function () {
     formMover.find('.invalid-feedback').text('');
   }
 
-
   // ═══════════════════════════════════════════
   // ETIQUETAS — Imprimir seleccionados
   // ═══════════════════════════════════════════
@@ -368,7 +460,6 @@ $(function () {
     const ids = [...window.activosSeleccionados].join(',');
     window.open(`${window.routes.etiquetas}?ids=${ids}`, '_blank');
   });
-
 
   // ═══════════════════════════════════════════
   // ESCANEO LÁSER — Seleccionar activo por código
@@ -383,16 +474,17 @@ $(function () {
     if (!valor) return;
 
     const activo = window.activos.find(
-      a => (a.codigo_patrimonial || '').toUpperCase() === valor
-        || (a.codigo_interno || '').toUpperCase() === valor
+      a => (a.codigo_patrimonial || '').toUpperCase() === valor || (a.codigo_interno || '').toUpperCase() === valor
     );
 
     if (!activo) {
       $(this).addClass('is-invalid');
       Swal.fire({
-        icon: 'warning', title: 'No encontrado',
+        icon: 'warning',
+        title: 'No encontrado',
         text: `Ningún activo coincide con el código «${valor}».`,
-        timer: 1800, showConfirmButton: false,
+        timer: 1800,
+        showConfirmButton: false
       });
       $(this).val('').focus();
       return;
@@ -418,7 +510,6 @@ $(function () {
   $(document).on('click', '#scan-clear', function () {
     $('#scan-input').val('').removeClass('is-invalid').focus();
   });
-
 
   // ═══════════════════════════════════════════
   // Apertura automática de ficha tras escanear un QR (?ver=ID)

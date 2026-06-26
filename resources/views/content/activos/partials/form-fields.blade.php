@@ -71,14 +71,14 @@
         </div>
       </div>
 
-      <div class="col-12">
+      {{-- <div class="col-12">
         <div class="alert alert-info mb-0 d-flex align-items-center" role="alert">
           <i class="bx bx-info-circle me-2"></i>
           <span>La <strong>situación</strong> se gestiona automáticamente: el activo queda
             <strong>DISPONIBLE</strong> si no asignas colaborador, o <strong>ASIGNADO</strong> si lo asignas.
             Luego puedes cambiarla con un movimiento (Asignar, Préstamo, etc.).</span>
         </div>
-      </div>
+      </div> --}}
 
     </div>
   </div>
@@ -93,7 +93,7 @@
   <div class="card-body pt-4">
     <div class="row g-4">
 
-      <div class="col-md-6">
+      <div class="col-md-6 mt-10">
         <div class="col-md-12">
 
           <div class="form-floating form-floating-outline">
@@ -127,31 +127,34 @@
               <div class="invalid-feedback">{{ $message }}</div>
             @enderror
           </div>
-          <small class="text-muted">Opcional.</small>
         </div><br>
 
         <div class="col-md-12">
-          <div class="form-floating form-floating-outline">
-            <select class="form-select @error('id_ubicacion_actual') is-invalid @enderror" id="id_ubicacion_actual"
-              name="id_ubicacion_actual">
-              <option value="">Sin ubicación</option>
-              @foreach ($ubicaciones->groupBy(fn($u) => $u->sede?->nombre_sede ?? 'Sin sede') as $sedeNombre => $items)
-                <optgroup label="{{ $sedeNombre }}">
-                  @foreach ($items as $u)
-                    <option value="{{ $u->id_ubicacion }}"
-                      {{ old('id_ubicacion_actual', $activo?->id_ubicacion_actual) == $u->id_ubicacion ? 'selected' : '' }}>
-                      {{ $u->nombre }} ({{ $u->tipo }}){{ $u->codigo ? ' — ' . $u->codigo : '' }}
-                    </option>
-                  @endforeach
-                </optgroup>
-              @endforeach
-            </select>
-            <label class="d-flex align-items-center"><i class="bx bx-map me-1"></i>Ubicación Física</label>
-            @error('id_ubicacion_actual')
-              <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
+          <label class="form-label d-flex align-items-center mb-1"><i class="bx bx-map me-1"></i>Ubicación
+            Física</label>
+
+          {{-- Valor real que viaja al servidor: el id del ambiente final (nodo hoja). --}}
+          <input type="hidden" name="id_ubicacion_actual" id="id_ubicacion_actual"
+            value="{{ old('id_ubicacion_actual', $activo?->id_ubicacion_actual) }}">
+
+          <div class="input-group @error('id_ubicacion_actual') is-invalid @enderror">
+            {{-- Muestra la ruta jerárquica completa; JS la rellena según el id seleccionado. --}}
+            <input type="text" class="form-control bg-label-secondary" id="ubicacionDisplay" readonly
+              placeholder="Sin ubicación seleccionada" style="cursor:pointer" data-bs-toggle="modal"
+              data-bs-target="#modalUbicacionTree">
+            <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal"
+              data-bs-target="#modalUbicacionTree">
+              <i class="bx bx-folder-open me-1"></i> Elegir
+            </button>
+            <button class="btn btn-outline-secondary" type="button" id="btnLimpiarUbicacion" title="Quitar ubicación">
+              <i class="bx bx-x"></i>
+            </button>
           </div>
-          <small class="text-muted">Lugar físico donde se encuentra el equipo.</small>
+          @error('id_ubicacion_actual')
+            <div class="invalid-feedback d-block">{{ $message }}</div>
+          @enderror
+          <small class="text-muted">Navega hasta el ambiente final (último nivel); la ruta completa se guarda
+            automáticamente.</small>
         </div>
       </div>
 
@@ -319,7 +322,7 @@
 </div>
 
 {{-- Card 3: Imagen del activo --}}
-<div class="card mb-4">
+{{-- <div class="card mb-4">
   <div class="card-header border-bottom">
     <h6 class="mb-0 fw-bold d-flex align-items-center"><i class="bx bx-image me-2 text-primary"></i>Imagen del Activo
     </h6>
@@ -347,7 +350,7 @@
       <div class="text-danger mt-1" style="font-size:.85rem;">{{ $message }}</div>
     @enderror
   </div>
-</div>
+</div> --}}
 
 <script>
   document.getElementById('inputImagen')?.addEventListener('change', function(e) {
@@ -356,3 +359,122 @@
     document.getElementById('imagenPreview').src = URL.createObjectURL(file);
   });
 </script>
+
+{{-- ═══════════════════════════════════════════════════════════════════════
+     MODAL — ÁRBOL DE UBICACIONES (Sede › Pabellón › Piso › Ambiente)
+     Solo los nodos hoja (sin hijos activos) son seleccionables.
+═══════════════════════════════════════════════════════════════════════ --}}
+<div class="modal fade" id="modalUbicacionTree" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header border-bottom py-4">
+        <h5 class="modal-title fw-bold d-flex align-items-center">
+          <i class="bx bx-map-pin me-2"></i>Seleccionar ubicación física
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group input-group-merge mb-3">
+          <span class="input-group-text"><i class="bx bx-search"></i></span>
+          <input type="text" class="form-control" id="ubicacionBuscar"
+            placeholder="Buscar ambiente, piso, pabellón...">
+        </div>
+        <div id="ubicacionTree" class="ubic-tree"></div>
+        <div id="ubicacionTreeVacio" class="text-center text-muted py-4 d-none">
+          <i class="bx bx-folder-open bx-sm d-block mb-2"></i>
+          No hay ubicaciones activas registradas.
+        </div>
+      </div>
+      <div class="modal-footer border-top py-4">
+        <span class="me-auto small text-muted d-flex align-items-center">
+          <i class="bx bx-info-circle me-1"></i>Solo puedes elegir el último nivel (ambiente final).
+        </span>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{{-- Datos del árbol: solo ubicaciones ACTIVAS, en plano (id + padre + sede). --}}
+@php
+  $ubicacionesData = $ubicaciones
+      ->map(
+          fn($u) => [
+              'id' => $u->id_ubicacion,
+              'padre' => $u->id_ubicacion_padre,
+              'sede_id' => $u->id_sede,
+              'sede' => $u->sede?->nombre_sede ?? 'Sin sede',
+              'nombre' => $u->nombre,
+              'tipo' => $u->tipo,
+              'codigo' => $u->codigo,
+          ],
+      )
+      ->values();
+@endphp
+<script id="ubicacionesData" type="application/json">
+  {!! $ubicacionesData->toJson() !!}
+</script>
+
+<style>
+  .ubic-tree ul {
+    list-style: none;
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+
+  .ubic-tree>ul {
+    padding-left: 0;
+  }
+
+  .ubic-tree .ubic-node {
+    display: flex;
+    align-items: center;
+    gap: .35rem;
+    padding: .25rem .4rem;
+    border-radius: .35rem;
+  }
+
+  .ubic-tree .ubic-node:hover {
+    background: rgba(105, 108, 255, .08);
+  }
+
+  .ubic-tree .ubic-toggle {
+    width: 1.1rem;
+    flex: 0 0 1.1rem;
+    text-align: center;
+    cursor: pointer;
+    color: #8592a3;
+  }
+
+  .ubic-tree .ubic-toggle.is-leaf {
+    visibility: hidden;
+  }
+
+  .ubic-tree .ubic-label {
+    cursor: pointer;
+    flex: 1;
+  }
+
+  .ubic-tree .ubic-label .ubic-tipo {
+    font-size: .72rem;
+    color: #8592a3;
+    margin-left: .35rem;
+  }
+
+  .ubic-tree .ubic-leaf>.ubic-node {
+    cursor: pointer;
+  }
+
+  .ubic-tree .ubic-leaf.is-selected>.ubic-node {
+    background: rgba(105, 108, 255, .16);
+    font-weight: 600;
+  }
+
+  .ubic-tree .ubic-children.collapsed {
+    display: none;
+  }
+
+  .ubic-tree .ubic-group>.ubic-node {
+    font-weight: 600;
+  }
+</style>

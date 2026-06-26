@@ -115,7 +115,7 @@ class ActivoController extends Controller
             'garantia_fin'        => 'nullable|date|after_or_equal:garantia_inicio',
             'observaciones'       => 'nullable|string',
             'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
-            'id_ubicacion_actual'   => 'nullable|integer|exists:ubicaciones,id_ubicacion',
+            'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
         ], [
             'id_modelo.required'           => 'Debes seleccionar un modelo.',
             'id_condicion_actual.required' => 'La condición es obligatoria.',
@@ -181,7 +181,7 @@ class ActivoController extends Controller
             'garantia_fin'        => 'nullable|date|after_or_equal:garantia_inicio',
             'observaciones'       => 'nullable|string',
             'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
-            'id_ubicacion_actual'   => 'nullable|integer|exists:ubicaciones,id_ubicacion',
+            'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
         ], [
             'id_modelo.required'           => 'Debes seleccionar un modelo.',
             'id_condicion_actual.required' => 'La condición es obligatoria.',
@@ -243,6 +243,20 @@ class ActivoController extends Controller
             'success' => true,
             'message' => 'Activo eliminado correctamente.',
         ]);
+    }
+
+    /**
+     * Regla de validación: la ubicación elegida debe ser un nodo HOJA, es decir,
+     * el último nivel del árbol (un ambiente final sin sub-ubicaciones activas).
+     * Refuerza en el servidor lo que el treeview ya restringe en el cliente.
+     */
+    private function reglaUbicacionHoja(): \Closure
+    {
+        return function (string $attribute, $value, \Closure $fail) {
+            if ($value && Ubicacion::where('id_ubicacion_padre', $value)->where('estado', 'ACTIVO')->exists()) {
+                $fail('Debes seleccionar el último nivel de la ubicación (un ambiente final, sin sub-ubicaciones).');
+            }
+        };
     }
 
     /**

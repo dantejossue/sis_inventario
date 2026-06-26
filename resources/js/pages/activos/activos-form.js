@@ -2,10 +2,264 @@ import $ from 'jquery';
 
 // Inicializa Select2 en los selects del formulario de crear/editar activo
 // (ambas vistas usan el mismo partial form-fields, con los mismos IDs).
+// La ubicación ya NO usa Select2: se elige mediante el árbol modal.
 $(function () {
-  $('#id_modelo, #id_condicion_actual, #id_responsable_actual, #id_ubicacion_actual')
-    .select2({
-      width: '100%',
-      placeholder: 'Seleccionar...'
-    });
+  $('#id_modelo, #id_condicion_actual, #id_responsable_actual').select2({
+    width: '100%',
+    placeholder: 'Seleccionar...'
+  });
 });
+
+// ───────────────────────────────────────────────────────────────────────────
+// Árbol de ubicaciones físicas (Sede › Pabellón › Piso › Ambiente).
+// Solo los nodos hoja (sin hijos activos) son seleccionables; los intermedios
+// solo sirven para navegar. Al elegir una hoja se guarda su id en el hidden
+// #id_ubicacion_actual y se muestra la ruta completa en #ubicacionDisplay.
+// ───────────────────────────────────────────────────────────────────────────
+(function initUbicacionTree() {
+  const dataEl = document.getElementById('ubicacionesData');
+  const treeEl = document.getElementById('ubicacionTree');
+  const hidden = document.getElementById('id_ubicacion_actual');
+  const display = document.getElementById('ubicacionDisplay');
+  if (!dataEl || !treeEl || !hidden || !display) return;
+
+  let registros = [];
+  try {
+    registros = JSON.parse(dataEl.textContent) || [];
+  } catch (e) {
+    registros = [];
+  }
+
+  const vacioEl = document.getElementById('ubicacionTreeVacio');
+  const buscarEl = document.getElementById('ubicacionBuscar');
+  const btnLimpiar = document.getElementById('btnLimpiarUbicacion');
+
+  // 1. Indexar nodos y enlazar hijos. Las "sedes" son raíces sintéticas que
+  //    agrupan los nodos cuyo padre no existe en el conjunto activo.
+  const porId = new Map();
+  registros.forEach(r => porId.set(r.id, { ...r, hijos: [] }));
+
+  const sedes = new Map(); // sede_id -> { sedeId, nombre, hijos: [] }
+  porId.forEach(nodo => {
+    const padre = nodo.padre != null ? porId.get(nodo.padre) : null;
+    if (padre) {
+      padre.hijos.push(nodo);
+    } else {
+      if (!sedes.has(nodo.sede_id)) {
+        sedes.set(nodo.sede_id, { sedeId: nodo.sede_id, nombre: nodo.sede, hijos: [] });
+      }
+      sedes.get(nodo.sede_id).hijos.push(nodo);
+    }
+  });
+
+  const esHoja = nodo => nodo.hijos.length === 0;
+
+  // Ruta jerárquica completa de un nodo: "Sede › Pabellón › Piso › Ambiente".
+  function rutaDe(id) {
+    const partes = [];
+    let cursor = porId.get(id);
+    let guard = 0;
+    while (cursor && guard++ < 30) {
+      partes.unshift(cursor.nombre);
+      cursor = cursor.padre != null ? porId.get(cursor.padre) : null;
+    }
+    const nodo = porId.get(id);
+    if (nodo) partes.unshift(nodo.sede);
+    return partes.join(' › ');
+  }
+
+  // 2. Render recursivo.
+  function ordenar(arr) {
+    return [...arr].sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'));
+  }
+
+  function nodoLi(nodo) {
+    const li = document.createElement('li');
+    const hoja = esHoja(nodo);
+    li.className = hoja ? 'ubic-leaf' : 'ubic-branch';
+    li.dataset.id = nodo.id;
+    li.dataset.nombre = nodo.nombre.toLowerCase();
+
+    const row = document.createElement('div');
+    row.className = 'ubic-node';
+
+    const toggle = document.createElement('span');
+    toggle.className = 'ubic-toggle' + (hoja ? ' is-leaf' : '');
+    toggle.innerHTML = hoja ? '' : '<i class="bx bx-chevron-right"></i>';
+    row.appendChild(toggle);
+
+    const label = document.createElement('span');
+    label.className = 'ubic-label';
+    const codigo = nodo.codigo ? ` — ${nodo.codigo}` : '';
+    label.innerHTML = `${nodo.nombre}<span class="ubic-tipo">${nodo.tipo}${codigo}</span>`;
+    row.appendChild(label);
+
+    li.appendChild(row);
+
+    if (!hoja) {
+      const ul = document.createElement('ul');
+      ul.className = 'ubic-children collapsed';
+      ordenar(nodo.hijos).forEach(h => ul.appendChild(nodoLi(h)));
+      li.appendChild(ul);
+
+      const toggleFn = () => {
+        ul.classList.toggle('collapsed');
+        const icon = toggle.querySelector('i');
+        if (icon) icon.className = ul.classList.contains('collapsed') ? 'bx bx-chevron-right' : 'bx bx-chevron-down';
+      };
+      toggle.addEventListener('click', toggleFn);
+      label.addEventListener('click', toggleFn);
+    } else {
+      // Hoja: seleccionable.
+      row.addEventListener('click', () => seleccionar(nodo.id));
+    }
+
+    return li;
+  }
+
+  function render() {
+    treeEl.innerHTML = '';
+    if (sedes.size === 0) {
+      vacioEl?.classList.remove('d-none');
+      return;
+    }
+    const rootUl = document.createElement('ul');
+    [...sedes.values()]
+      .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
+      .forEach(sede => {
+        const li = document.createElement('li');
+        li.className = 'ubic-group';
+        li.dataset.nombre = sede.nombre.toLowerCase();
+
+        const row = document.createElement('div');
+        row.className = 'ubic-node';
+        const toggle = document.createElement('span');
+        toggle.className = 'ubic-toggle';
+        toggle.innerHTML = '<i class="bx bx-chevron-down"></i>';
+        row.appendChild(toggle);
+        const label = document.createElement('span');
+        label.className = 'ubic-label';
+        label.innerHTML = `<i class="bx bx-building-house me-1"></i>${sede.nombre}`;
+        row.appendChild(label);
+        li.appendChild(row);
+
+        const ul = document.createElement('ul');
+        ul.className = 'ubic-children';
+        ordenar(sede.hijos).forEach(h => ul.appendChild(nodoLi(h)));
+        li.appendChild(ul);
+
+        const toggleFn = () => {
+          ul.classList.toggle('collapsed');
+          const icon = toggle.querySelector('i');
+          if (icon) icon.className = ul.classList.contains('collapsed') ? 'bx bx-chevron-right' : 'bx bx-chevron-down';
+        };
+        toggle.addEventListener('click', toggleFn);
+        label.addEventListener('click', toggleFn);
+
+        rootUl.appendChild(li);
+      });
+    treeEl.appendChild(rootUl);
+  }
+
+  // 3. Selección.
+  function marcarSeleccion(id) {
+    treeEl.querySelectorAll('.ubic-leaf.is-selected').forEach(el => el.classList.remove('is-selected'));
+    if (id) {
+      const li = treeEl.querySelector(`.ubic-leaf[data-id="${id}"]`);
+      if (li) li.classList.add('is-selected');
+    }
+  }
+
+  function expandirHasta(id) {
+    let cursor = porId.get(id);
+    while (cursor) {
+      const li = treeEl.querySelector(`li[data-id="${cursor.id}"]`);
+      const ul = li?.parentElement;
+      if (ul && ul.classList.contains('ubic-children')) {
+        ul.classList.remove('collapsed');
+        const icon = ul.previousElementSibling?.querySelector('.ubic-toggle i');
+        if (icon) icon.className = 'bx bx-chevron-down';
+      }
+      cursor = cursor.padre != null ? porId.get(cursor.padre) : null;
+    }
+  }
+
+  function seleccionar(id) {
+    hidden.value = id;
+    display.value = rutaDe(id);
+    marcarSeleccion(id);
+    // Cierra el modal usando la API de Bootstrap (expuesta en window.bootstrap).
+    const modalEl = document.getElementById('modalUbicacionTree');
+    const Modal = window.bootstrap?.Modal;
+    if (modalEl && Modal) {
+      (Modal.getInstance(modalEl) || new Modal(modalEl)).hide();
+    }
+  }
+
+  function limpiar() {
+    hidden.value = '';
+    display.value = '';
+    marcarSeleccion(null);
+  }
+
+  // 4. Buscador: muestra un nodo si él o algún descendiente coincide.
+  function filtrar(termino) {
+    const q = termino.trim().toLowerCase();
+    const items = treeEl.querySelectorAll('li');
+    if (!q) {
+      items.forEach(li => li.classList.remove('d-none'));
+      // Al limpiar la búsqueda: colapsa ramas internas, deja las sedes abiertas.
+      treeEl.querySelectorAll('.ubic-branch > .ubic-children').forEach(ul => ul.classList.add('collapsed'));
+      treeEl.querySelectorAll('.ubic-group > .ubic-children').forEach(ul => ul.classList.remove('collapsed'));
+      sincronizarIconos();
+      return;
+    }
+    items.forEach(li => {
+      const coincide = (li.dataset.nombre || '').includes(q);
+      const tieneHijoVisible =
+        !!li.querySelector('li') &&
+        [...li.querySelectorAll('li')].some(c => (c.dataset.nombre || '').includes(q));
+      const visible = coincide || tieneHijoVisible;
+      li.classList.toggle('d-none', !visible);
+      const ul = li.querySelector(':scope > .ubic-children');
+      if (ul && visible) ul.classList.remove('collapsed');
+    });
+    sincronizarIconos();
+  }
+
+  function sincronizarIconos() {
+    treeEl.querySelectorAll('.ubic-children').forEach(ul => {
+      const toggle = ul.previousElementSibling?.querySelector('.ubic-toggle');
+      const icon = toggle?.querySelector('i');
+      if (icon && !toggle.classList.contains('is-leaf')) {
+        icon.className = ul.classList.contains('collapsed') ? 'bx bx-chevron-right' : 'bx bx-chevron-down';
+      }
+    });
+  }
+
+  // 5. Arranque.
+  render();
+
+  // Estado inicial: si ya hay un id (modo editar / validación fallida), mostrar
+  // su ruta y dejar el árbol listo para expandirlo al abrir el modal.
+  const idInicial = hidden.value ? parseInt(hidden.value, 10) : null;
+  if (idInicial && porId.has(idInicial)) {
+    display.value = rutaDe(idInicial);
+  } else if (idInicial) {
+    // El id apunta a una ubicación inactiva (no está en el árbol activo).
+    display.value = 'Ubicación actual (inactiva)';
+  }
+
+  document.getElementById('modalUbicacionTree')?.addEventListener('shown.bs.modal', () => {
+    const id = hidden.value ? parseInt(hidden.value, 10) : null;
+    if (id && porId.has(id)) {
+      expandirHasta(id);
+      marcarSeleccion(id);
+      treeEl.querySelector(`.ubic-leaf[data-id="${id}"]`)?.scrollIntoView({ block: 'center' });
+    }
+    buscarEl?.focus();
+  });
+
+  buscarEl?.addEventListener('input', e => filtrar(e.target.value));
+  btnLimpiar?.addEventListener('click', limpiar);
+})();
