@@ -16,47 +16,55 @@ use Illuminate\Validation\ValidationException;
 class MovimientoController extends Controller
 {
     /**
-     * Configuración por tipo de movimiento: qué exige y qué efecto produce
-     * sobre el activo (situación resultante y estado del propio movimiento).
-     * Equivale a los flags "requiere"/"afecta" del diseño original.
+     * Máquina de estados (obs #1). La clave es la OPERACIÓN que expone la UI
+     * (vocabulario estable para el front). Cada operación define:
+     *   - mov:         el tipo persistido en movimientos.tipo (enum TO BE).
+     *   - situacion:   código de situación resultante del activo (null = no cambia).
+     *   - origen:      situaciones ACTUALES del activo admitidas como origen.
+     *   - colaborador/ubicacion/devolucion: qué campos exige la operación.
+     *
+     * Situaciones del modelo: EN_USO, EN_ALMACEN, EN_MANTENIMIENTO,
+     * EN_DESPLAZAMIENTO, PENDIENTE_BAJA, DADO_DE_BAJA (terminal).
      */
-    private const TIPOS = [
-        'ASIGNAR'       => ['colaborador' => true,  'ubicacion' => false, 'devolucion' => false, 'situacion' => 'ASIGNADO',     'estado_mov' => 'CERRADO'],
-        'TRANSFERENCIA' => ['colaborador' => true,  'ubicacion' => false, 'devolucion' => false, 'situacion' => 'ASIGNADO',     'estado_mov' => 'CERRADO'],
-        'PRESTAMO'      => ['colaborador' => true,  'ubicacion' => false, 'devolucion' => true,  'situacion' => 'EN_PRESTAMO',  'estado_mov' => 'ABIERTO'],
-        'DEVOLUCION'    => ['colaborador' => false, 'ubicacion' => false, 'devolucion' => false, 'situacion' => 'DISPONIBLE',   'estado_mov' => 'CERRADO'],
-        'REUBICACION'   => ['colaborador' => false, 'ubicacion' => true,  'devolucion' => false, 'situacion' => null,           'estado_mov' => 'CERRADO'],
-        'BAJA'          => ['colaborador' => false, 'ubicacion' => false, 'devolucion' => false, 'situacion' => 'DADO_DE_BAJA', 'estado_mov' => 'CERRADO'],
-    ];
-
-    /**
-     * Situaciones "entregables": el activo está libre y listo para asignar o
-     * prestar. Para el negocio, DISPONIBLE = operativo y guardado en almacén,
-     * por lo que esos tres estados se tratan como equivalentes.
-     */
-    private const ENTREGABLE = ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO'];
-
-    /**
-     * Máquina de estados: situación ACTUAL del activo permitida como ORIGEN de
-     * cada tipo de movimiento. Si la situación del activo no está en la lista,
-     * el movimiento se rechaza. Un activo DADO_DE_BAJA es terminal: no aparece
-     * en ninguna lista, así que no admite ningún movimiento.
-     */
-    private const TRANSICIONES = [
-        'ASIGNAR'       => self::ENTREGABLE,
-        'TRANSFERENCIA' => ['ASIGNADO'],
-        'PRESTAMO'      => self::ENTREGABLE,
-        'DEVOLUCION'    => ['EN_PRESTAMO'],
-        'REUBICACION'   => ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO', 'ASIGNADO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO'],
-        'BAJA'          => ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO', 'ASIGNADO', 'EN_MANTENIMIENTO'],
+    private const OPERACIONES = [
+        'ASIGNAR' => [
+            'mov' => 'ASIGNACION', 'situacion' => 'EN_USO',
+            'colaborador' => true, 'ubicacion' => false, 'devolucion' => false,
+            'origen' => ['EN_ALMACEN'],
+        ],
+        'TRANSFERENCIA' => [
+            'mov' => 'TRANSFERENCIA', 'situacion' => 'EN_USO',
+            'colaborador' => true, 'ubicacion' => false, 'devolucion' => false,
+            'origen' => ['EN_USO'],
+        ],
+        'PRESTAMO' => [
+            'mov' => 'PRESTAMO_TEMPORAL', 'situacion' => 'EN_DESPLAZAMIENTO',
+            'colaborador' => true, 'ubicacion' => false, 'devolucion' => true,
+            'origen' => ['EN_ALMACEN'],
+        ],
+        'DEVOLUCION' => [
+            'mov' => 'DEVOLUCION_INTERNA', 'situacion' => 'EN_ALMACEN',
+            'colaborador' => false, 'ubicacion' => false, 'devolucion' => false,
+            'origen' => ['EN_DESPLAZAMIENTO'],
+        ],
+        'REUBICACION' => [
+            'mov' => 'DESPLAZAMIENTO_INTERNO', 'situacion' => null,
+            'colaborador' => false, 'ubicacion' => true, 'devolucion' => false,
+            'origen' => ['EN_ALMACEN', 'EN_USO', 'EN_DESPLAZAMIENTO', 'EN_MANTENIMIENTO'],
+        ],
+        'BAJA' => [
+            'mov' => 'REGULARIZACION', 'situacion' => 'DADO_DE_BAJA',
+            'colaborador' => false, 'ubicacion' => false, 'devolucion' => false,
+            'origen' => ['EN_ALMACEN', 'EN_USO', 'EN_MANTENIMIENTO'],
+        ],
     ];
 
     public function index()
     {
         $movimientos = Movimiento::with([
                 'detalles.activo:id_activo,codigo_interno',
-                'colaboradorOrigen', 'colaboradorDestino',
-                'ubicacionOrigen', 'ubicacionDestino',
+                'detalles.responsableOrigen', 'detalles.responsableDestino',
+                'detalles.ubicacionOrigen', 'detalles.ubicacionDestino',
                 'registradoPor',
             ])
             ->orderByDesc('fecha_movimiento')
@@ -70,7 +78,7 @@ class MovimientoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'tipo'                        => ['required', Rule::in(array_keys(self::TIPOS))],
+            'tipo'                        => ['required', Rule::in(array_keys(self::OPERACIONES))],
             'activo_ids'                  => 'required|array|min:1',
             'activo_ids.*'                => 'integer|exists:activo,id_activo',
             'id_colaborador_destino'      => 'nullable|integer|exists:colaboradores,id_colaborador',
@@ -84,35 +92,34 @@ class MovimientoController extends Controller
         ]);
 
         $tipo = $request->tipo;
-        $cfg  = self::TIPOS[$tipo];
+        $op   = self::OPERACIONES[$tipo];
 
-        // Validaciones condicionales según el tipo
-        if ($cfg['colaborador'] && !$request->id_colaborador_destino) {
+        // Validaciones condicionales según la operación
+        if ($op['colaborador'] && !$request->id_colaborador_destino) {
             throw ValidationException::withMessages(['id_colaborador_destino' => 'Debes seleccionar el colaborador destino.']);
         }
-        if ($cfg['ubicacion'] && !$request->id_ubicacion_destino) {
+        if ($op['ubicacion'] && !$request->id_ubicacion_destino) {
             throw ValidationException::withMessages(['id_ubicacion_destino' => 'Debes seleccionar la ubicación destino.']);
         }
-        if ($cfg['devolucion'] && !$request->fecha_devolucion_programada) {
+        if ($op['devolucion'] && !$request->fecha_devolucion_programada) {
             throw ValidationException::withMessages(['fecha_devolucion_programada' => 'Indica la fecha de devolución programada.']);
         }
 
         $colaboradorDestino = $request->id_colaborador_destino ?: null;
         $ubicacionDestino   = $request->id_ubicacion_destino ?: null;
 
-        $activos = Activo::with('situacion:id_estado_activo,nombre')
+        $activos = Activo::with('situacion:id_estado_activo,codigo')
             ->whereIn('id_activo', $request->activo_ids)
             ->get();
 
         // Regla de negocio: el movimiento solo procede si la situación ACTUAL de
         // cada activo lo admite (máquina de estados). Se valida todo el lote para
         // que ninguno avance si alguno es inválido.
-        $permitidas = self::TRANSICIONES[$tipo];
-        $invalidos  = $activos->filter(fn($a) => !in_array($a->situacion?->nombre, $permitidas, true));
+        $invalidos = $activos->filter(fn($a) => !in_array($a->situacion?->codigo, $op['origen'], true));
 
         if ($invalidos->isNotEmpty()) {
             $detalle = $invalidos
-                ->map(fn($a) => $a->codigo_interno . ' (' . str_replace('_', ' ', $a->situacion?->nombre ?? 'SIN SITUACIÓN') . ')')
+                ->map(fn($a) => $a->codigo_interno . ' (' . str_replace('_', ' ', $a->situacion?->codigo ?? 'SIN SITUACIÓN') . ')')
                 ->implode(', ');
 
             throw ValidationException::withMessages([
@@ -120,57 +127,61 @@ class MovimientoController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($request, $tipo, $cfg, $colaboradorDestino, $ubicacionDestino, $activos) {
-            // Origen para la cabecera: solo si es homogéneo entre los activos del lote.
-            $origenColab = $activos->pluck('id_responsable_actual')->unique();
-            $origenUbic  = $activos->pluck('id_ubicacion_actual')->unique();
+        DB::transaction(function () use ($request, $tipo, $op, $colaboradorDestino, $ubicacionDestino, $activos) {
+            // La fecha de devolución programada ya no es columna de cabecera (TO BE);
+            // si aplica, se anota en las observaciones del movimiento.
+            $observaciones = $request->observaciones ?: null;
+            if ($op['devolucion'] && $request->fecha_devolucion_programada) {
+                $nota = 'Devolución programada: ' . $request->fecha_devolucion_programada;
+                $observaciones = $observaciones ? $observaciones . ' | ' . $nota : $nota;
+            }
 
             $mov = Movimiento::create([
-                'codigo_movimiento'           => 'TMP',
-                'tipo'                        => $tipo,
-                'estado'                      => $cfg['estado_mov'],
-                'id_colaborador_origen'       => $origenColab->count() === 1 ? $origenColab->first() : null,
-                'id_colaborador_destino'      => $colaboradorDestino,
-                'id_ubicacion_origen'         => $origenUbic->count() === 1 ? $origenUbic->first() : null,
-                'id_ubicacion_destino'        => $ubicacionDestino,
-                'fecha_devolucion_programada' => $request->fecha_devolucion_programada ?: null,
-                'motivo'                      => $request->motivo ?: null,
-                'observaciones'               => $request->observaciones ?: null,
-                'registrado_por'              => Auth::id(),
+                'codigo_movimiento' => 'TMP',
+                'tipo'              => $op['mov'],
+                'estado'            => 'EJECUTADO', // la app ejecuta el efecto al registrar
+                'motivo'            => $request->motivo ?: null,
+                'observaciones'     => $observaciones,
+                'registrado_por'    => Auth::id(),
+                'fecha_registro'    => now(),
+                'fecha_movimiento'  => now(),
+                'requiere_tramite'  => false,
             ]);
 
             $mov->update(['codigo_movimiento' => 'MOV-' . str_pad((string) $mov->id_movimiento, 6, '0', STR_PAD_LEFT)]);
 
-            $situacionId = $cfg['situacion'] ? $this->situacionId($cfg['situacion']) : null;
+            $situacionId = $op['situacion'] ? $this->situacionId($op['situacion']) : null;
 
             foreach ($activos as $activo) {
+                // Responsable y ubicación RESULTANTES del activo tras la operación.
+                $respDestino = match ($tipo) {
+                    'ASIGNAR', 'TRANSFERENCIA', 'PRESTAMO' => $colaboradorDestino,
+                    'DEVOLUCION', 'BAJA'                   => null,
+                    'REUBICACION'                          => $activo->id_responsable_actual,
+                };
+                $ubicDestino = ($ubicacionDestino && $tipo !== 'BAJA')
+                    ? $ubicacionDestino
+                    : $activo->id_ubicacion_actual;
+
                 DetalleMovimientoActivo::create([
-                    'id_movimiento'        => $mov->id_movimiento,
-                    'id_activo'            => $activo->id_activo,
-                    'condicion_salida_id'  => $activo->id_condicion_actual,
-                    'condicion_entrada_id' => $activo->id_condicion_actual,
+                    'id_movimiento'          => $mov->id_movimiento,
+                    'id_activo'              => $activo->id_activo,
+                    'id_responsable_origen'  => $activo->id_responsable_actual,
+                    'id_responsable_destino' => $respDestino,
+                    'id_ubicacion_origen'    => $activo->id_ubicacion_actual,
+                    'id_ubicacion_destino'   => $ubicDestino,
+                    'condicion_salida_id'    => $activo->id_condicion_actual,
+                    'condicion_entrada_id'   => $activo->id_condicion_actual,
+                    'estado_revision'        => 'CONFORME',
                 ]);
 
-                // Una DEVOLUCION cierra el/los PRESTAMO abiertos de ese activo.
-                if ($tipo === 'DEVOLUCION') {
-                    Movimiento::where('tipo', 'PRESTAMO')
-                        ->where('estado', 'ABIERTO')
-                        ->whereHas('detalles', fn($q) => $q->where('id_activo', $activo->id_activo))
-                        ->update(['estado' => 'CERRADO', 'fecha_cierre' => now()]);
-                }
-
                 // Efectos sobre el activo
-                $updates = [];
+                $updates = [
+                    'id_responsable_actual' => $respDestino,
+                    'id_ubicacion_actual'   => $ubicDestino,
+                ];
                 if ($situacionId) {
                     $updates['id_situacion_actual'] = $situacionId;
-                }
-                if (in_array($tipo, ['ASIGNAR', 'TRANSFERENCIA', 'PRESTAMO'], true)) {
-                    $updates['id_responsable_actual'] = $colaboradorDestino;
-                } elseif (in_array($tipo, ['DEVOLUCION', 'BAJA'], true)) {
-                    $updates['id_responsable_actual'] = null;
-                }
-                if ($ubicacionDestino && $tipo !== 'BAJA') {
-                    $updates['id_ubicacion_actual'] = $ubicacionDestino;
                 }
 
                 $activo->update($updates);
@@ -200,22 +211,22 @@ class MovimientoController extends Controller
     // Helpers
     // ──────────────────────────────────────────────────────────────────
 
-    private function situacionId(string $nombre): int
+    private function situacionId(string $codigo): int
     {
-        return (int) EstadoActivo::where('tipo_estado', 'SITUACION')
-            ->where('nombre', $nombre)
+        return (int) EstadoActivo::where('tipo', 'SITUACION')
+            ->where('codigo', $codigo)
             ->value('id_estado_activo');
     }
 
-    /** Mensaje legible que explica por qué un tipo de movimiento fue rechazado. */
+    /** Mensaje legible que explica por qué una operación fue rechazada. */
     private function motivoRegla(string $tipo): string
     {
         return match ($tipo) {
-            'ASIGNAR', 'PRESTAMO' => 'Solo se permite con activos disponibles (operativos y en almacén).',
-            'TRANSFERENCIA'       => 'Solo se permite con activos que estén ASIGNADOS.',
-            'DEVOLUCION'          => 'Solo se permite con activos que estén EN PRÉSTAMO.',
-            'BAJA'                => 'No se permite si el activo está EN PRÉSTAMO (devuélvelo primero) o ya está DADO DE BAJA.',
-            'REUBICACION'         => 'No se permite con activos DADOS DE BAJA.',
+            'ASIGNAR', 'PRESTAMO' => 'Solo se permite con activos en almacén.',
+            'TRANSFERENCIA'       => 'Solo se permite con activos que estén EN USO.',
+            'DEVOLUCION'          => 'Solo se permite con activos que estén EN DESPLAZAMIENTO (prestados).',
+            'BAJA'                => 'No se permite si el activo está en desplazamiento (devuélvelo primero) o ya está dado de baja.',
+            'REUBICACION'         => 'No se permite con activos dados de baja.',
             default               => '',
         };
     }
@@ -226,19 +237,24 @@ class MovimientoController extends Controller
             ? trim("{$c->per_apepat} " . ($c->per_apemat ? "{$c->per_apemat}, " : ', ') . "{$c->per_nombre}")
             : null;
 
+        // Origen/destino viven por activo en el detalle. Se agrega a un único valor
+        // si es homogéneo en todo el lote; si difiere, se muestra "Varios".
+        $agg = function ($valores) {
+            $u = collect($valores)->filter()->unique()->values();
+            return $u->count() === 1 ? $u->first() : ($u->count() > 1 ? 'Varios' : null);
+        };
+
         return [
             'id_movimiento'       => $m->id_movimiento,
             'codigo'              => $m->codigo_movimiento,
             'tipo'                => $m->tipo,
             'estado'              => $m->estado,
             'fecha'               => $m->fecha_movimiento?->format('Y-m-d H:i'),
-            'fecha_devolucion'    => $m->fecha_devolucion_programada?->format('Y-m-d'),
-            'fecha_cierre'        => $m->fecha_cierre?->format('Y-m-d H:i'),
             'activos'             => $m->detalles->map(fn($d) => $d->activo?->codigo_interno)->filter()->values(),
-            'colaborador_origen'  => $nombre($m->colaboradorOrigen),
-            'colaborador_destino' => $nombre($m->colaboradorDestino),
-            'ubicacion_origen'    => $m->ubicacionOrigen?->nombre,
-            'ubicacion_destino'   => $m->ubicacionDestino?->nombre,
+            'colaborador_origen'  => $agg($m->detalles->map(fn($d) => $nombre($d->responsableOrigen))),
+            'colaborador_destino' => $agg($m->detalles->map(fn($d) => $nombre($d->responsableDestino))),
+            'ubicacion_origen'    => $agg($m->detalles->map(fn($d) => $d->ubicacionOrigen?->nombre)),
+            'ubicacion_destino'   => $agg($m->detalles->map(fn($d) => $d->ubicacionDestino?->nombre)),
             'motivo'              => $m->motivo,
             'registrado_por'      => $m->registradoPor?->nombre_usuario,
         ];

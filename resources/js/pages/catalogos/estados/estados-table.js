@@ -52,7 +52,7 @@ $(function () {
               <button type="button" class="btn-action-icon action-edit btn-editar-estado"
                 data-id="${row.id_estado_activo}"
                 data-nombre="${row.nombre}"
-                data-tipo="${row.tipo_estado}"
+                data-tipo="${row.tipo}"
                 data-descripcion="${row.descripcion ?? ''}"
                 data-tabla="condiciones"
                 data-bs-toggle="tooltip" title="Editar">
@@ -117,7 +117,7 @@ $(function () {
               <button type="button" class="btn-action-icon action-edit btn-editar-estado"
                 data-id="${row.id_estado_activo}"
                 data-nombre="${row.nombre}"
-                data-tipo="${row.tipo_estado}"
+                data-tipo="${row.tipo}"
                 data-descripcion="${row.descripcion ?? ''}"
                 data-tabla="situaciones"
                 data-bs-toggle="tooltip" title="Editar">

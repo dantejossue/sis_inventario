@@ -52,7 +52,7 @@ $(function () {
         modal.modal('hide');
 
         if (res.data) {
-          const tipo = res.data.tipo_estado;
+          const tipo = res.data.tipo;
           if (tipo === 'CONDICION') {
             window.tablaCondiciones.row.add(res.data).draw(false);
           } else {

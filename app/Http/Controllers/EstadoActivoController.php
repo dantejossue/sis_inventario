@@ -4,15 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\EstadoActivo;
 use Illuminate\Http\Request;
+use Illuminate\Support\Str;
 
 class EstadoActivoController extends Controller
 {
     public function index()
     {
-        $estados = EstadoActivo::orderBy('tipo_estado')->orderBy('nombre')->get();
+        $estados = EstadoActivo::orderBy('tipo')->orderBy('nombre')->get();
 
-        $condiciones = $estados->where('tipo_estado', 'CONDICION')->values();
-        $situaciones = $estados->where('tipo_estado', 'SITUACION')->values();
+        $condiciones = $estados->where('tipo', 'CONDICION')->values();
+        $situaciones = $estados->where('tipo', 'SITUACION')->values();
 
         return view('content.catalogos.estados.index', compact('condiciones', 'situaciones'));
     }
@@ -20,24 +21,25 @@ class EstadoActivoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nombre'      => [
-                'required', 'string', 'max:100',
-                \Illuminate\Validation\Rule::unique('estado_activo')->where(function ($query) use ($request) {
-                    return $query->where('tipo_estado', $request->tipo_estado);
-                }),
-            ],
-            'tipo_estado' => 'required|in:CONDICION,SITUACION',
+            'nombre' => 'required|string|max:100',
+            'tipo'   => 'required|in:CONDICION,SITUACION',
             'descripcion' => 'nullable|string|max:255',
-        ], [
-            'nombre.required'    => 'El nombre del estado es obligatorio.',
-            'nombre.unique'      => 'Ya existe un estado con ese nombre para este tipo.',
-            'tipo_estado.required' => 'El tipo de estado es obligatorio.',
-            'tipo_estado.in'     => 'El tipo de estado debe ser CONDICION o SITUACION.',
-        ]);
+        ], $this->mensajes());
+
+        $codigo = $this->codigoDesde($request->nombre);
+
+        // El identificador único es (tipo, codigo): dos estados del mismo tipo no
+        // pueden compartir código.
+        if (EstadoActivo::where('tipo', $request->tipo)->where('codigo', $codigo)->exists()) {
+            return response()->json([
+                'errors' => ['nombre' => ['Ya existe un estado con ese nombre para este tipo.']],
+            ], 422);
+        }
 
         $estado = EstadoActivo::create([
+            'tipo'        => $request->tipo,
+            'codigo'      => $codigo,
             'nombre'      => strtoupper(trim($request->nombre)),
-            'tipo_estado' => $request->tipo_estado,
             'descripcion' => $request->descripcion ? trim($request->descripcion) : null,
             'estado'      => 'ACTIVO',
         ]);
@@ -54,23 +56,28 @@ class EstadoActivoController extends Controller
         $estado = EstadoActivo::findOrFail($id);
 
         $request->validate([
-            'nombre' => [
-                'required', 'string', 'max:100',
-                \Illuminate\Validation\Rule::unique('estado_activo')->where(function ($query) use ($request) {
-                    return $query->where('tipo_estado', $request->tipo_estado);
-                })->ignore($id, 'id_estado_activo'),
-            ],
-            'tipo_estado' => 'required|in:CONDICION,SITUACION',
+            'nombre' => 'required|string|max:100',
+            'tipo'   => 'required|in:CONDICION,SITUACION',
             'descripcion' => 'nullable|string|max:255',
-        ], [
-            'nombre.required'    => 'El nombre del estado es obligatorio.',
-            'nombre.unique'      => 'Ya existe un estado con ese nombre para este tipo.',
-            'tipo_estado.required' => 'El tipo de estado es obligatorio.',
-        ]);
+        ], $this->mensajes());
+
+        $codigo = $this->codigoDesde($request->nombre);
+
+        $duplicado = EstadoActivo::where('tipo', $request->tipo)
+            ->where('codigo', $codigo)
+            ->where('id_estado_activo', '!=', $id)
+            ->exists();
+
+        if ($duplicado) {
+            return response()->json([
+                'errors' => ['nombre' => ['Ya existe un estado con ese nombre para este tipo.']],
+            ], 422);
+        }
 
         $estado->update([
+            'tipo'        => $request->tipo,
+            'codigo'      => $codigo,
             'nombre'      => strtoupper(trim($request->nombre)),
-            'tipo_estado' => $request->tipo_estado,
             'descripcion' => $request->descripcion ? trim($request->descripcion) : null,
         ]);
 
@@ -93,5 +100,20 @@ class EstadoActivoController extends Controller
             'message'      => 'Estado actualizado.',
             'nuevo_estado' => $estado->estado,
         ]);
+    }
+
+    /** Código canónico (MAYÚSCULAS con guiones bajos) derivado del nombre. */
+    private function codigoDesde(string $nombre): string
+    {
+        return Str::upper(Str::slug(trim($nombre), '_'));
+    }
+
+    private function mensajes(): array
+    {
+        return [
+            'nombre.required' => 'El nombre del estado es obligatorio.',
+            'tipo.required'   => 'El tipo de estado es obligatorio.',
+            'tipo.in'         => 'El tipo de estado debe ser CONDICION o SITUACION.',
+        ];
     }
 }

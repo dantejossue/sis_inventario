@@ -56,7 +56,7 @@ $(function () {
           const data          = row.data();
           data.nombre         = res.data.nombre;
           data.descripcion    = res.data.descripcion;
-          data.tipo_estado    = res.data.tipo_estado;
+          data.tipo           = res.data.tipo;
           row.data(data).draw(false);
         }
 

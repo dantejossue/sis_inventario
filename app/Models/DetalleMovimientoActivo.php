@@ -15,8 +15,13 @@ class DetalleMovimientoActivo extends Model
     protected $fillable = [
         'id_movimiento',
         'id_activo',
+        'id_responsable_origen',
+        'id_responsable_destino',
+        'id_ubicacion_origen',
+        'id_ubicacion_destino',
         'condicion_salida_id',
         'condicion_entrada_id',
+        'estado_revision',
         'observaciones',
     ];
 
@@ -28,5 +33,25 @@ class DetalleMovimientoActivo extends Model
     public function activo()
     {
         return $this->belongsTo(Activo::class, 'id_activo', 'id_activo');
+    }
+
+    public function responsableOrigen()
+    {
+        return $this->belongsTo(Colaborador::class, 'id_responsable_origen', 'id_colaborador');
+    }
+
+    public function responsableDestino()
+    {
+        return $this->belongsTo(Colaborador::class, 'id_responsable_destino', 'id_colaborador');
+    }
+
+    public function ubicacionOrigen()
+    {
+        return $this->belongsTo(Ubicacion::class, 'id_ubicacion_origen', 'id_ubicacion');
+    }
+
+    public function ubicacionDestino()
+    {
+        return $this->belongsTo(Ubicacion::class, 'id_ubicacion_destino', 'id_ubicacion');
     }
 }

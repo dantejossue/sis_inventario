@@ -13,22 +13,21 @@ $(function () {
 
   // Etiqueta (badge suave) de color según la situación del activo
   const situacionBadge = {
-    DISPONIBLE: 'bg-label-success',
-    OPERATIVO: 'bg-label-success',
+    EN_USO: 'bg-label-primary',
+    EN_ALMACEN: 'bg-label-success',
     EN_MANTENIMIENTO: 'bg-label-warning',
-    EN_PRESTAMO: 'bg-label-info',
-    ASIGNADO: 'bg-label-primary',
-    EN_ALMACEN: 'bg-label-secondary',
+    EN_DESPLAZAMIENTO: 'bg-label-info',
+    PENDIENTE_BAJA: 'bg-label-secondary',
     DADO_DE_BAJA: 'bg-label-danger'
   };
 
   // Clase de color que pinta la fila completa según la situación del activo
   const situacionRowClass = {
-    OPERATIVO: 'table-success',
+    EN_USO: 'table-primary',
+    EN_ALMACEN: 'table-success',
     EN_MANTENIMIENTO: 'table-warning',
-    EN_PRESTAMO: 'table-info',
-    ASIGNADO: 'table-primary',
-    EN_ALMACEN: 'table-secondary',
+    EN_DESPLAZAMIENTO: 'table-info',
+    PENDIENTE_BAJA: 'table-secondary',
     DADO_DE_BAJA: 'table-danger'
   };
 

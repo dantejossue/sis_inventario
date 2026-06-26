@@ -86,7 +86,7 @@
 
         <form id="formNuevoEstado" action="{{ route('estados.store') }}" method="POST">
           @csrf
-          <input type="hidden" name="tipo_estado" id="nuevo_tipo_estado" value="">
+          <input type="hidden" name="tipo" id="nuevo_tipo_estado" value="">
 
           <div class="modal-body py-5">
 
@@ -134,7 +134,7 @@
         <form id="formEditarEstado" method="POST">
           @csrf
           @method('PUT')
-          <input type="hidden" name="tipo_estado" id="edit-tipo-estado" value="">
+          <input type="hidden" name="tipo" id="edit-tipo-estado" value="">
 
           <div class="modal-body py-5">
 

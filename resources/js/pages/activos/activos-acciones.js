@@ -12,12 +12,11 @@ $(function () {
   };
 
   const situacionBadge = {
-    DISPONIBLE: 'bg-success',
-    OPERATIVO: 'bg-success',
+    EN_USO: 'bg-primary',
+    EN_ALMACEN: 'bg-success',
     EN_MANTENIMIENTO: 'bg-warning',
-    EN_PRESTAMO: 'bg-info',
-    ASIGNADO: 'bg-primary',
-    EN_ALMACEN: 'bg-secondary',
+    EN_DESPLAZAMIENTO: 'bg-info',
+    PENDIENTE_BAJA: 'bg-secondary',
     DADO_DE_BAJA: 'bg-danger'
   };
 
@@ -205,7 +204,7 @@ $(function () {
       colaborador: 'req',
       ubicacion: 'opt',
       devolucion: false,
-      ayuda: 'Asigna el activo a un colaborador (queda ASIGNADO).'
+      ayuda: 'Asigna el activo a un colaborador (queda EN USO).'
     },
     TRANSFERENCIA: {
       colaborador: 'req',
@@ -223,7 +222,7 @@ $(function () {
       colaborador: false,
       ubicacion: 'opt',
       devolucion: false,
-      ayuda: 'Devuelve el activo: queda DISPONIBLE y sin colaborador.'
+      ayuda: 'Devuelve el activo prestado: queda EN ALMACÉN y sin colaborador.'
     },
     REUBICACION: {
       colaborador: false,
@@ -242,14 +241,15 @@ $(function () {
   // Máquina de estados (espejo de MovimientoController::TRANSICIONES): situación
   // ACTUAL del activo permitida como origen de cada tipo. Sirve para deshabilitar
   // en el modal los movimientos que no apliquen a los activos seleccionados.
-  const ENTREGABLE = ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO'];
+  // Espejo de MovimientoController::OPERACIONES['origen']: situación ACTUAL
+  // admitida como origen de cada operación.
   const MOV_DESDE = {
-    ASIGNAR: ENTREGABLE,
-    TRANSFERENCIA: ['ASIGNADO'],
-    PRESTAMO: ENTREGABLE,
-    DEVOLUCION: ['EN_PRESTAMO'],
-    REUBICACION: ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO', 'ASIGNADO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO'],
-    BAJA: ['DISPONIBLE', 'EN_ALMACEN', 'OPERATIVO', 'ASIGNADO', 'EN_MANTENIMIENTO']
+    ASIGNAR: ['EN_ALMACEN'],
+    TRANSFERENCIA: ['EN_USO'],
+    PRESTAMO: ['EN_ALMACEN'],
+    DEVOLUCION: ['EN_DESPLAZAMIENTO'],
+    REUBICACION: ['EN_ALMACEN', 'EN_USO', 'EN_DESPLAZAMIENTO', 'EN_MANTENIMIENTO'],
+    BAJA: ['EN_ALMACEN', 'EN_USO', 'EN_MANTENIMIENTO']
   };
 
   let idsParaMover = [];

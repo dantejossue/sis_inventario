@@ -52,10 +52,10 @@ class ActivoController extends Controller
                     'categoria_nombre' => $m->categoriaActivo?->nombre ?? null,
                     'id_categoria'     => $m->id_categoria,
                 ]),
-            'condiciones' => EstadoActivo::where('tipo_estado', 'CONDICION')
+            'condiciones' => EstadoActivo::where('tipo', 'CONDICION')
                 ->where('estado', 'ACTIVO')
                 ->get(['id_estado_activo', 'nombre']),
-            'situaciones' => EstadoActivo::where('tipo_estado', 'SITUACION')
+            'situaciones' => EstadoActivo::where('tipo', 'SITUACION')
                 ->where('estado', 'ACTIVO')
                 ->get(['id_estado_activo', 'nombre']),
             'colaboradores' => Colaborador::where('estado', 'ACTIVO')
@@ -132,8 +132,8 @@ class ActivoController extends Controller
         $modelo = Modelo::findOrFail($request->id_modelo);
 
         // La situación es derivada del ciclo de vida: si nace con colaborador
-        // queda ASIGNADO; si no, DISPONIBLE (listo para asignar luego).
-        $situacionInicial = $request->id_responsable_actual ? 'ASIGNADO' : 'DISPONIBLE';
+        // queda EN_USO; si no, EN_ALMACEN (listo para asignar luego).
+        $situacionInicial = $request->id_responsable_actual ? 'EN_USO' : 'EN_ALMACEN';
 
         Activo::create([
             'id_modelo'             => $request->id_modelo,
@@ -233,10 +233,8 @@ class ActivoController extends Controller
     {
         $activo = Activo::findOrFail($id);
 
-        if ($activo->imagen) {
-            Storage::disk('public')->delete($activo->imagen);
-        }
-
+        // Borrado LÓGICO (SoftDeletes): no se elimina el archivo de imagen para
+        // poder restaurar el activo íntegro más adelante.
         $activo->delete();
 
         return response()->json([
@@ -260,12 +258,12 @@ class ActivoController extends Controller
     }
 
     /**
-     * Resuelve el id de una situación (estado_activo tipo SITUACION) por nombre.
+     * Resuelve el id de una situación (estado_activo tipo SITUACION) por su código.
      */
-    private function situacionId(string $nombre): int
+    private function situacionId(string $codigo): int
     {
-        return (int) EstadoActivo::where('tipo_estado', 'SITUACION')
-            ->where('nombre', $nombre)
+        return (int) EstadoActivo::where('tipo', 'SITUACION')
+            ->where('codigo', $codigo)
             ->value('id_estado_activo');
     }
 

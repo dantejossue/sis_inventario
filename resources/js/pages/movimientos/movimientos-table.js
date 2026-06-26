@@ -1,13 +1,27 @@
 import dtDefaults from '../../plugins/datatables-defaults';
 import { initTooltips } from '../../plugins/bootstrap-tooltips';
 
+// Tipo persistido (enum TO BE de movimientos.tipo)
 const tipoBadge = {
-  ASIGNAR: 'bg-label-primary',
+  ASIGNACION: 'bg-label-primary',
   TRANSFERENCIA: 'bg-label-info',
-  PRESTAMO: 'bg-label-warning',
-  DEVOLUCION: 'bg-label-success',
-  REUBICACION: 'bg-label-secondary',
-  BAJA: 'bg-label-danger'
+  ORDEN_SALIDA: 'bg-label-warning',
+  REINGRESO: 'bg-label-success',
+  DESPLAZAMIENTO_INTERNO: 'bg-label-secondary',
+  PRESTAMO_TEMPORAL: 'bg-label-warning',
+  DEVOLUCION_INTERNA: 'bg-label-success',
+  REGULARIZACION: 'bg-label-danger'
+};
+
+// Color del estado del flujo del movimiento (REGISTRADO..EJECUTADO)
+const estadoBadge = {
+  REGISTRADO: 'bg-label-secondary',
+  PENDIENTE_TRAMITE: 'bg-label-warning',
+  EN_TRAMITE: 'bg-label-info',
+  AUTORIZADO: 'bg-label-primary',
+  EJECUTADO: 'bg-success',
+  RECHAZADO: 'bg-label-danger',
+  CANCELADO: 'bg-label-dark'
 };
 
 // Texto vacío seguro
@@ -28,7 +42,7 @@ $(function () {
       },
       {
         data: 'tipo',
-        render: t => `<span class="badge ${tipoBadge[t] ?? 'bg-label-secondary'}">${t}</span>`
+        render: t => `<span class="badge ${tipoBadge[t] ?? 'bg-label-secondary'}">${(t ?? '').replace(/_/g, ' ')}</span>`
       },
       {
         data: 'activos',
@@ -70,9 +84,7 @@ $(function () {
       {
         data: 'estado',
         render: e =>
-          e === 'ABIERTO'
-            ? '<span class="badge bg-warning fw-bold">Abierto</span>'
-            : '<span class="badge bg-label-secondary fw-bold">Cerrado</span>'
+          `<span class="badge ${estadoBadge[e] ?? 'bg-label-secondary'} fw-bold">${(e ?? '').replace(/_/g, ' ')}</span>`
       },
       {
         data: 'registrado_por',

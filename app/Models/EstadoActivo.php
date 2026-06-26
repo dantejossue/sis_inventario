@@ -11,5 +11,5 @@ class EstadoActivo extends Model
 
     public $timestamps = false;
 
-    protected $fillable = ['nombre', 'tipo_estado', 'descripcion', 'estado'];
+    protected $fillable = ['tipo', 'codigo', 'nombre', 'descripcion', 'estado'];
 }

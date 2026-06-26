@@ -9,7 +9,13 @@
       "Bash(node --check /tmp/_chk.mjs)",
       "Bash(rm -f /tmp/_chk.mjs)",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(cd *)",
+      "Bash(git mv *)",
+      "Bash(mv -v 2026_06_16_000001_create_ubicaciones_table.php 2026_06_07_000002_create_ubicaciones_table.php)",
+      "Bash(grep -v '^$')",
+      "Bash(grep -vE 'Deprecated|^\\\\s*$')",
+      "Bash(git reset *)"
     ]
   }
 }

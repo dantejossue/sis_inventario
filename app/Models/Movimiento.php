@@ -14,50 +14,32 @@ class Movimiento extends Model
     public $timestamps = false;
 
     protected $casts = [
-        'fecha_movimiento'            => 'datetime',
-        'fecha_cierre'                => 'datetime',
-        'fecha_devolucion_programada' => 'date',
+        'fecha_registro'      => 'datetime',
+        'fecha_movimiento'    => 'datetime',
+        'fecha_registro_siga' => 'datetime',
+        'requiere_tramite'    => 'boolean',
     ];
 
     protected $fillable = [
         'codigo_movimiento',
         'tipo',
-        'estado',
-        'id_colaborador_origen',
-        'id_colaborador_destino',
-        'id_ubicacion_origen',
-        'id_ubicacion_destino',
-        'fecha_movimiento',
-        'fecha_devolucion_programada',
-        'fecha_cierre',
         'motivo',
-        'observaciones',
+        'estado',
         'registrado_por',
+        'validado_oti_por',
+        'validado_patrimonio_por',
+        'fecha_registro',
+        'fecha_movimiento',
+        'requiere_tramite',
+        'estado_siga',
+        'fecha_registro_siga',
+        'observacion_siga',
+        'observaciones',
     ];
 
     public function detalles()
     {
         return $this->hasMany(DetalleMovimientoActivo::class, 'id_movimiento', 'id_movimiento');
-    }
-
-    public function colaboradorOrigen()
-    {
-        return $this->belongsTo(Colaborador::class, 'id_colaborador_origen', 'id_colaborador');
-    }
-
-    public function colaboradorDestino()
-    {
-        return $this->belongsTo(Colaborador::class, 'id_colaborador_destino', 'id_colaborador');
-    }
-
-    public function ubicacionOrigen()
-    {
-        return $this->belongsTo(Ubicacion::class, 'id_ubicacion_origen', 'id_ubicacion');
-    }
-
-    public function ubicacionDestino()
-    {
-        return $this->belongsTo(Ubicacion::class, 'id_ubicacion_destino', 'id_ubicacion');
     }
 
     public function registradoPor()
