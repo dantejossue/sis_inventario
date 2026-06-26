@@ -112,6 +112,39 @@ $(function () {
     $('#info-descripcion').text(activo.descripcion ?? '—');
     $('#info-observaciones').text(activo.observaciones ?? '—');
 
+    // ── Ficha Técnica TI (solo categorías que la requieren) ───────────────────
+    const $ficha = $('#info-ficha-tecnica');
+    const t = activo.tecnico;
+    if (activo.requiere_ficha && t) {
+      const fila = (label, val) =>
+        val ? `<div class="col-6"><p class="text-muted small mb-0">${label}</p><p class="fw-semibold mb-0">${val}</p></div>` : '';
+      const eo = t.estado_operativo ? t.estado_operativo.replace(/_/g, ' ') : null;
+      const disco = [t.almacenamiento, t.tipo_almacenamiento].filter(Boolean).join(' ');
+      const cuerpo =
+        fila('Procesador', t.procesador) +
+        fila('RAM', t.memoria_ram) +
+        fila('Almacenamiento', disco) +
+        fila('Sistema Operativo', t.sistema_operativo) +
+        fila('Estado Operativo', eo) +
+        fila('Nombre de Equipo', t.nombre_equipo) +
+        fila('IP', t.direccion_ip) +
+        fila('MAC', t.direccion_mac) +
+        fila('Dominio', t.dominio) +
+        fila('Licencia Office', t.licencia_office) +
+        fila('Antivirus', t.antivirus) +
+        fila('Accesorios', t.accesorios) +
+        (t.observaciones_tecnicas
+          ? `<div class="col-12"><p class="text-muted small mb-0">Obs. técnicas</p><p class="mb-0">${t.observaciones_tecnicas}</p></div>`
+          : '');
+      $ficha.html(
+        '<hr class="my-1"><div class="col-12"><p class="text-muted small mb-2 text-uppercase fw-semibold">' +
+          '<i class="bx bx-chip me-1"></i> Ficha Técnica TI</p></div>' +
+          (cuerpo || '<div class="col-12"><p class="text-muted small mb-0 fst-italic">Sin datos técnicos cargados.</p></div>')
+      ).removeClass('d-none');
+    } else {
+      $ficha.addClass('d-none').empty();
+    }
+
     // ── Códigos de identificación: QR (URL a la ficha) + barras (cód. patrimonial)
     const qrBox = document.getElementById('info-qr');
     qrBox.innerHTML = '';

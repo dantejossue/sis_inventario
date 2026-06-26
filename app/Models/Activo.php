@@ -66,4 +66,15 @@ class Activo extends Model
     {
         return $this->belongsTo(Ubicacion::class, 'id_ubicacion_actual', 'id_ubicacion');
     }
+
+    /** Ficha técnica TI (1-a-1), solo para categorías que la requieren. */
+    public function activoTecnico()
+    {
+        return $this->hasOne(ActivoTecnico::class, 'id_activo', 'id_activo');
+    }
+
+    public function categoria()
+    {
+        return $this->belongsTo(CategoriaActivo::class, 'id_categoria', 'id_categoria');
+    }
 }

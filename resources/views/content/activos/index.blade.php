@@ -410,6 +410,11 @@
           <p class="mb-0" id="info-observaciones">—</p>
         </div>
 
+        {{-- Ficha Técnica TI (la rellena activos-acciones.js si la categoría la requiere) --}}
+        <div class="col-12 p-0">
+          <div class="row g-3 d-none" id="info-ficha-tecnica"></div>
+        </div>
+
         <div class="col-12">
           <hr class="my-1">
         </div>

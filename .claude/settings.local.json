@@ -15,7 +15,8 @@
       "Bash(mv -v 2026_06_16_000001_create_ubicaciones_table.php 2026_06_07_000002_create_ubicaciones_table.php)",
       "Bash(grep -v '^$')",
       "Bash(grep -vE 'Deprecated|^\\\\s*$')",
-      "Bash(git reset *)"
+      "Bash(git reset *)",
+      "Bash(git commit -q -m ' *)"
     ]
   }
 }

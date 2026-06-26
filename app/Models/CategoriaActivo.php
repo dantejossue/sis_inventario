@@ -13,7 +13,9 @@ class CategoriaActivo extends Model
     const CREATED_AT   = 'creado_en';
     const UPDATED_AT   = 'actualizado_en';
 
-    protected $fillable = ['nombre', 'descripcion', 'estado'];
+    protected $fillable = ['nombre', 'descripcion', 'requiere_ficha_tecnica', 'estado'];
+
+    protected $casts = ['requiere_ficha_tecnica' => 'boolean'];
 
     public function modelos()
     {

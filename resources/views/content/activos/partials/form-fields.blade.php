@@ -36,7 +36,7 @@
           <select class="form-select @error('id_modelo') is-invalid @enderror" id="id_modelo" name="id_modelo">
             <option value="">Seleccionar modelo...</option>
             @foreach ($modelos as $m)
-              <option value="{{ $m['id_modelo'] }}"
+              <option value="{{ $m['id_modelo'] }}" data-ficha="{{ $m['requiere_ficha'] ? 1 : 0 }}"
                 {{ old('id_modelo', $activo?->id_modelo) == $m['id_modelo'] ? 'selected' : '' }}>
                 {{ $m['marca_nombre'] }} — {{ $m['nombre'] }}
                 @if ($m['categoria_nombre'])
@@ -314,6 +314,141 @@
           @error('observaciones')
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+{{-- Card: Ficha Técnica TI — solo visible si la categoría del modelo la requiere.
+     El JS (activos-form.js) muestra/oculta esta card según el modelo elegido. --}}
+@php $tec = $activo?->activoTecnico; @endphp
+<div class="card mb-4 d-none" id="ficha-tecnica-wrap">
+  <div class="card-header border-bottom">
+    <h6 class="mb-0 fw-bold d-flex align-items-center"><i class="bx bx-chip me-2 text-primary"></i>Ficha Técnica TI</h6>
+  </div>
+  <div class="card-body pt-4">
+    <div class="row g-4">
+
+      <div class="col-md-6">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_procesador" name="tec_procesador"
+            value="{{ old('tec_procesador', $tec?->procesador) }}" placeholder="Ej: Intel Core i5-1135G7">
+          <label>Procesador</label>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_memoria_ram" name="tec_memoria_ram"
+            value="{{ old('tec_memoria_ram', $tec?->memoria_ram) }}" placeholder="Ej: 8 GB">
+          <label>Memoria RAM</label>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_almacenamiento" name="tec_almacenamiento"
+            value="{{ old('tec_almacenamiento', $tec?->almacenamiento) }}" placeholder="Ej: 512 GB">
+          <label>Almacenamiento</label>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="form-floating form-floating-outline">
+          <select class="form-select" id="tec_tipo_almacenamiento" name="tec_tipo_almacenamiento">
+            <option value="">—</option>
+            @foreach (['HDD', 'SSD', 'NVME', 'EMMC', 'OTRO'] as $opt)
+              <option value="{{ $opt }}" {{ old('tec_tipo_almacenamiento', $tec?->tipo_almacenamiento) === $opt ? 'selected' : '' }}>
+                {{ $opt }}</option>
+            @endforeach
+          </select>
+          <label>Tipo de Disco</label>
+        </div>
+      </div>
+
+      <div class="col-md-5">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_sistema_operativo" name="tec_sistema_operativo"
+            value="{{ old('tec_sistema_operativo', $tec?->sistema_operativo) }}" placeholder="Ej: Windows 11 Pro">
+          <label>Sistema Operativo</label>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-floating form-floating-outline">
+          <select class="form-select" id="tec_estado_operativo" name="tec_estado_operativo">
+            @php $eo = old('tec_estado_operativo', $tec?->estado_operativo ?? 'OPERATIVO'); @endphp
+            @foreach (['OPERATIVO', 'INOPERATIVO', 'EN_REVISION', 'EN_MANTENIMIENTO', 'PENDIENTE_BAJA', 'DADO_DE_BAJA'] as $opt)
+              <option value="{{ $opt }}" {{ $eo === $opt ? 'selected' : '' }}>{{ str_replace('_', ' ', $opt) }}</option>
+            @endforeach
+          </select>
+          <label>Estado Operativo</label>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_nombre_equipo" name="tec_nombre_equipo"
+            value="{{ old('tec_nombre_equipo', $tec?->nombre_equipo) }}" placeholder="Ej: PC-OTI-01">
+          <label>Nombre de Equipo</label>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_direccion_ip" name="tec_direccion_ip"
+            value="{{ old('tec_direccion_ip', $tec?->direccion_ip) }}" placeholder="Ej: 192.168.1.50">
+          <label>Dirección IP</label>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_direccion_mac" name="tec_direccion_mac"
+            value="{{ old('tec_direccion_mac', $tec?->direccion_mac) }}" placeholder="Ej: 00:1A:2B:3C:4D:5E">
+          <label>Dirección MAC</label>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_dominio" name="tec_dominio"
+            value="{{ old('tec_dominio', $tec?->dominio) }}" placeholder="Ej: undc.local">
+          <label>Dominio</label>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_licencia_office" name="tec_licencia_office"
+            value="{{ old('tec_licencia_office', $tec?->licencia_office) }}" placeholder="Ej: Office 2021 / M365">
+          <label>Licencia Office</label>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_antivirus" name="tec_antivirus"
+            value="{{ old('tec_antivirus', $tec?->antivirus) }}" placeholder="Ej: Kaspersky Endpoint">
+          <label>Antivirus</label>
+        </div>
+      </div>
+
+      <div class="col-md-12">
+        <div class="form-floating form-floating-outline">
+          <input type="text" class="form-control" id="tec_accesorios" name="tec_accesorios"
+            value="{{ old('tec_accesorios', $tec?->accesorios) }}" placeholder="Ej: Mouse, teclado, cargador">
+          <label>Accesorios</label>
+        </div>
+      </div>
+
+      <div class="col-md-12">
+        <div class="form-floating form-floating-outline">
+          <textarea class="form-control" id="tec_observaciones_tecnicas" name="tec_observaciones_tecnicas"
+            placeholder="Observaciones técnicas" style="height:80px">{{ old('tec_observaciones_tecnicas', $tec?->observaciones_tecnicas) }}</textarea>
+          <label>Observaciones Técnicas</label>
         </div>
       </div>
 

@@ -8,6 +8,19 @@ $(function () {
     width: '100%',
     placeholder: 'Seleccionar...'
   });
+
+  // Ficha Técnica TI: visible solo si la categoría del modelo elegido la requiere
+  // (el <option> trae data-ficha="1|0", calculado en el servidor).
+  const $modelo = $('#id_modelo');
+  const $ficha = $('#ficha-tecnica-wrap');
+
+  function toggleFichaTecnica() {
+    const requiere = $modelo.find('option:selected').data('ficha') == 1;
+    $ficha.toggleClass('d-none', !requiere);
+  }
+
+  $modelo.on('change', toggleFichaTecnica);
+  toggleFichaTecnica(); // estado inicial (modo editar / validación fallida)
 });
 
 // ───────────────────────────────────────────────────────────────────────────

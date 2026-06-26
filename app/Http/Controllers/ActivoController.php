@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activo;
+use App\Models\ActivoTecnico;
+use App\Models\CategoriaActivo;
 use App\Models\Colaborador;
 use App\Models\EstadoActivo;
 use App\Models\Modelo;
@@ -19,7 +21,7 @@ class ActivoController extends Controller
         $ubicacionesPorId = Ubicacion::get(['id_ubicacion', 'id_ubicacion_padre', 'nombre'])
             ->keyBy('id_ubicacion');
 
-        $activos = Activo::with('modelo.marca', 'modelo.categoriaActivo', 'condicion', 'situacion', 'ubicacion.sede', 'responsable')
+        $activos = Activo::with('modelo.marca', 'modelo.categoriaActivo', 'condicion', 'situacion', 'ubicacion.sede', 'responsable', 'categoria', 'activoTecnico')
             ->get()
             ->map(fn($a) => static::formatActivo($a, $ubicacionesPorId))
             ->values();
@@ -51,6 +53,7 @@ class ActivoController extends Controller
                     'marca_nombre'     => $m->marca->nombre,
                     'categoria_nombre' => $m->categoriaActivo?->nombre ?? null,
                     'id_categoria'     => $m->id_categoria,
+                    'requiere_ficha'   => (bool) ($m->categoriaActivo?->requiere_ficha_tecnica),
                 ]),
             'condiciones' => EstadoActivo::where('tipo', 'CONDICION')
                 ->where('estado', 'ACTIVO')
@@ -85,7 +88,7 @@ class ActivoController extends Controller
 
     public function edit(int $id)
     {
-        $activo = Activo::findOrFail($id);
+        $activo = Activo::with('activoTecnico')->findOrFail($id);
 
         [
             'modelos' => $modelos,
@@ -116,7 +119,7 @@ class ActivoController extends Controller
             'observaciones'       => 'nullable|string',
             'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
             'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
-        ], [
+        ] + $this->reglasTecnicas(), [
             'id_modelo.required'           => 'Debes seleccionar un modelo.',
             'id_condicion_actual.required' => 'La condición es obligatoria.',
             'codigo_interno.required'      => 'El código interno es obligatorio.',
@@ -135,7 +138,7 @@ class ActivoController extends Controller
         // queda EN_USO; si no, EN_ALMACEN (listo para asignar luego).
         $situacionInicial = $request->id_responsable_actual ? 'EN_USO' : 'EN_ALMACEN';
 
-        Activo::create([
+        $activo = Activo::create([
             'id_modelo'             => $request->id_modelo,
             'id_categoria'          => $modelo->id_categoria,
             'id_condicion_actual'   => $request->id_condicion_actual,
@@ -158,6 +161,8 @@ class ActivoController extends Controller
             'qr_token'              => (string) Str::uuid(),
             'creado_por'            => Auth::id(),
         ]);
+
+        $this->guardarFichaTecnica($activo, $modelo, $request);
 
         return redirect()->route('activos.index')->with('success', 'Activo registrado correctamente.');
     }
@@ -182,7 +187,7 @@ class ActivoController extends Controller
             'observaciones'       => 'nullable|string',
             'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
             'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
-        ], [
+        ] + $this->reglasTecnicas(), [
             'id_modelo.required'           => 'Debes seleccionar un modelo.',
             'id_condicion_actual.required' => 'La condición es obligatoria.',
             'codigo_interno.required'      => 'El código interno es obligatorio.',
@@ -226,6 +231,8 @@ class ActivoController extends Controller
             'actualizado_por'       => Auth::id(),
         ]);
 
+        $this->guardarFichaTecnica($activo, $modelo, $request);
+
         return redirect()->route('activos.index')->with('success', 'Activo actualizado correctamente.');
     }
 
@@ -255,6 +262,63 @@ class ActivoController extends Controller
                 $fail('Debes seleccionar el último nivel de la ubicación (un ambiente final, sin sub-ubicaciones).');
             }
         };
+    }
+
+    // ──────────────────────────────────────────────────────────────────
+    //  Ficha técnica TI (activo_tecnico)
+    // ──────────────────────────────────────────────────────────────────
+
+    /** Columnas de la ficha técnica, capturadas en el form con prefijo tec_. */
+    private const CAMPOS_TECNICOS = [
+        'procesador', 'memoria_ram', 'almacenamiento', 'tipo_almacenamiento',
+        'sistema_operativo', 'direccion_mac', 'direccion_ip', 'nombre_equipo', 'dominio',
+        'licencia_office', 'antivirus', 'accesorios', 'observaciones_tecnicas', 'estado_operativo',
+    ];
+
+    /** Reglas de validación de la ficha técnica (todas opcionales). */
+    private function reglasTecnicas(): array
+    {
+        return [
+            'tec_procesador'             => 'nullable|string|max:150',
+            'tec_memoria_ram'            => 'nullable|string|max:60',
+            'tec_almacenamiento'         => 'nullable|string|max:100',
+            'tec_tipo_almacenamiento'    => 'nullable|in:HDD,SSD,NVME,EMMC,OTRO',
+            'tec_sistema_operativo'      => 'nullable|string|max:100',
+            'tec_direccion_mac'          => 'nullable|string|max:60',
+            'tec_direccion_ip'           => 'nullable|string|max:60',
+            'tec_nombre_equipo'          => 'nullable|string|max:100',
+            'tec_dominio'                => 'nullable|string|max:100',
+            'tec_licencia_office'        => 'nullable|string|max:100',
+            'tec_antivirus'              => 'nullable|string|max:100',
+            'tec_accesorios'             => 'nullable|string|max:255',
+            'tec_observaciones_tecnicas' => 'nullable|string|max:1000',
+            'tec_estado_operativo'       => 'nullable|in:OPERATIVO,INOPERATIVO,EN_REVISION,EN_MANTENIMIENTO,PENDIENTE_BAJA,DADO_DE_BAJA',
+        ];
+    }
+
+    /**
+     * Crea/actualiza la ficha técnica si la categoría del modelo la requiere; si
+     * la categoría NO la requiere (p. ej. cambió a una no tecnológica), elimina
+     * la ficha existente para mantener coherencia.
+     */
+    private function guardarFichaTecnica(Activo $activo, Modelo $modelo, Request $request): void
+    {
+        $requiere = (bool) CategoriaActivo::where('id_categoria', $modelo->id_categoria)
+            ->value('requiere_ficha_tecnica');
+
+        if (! $requiere) {
+            ActivoTecnico::where('id_activo', $activo->id_activo)->delete();
+            return;
+        }
+
+        $datos = [];
+        foreach (self::CAMPOS_TECNICOS as $campo) {
+            $valor = $request->input("tec_{$campo}");
+            $datos[$campo] = is_string($valor) && trim($valor) !== '' ? trim($valor) : null;
+        }
+        $datos['estado_operativo'] = $datos['estado_operativo'] ?: 'OPERATIVO';
+
+        ActivoTecnico::updateOrCreate(['id_activo' => $activo->id_activo], $datos);
     }
 
     /**
@@ -367,6 +431,23 @@ class ActivoController extends Controller
             'ubicacion_descripcion' => $ubic?->descripcion,
             'ubicacion_ruta'        => $rutaUbicacion,
             'responsable_nombre'    => $nombreResponsable,
+            'requiere_ficha'        => (bool) ($a->modelo?->categoriaActivo?->requiere_ficha_tecnica),
+            'tecnico'               => ($t = $a->activoTecnico) ? [
+                'procesador'             => $t->procesador,
+                'memoria_ram'            => $t->memoria_ram,
+                'almacenamiento'         => $t->almacenamiento,
+                'tipo_almacenamiento'    => $t->tipo_almacenamiento,
+                'sistema_operativo'      => $t->sistema_operativo,
+                'direccion_mac'          => $t->direccion_mac,
+                'direccion_ip'           => $t->direccion_ip,
+                'nombre_equipo'          => $t->nombre_equipo,
+                'dominio'                => $t->dominio,
+                'licencia_office'        => $t->licencia_office,
+                'antivirus'              => $t->antivirus,
+                'accesorios'             => $t->accesorios,
+                'observaciones_tecnicas' => $t->observaciones_tecnicas,
+                'estado_operativo'       => $t->estado_operativo,
+            ] : null,
         ];
     }
 }
