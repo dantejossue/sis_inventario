@@ -16,7 +16,19 @@
       "Bash(grep -v '^$')",
       "Bash(grep -vE 'Deprecated|^\\\\s*$')",
       "Bash(git reset *)",
-      "Bash(git commit -q -m ' *)"
+      "Bash(git commit -q -m ' *)",
+      "Bash(npx playwright *)",
+      "Bash(curl -s -o /dev/null -w \"http_code=%{http_code}\\\\n\" -m 10 http://sis_inventario.test/)",
+      "Bash(NODE_PATH=\"$SC/pw/node_modules\" node *)",
+      "Read(//c/Users/dante/AppData/Local/Temp/claude/C--laragon-www-sis-inventario/084530c2-134f-4449-b494-3e9e90f91ae0/scratchpad/pw/**)",
+      "Bash(npm install *)",
+      "Bash(node -e \"const{chromium}=require\\('playwright'\\);chromium.launch\\(\\).then\\(async b=>{console.log\\('launch OK'\\);await b.close\\(\\)}\\).catch\\(e=>console.log\\('ERR',e.message.split\\(String.fromCharCode\\(10\\)\\)[0]\\)\\)\")",
+      "Bash(node -e \"console.log\\('core ver:',require\\('playwright-core/package.json'\\).version\\)\")",
+      "Bash(NODE_PATH=/c/Users/dante/AppData/Local/Temp/claude/C--laragon-www-sis-inventario/084530c2-134f-4449-b494-3e9e90f91ae0/scratchpad/pw/node_modules node -e ' *)",
+      "Bash(composer require *)",
+      "Bash(grep -nE \"^use App\\\\\\\\\\\\\\\\Http\\\\\\\\\\\\\\\\Controllers\" routes/web.php)",
+      "Bash(grep *)",
+      "Bash(NODE_PATH=__TRACKED_VAR__/pw/node_modules node __TRACKED_VAR__/verify-import.js)"
     ]
   }
 }

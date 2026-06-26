@@ -104,6 +104,19 @@
       ]
     },
     {
+      "url": "importaciones",
+      "name": "Importación SIGA",
+      "icon": "menu-icon icon-base bx bx-import",
+      "slug": [
+        "importaciones.index",
+        "importaciones.show"
+      ],
+      "roles": [
+        "ADMINISTRADOR",
+        "PATRIMONIO"
+      ]
+    },
+    {
       "url": "mantenimientos",
       "name": "Mantenimientos",
       "icon": "menu-icon icon-base bx bx-wrench",

@@ -55,6 +55,7 @@ use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ActivoController;
 use App\Http\Controllers\MovimientoController;
+use App\Http\Controllers\ImportacionSigaController;
 
 // Main Page Route
 // ==========================================
@@ -154,6 +155,12 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     // Gestión de Movimientos (asignar, transferir, prestar, devolver, reubicar, baja)
     Route::get('/movimientos', [MovimientoController::class, 'index'])->name('movimientos.index');
     Route::post('/movimientos', [MovimientoController::class, 'store'])->name('movimientos.store');
+
+    // Importación SIGA (padrón patrimonial → base operativa)
+    Route::get('/importaciones', [ImportacionSigaController::class, 'index'])->name('importaciones.index');
+    Route::get('/importaciones/plantilla', [ImportacionSigaController::class, 'plantilla'])->name('importaciones.plantilla');
+    Route::post('/importaciones', [ImportacionSigaController::class, 'store'])->name('importaciones.store');
+    Route::get('/importaciones/{id}', [ImportacionSigaController::class, 'show'])->name('importaciones.show');
   });
 });
 
