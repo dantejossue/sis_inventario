@@ -7,8 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Detalle de un movimiento: qué activos abarca y su condición de
-     * salida/entrada. Un par (movimiento, activo) es único.
+     * Detalle de un movimiento: por cada activo, su origen y destino (responsable
+     * y ubicación) y la condición física al salir/entrar. Un par (movimiento,
+     * activo) es único (obs #2). Condición salida/entrada conservada (obs #4).
      */
     public function up(): void
     {
@@ -17,14 +18,26 @@ return new class extends Migration
 
             $table->integer('id_movimiento');
             $table->integer('id_activo');
+
+            $table->integer('id_responsable_origen')->nullable();
+            $table->integer('id_responsable_destino')->nullable();
+            $table->integer('id_ubicacion_origen')->nullable();
+            $table->integer('id_ubicacion_destino')->nullable();
+
             $table->unsignedInteger('condicion_salida_id')->nullable();
             $table->unsignedInteger('condicion_entrada_id')->nullable();
+
+            $table->enum('estado_revision', ['PENDIENTE', 'CONFORME', 'OBSERVADO'])->default('PENDIENTE');
             $table->string('observaciones', 255)->nullable();
 
             $table->dateTime('creado_en')->useCurrent();
 
             $table->foreign('id_movimiento')->references('id_movimiento')->on('movimientos')->cascadeOnDelete();
             $table->foreign('id_activo')->references('id_activo')->on('activo')->cascadeOnDelete();
+            $table->foreign('id_responsable_origen')->references('id_colaborador')->on('colaboradores')->nullOnDelete();
+            $table->foreign('id_responsable_destino')->references('id_colaborador')->on('colaboradores')->nullOnDelete();
+            $table->foreign('id_ubicacion_origen')->references('id_ubicacion')->on('ubicaciones')->nullOnDelete();
+            $table->foreign('id_ubicacion_destino')->references('id_ubicacion')->on('ubicaciones')->nullOnDelete();
             $table->foreign('condicion_salida_id')->references('id_estado_activo')->on('estado_activo')->nullOnDelete();
             $table->foreign('condicion_entrada_id')->references('id_estado_activo')->on('estado_activo')->nullOnDelete();
 

@@ -11,17 +11,26 @@ return new class extends Migration
         Schema::create('activo', function (Blueprint $table) {
             $table->integer('id_activo')->autoIncrement();
 
-            $table->unsignedInteger('id_modelo');
+            // ── Relaciones (todas SET NULL: el activo sobrevive al catálogo) ──
+            $table->unsignedInteger('id_modelo')->nullable();
             $table->unsignedInteger('id_categoria')->nullable();
-            $table->unsignedInteger('id_ubicacion_actual')->nullable();
+            $table->integer('id_ubicacion_actual')->nullable();
             $table->integer('id_responsable_actual')->nullable();
-            $table->unsignedInteger('id_condicion_actual');
-            $table->unsignedInteger('id_situacion_actual');
+            $table->unsignedInteger('id_condicion_actual')->nullable();
+            $table->unsignedInteger('id_situacion_actual')->nullable();
 
-            $table->string('codigo_interno', 50)->unique('uk_activo_codigo_interno');
+            // ── Identificación ────────────────────────────────────────
+            $table->string('codigo_interno', 50)->nullable()->unique('uk_activo_codigo_interno');
             $table->string('codigo_patrimonial', 100)->unique('uk_activo_codigo_patrimonial');
-            $table->string('numero_serie', 150)->nullable()->unique('uk_activo_numero_serie');
+            $table->string('codigo_siga', 60)->nullable();
+            $table->string('numero_pecosa', 60)->nullable();
+            $table->string('numero_orden_compra', 60)->nullable();
+            $table->date('fecha_alta_siga')->nullable();
+            $table->string('numero_serie', 150)->nullable(); // index, ya no único
+
+            // ── Descriptivos ──────────────────────────────────────────
             $table->string('descripcion', 255)->nullable();
+            $table->string('imagen', 255)->nullable();
             $table->date('fecha_adquisicion')->nullable();
             $table->decimal('valor_compra', 12, 2)->nullable();
             $table->string('proveedor', 150)->nullable();
@@ -30,21 +39,41 @@ return new class extends Migration
             $table->text('observaciones')->nullable();
             $table->string('qr_token', 255)->nullable()->unique();
 
-            $table->unsignedInteger('creado_por')->nullable();
-            $table->unsignedInteger('actualizado_por')->nullable();
+            // ── Origen y validación ───────────────────────────────────
+            $table->enum('origen_registro', ['IMPORTADO_SIGA', 'EXCEL', 'MANUAL', 'REGULARIZACION'])->default('MANUAL');
+            $table->enum('estado_validacion', ['VALIDADO', 'PENDIENTE_VALIDACION', 'OBSERVADO'])->default('VALIDADO');
+            // Flag "pendiente de actualización en SIGA" a nivel de activo (obs #5).
+            $table->enum('estado_siga', ['NO_APLICA', 'PENDIENTE_ACTUALIZACION', 'REGISTRADO', 'OBSERVADO'])->default('NO_APLICA');
+            $table->integer('id_importacion')->nullable();
+
+            // ── Auditoría ─────────────────────────────────────────────
+            $table->integer('creado_por')->nullable();
+            $table->integer('actualizado_por')->nullable();
             $table->dateTime('creado_en')->useCurrent();
             $table->dateTime('actualizado_en')->nullable()->useCurrentOnUpdate();
+            $table->softDeletes('deleted_at'); // Baja lógica (F1)
 
-            $table->foreign('id_modelo')->references('id_modelo')->on('modelo');
+            // ── Claves foráneas ───────────────────────────────────────
+            $table->foreign('id_modelo')->references('id_modelo')->on('modelo')->nullOnDelete();
             $table->foreign('id_categoria')->references('id_categoria')->on('categoria_activo')->nullOnDelete();
-            $table->foreign('id_condicion_actual')->references('id_estado_activo')->on('estado_activo');
-            $table->foreign('id_situacion_actual')->references('id_estado_activo')->on('estado_activo');
+            $table->foreign('id_ubicacion_actual', 'fk_activo_ubicacion')->references('id_ubicacion')->on('ubicaciones')->nullOnDelete();
             $table->foreign('id_responsable_actual')->references('id_colaborador')->on('colaboradores')->nullOnDelete();
+            $table->foreign('id_condicion_actual')->references('id_estado_activo')->on('estado_activo')->nullOnDelete();
+            $table->foreign('id_situacion_actual')->references('id_estado_activo')->on('estado_activo')->nullOnDelete();
+            $table->foreign('id_importacion')->references('id_importacion')->on('importaciones_siga')->nullOnDelete();
+            $table->foreign('creado_por')->references('id_usuario')->on('usuarios')->nullOnDelete();
+            $table->foreign('actualizado_por')->references('id_usuario')->on('usuarios')->nullOnDelete();
 
+            // ── Índices ───────────────────────────────────────────────
             $table->index('id_modelo');
+            $table->index('id_categoria');
             $table->index('id_condicion_actual');
             $table->index('id_situacion_actual');
             $table->index('id_responsable_actual');
+            $table->index('numero_serie');
+            $table->index('codigo_siga');
+            $table->index('estado_validacion');
+            $table->index('estado_siga');
         });
     }
 

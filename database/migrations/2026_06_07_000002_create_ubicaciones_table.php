@@ -30,12 +30,14 @@ return new class extends Migration
 
             $table->string('nombre', 150);
             $table->enum('tipo', [
+                'SEDE',
+                'EDIFICIO',
+                'PABELLON',
                 'PISO',
                 'OFICINA',
-                'ALMACEN',
-                'PABELLON',
                 'AULA',
                 'LABORATORIO',
+                'ALMACEN',
                 'OTRO',
             ])->default('OFICINA');
 

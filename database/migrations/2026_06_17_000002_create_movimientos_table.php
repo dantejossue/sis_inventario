@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Cabecera de movimientos de activos. Un movimiento agrupa uno o varios
-     * activos (ver detalle_movimiento_activo) y aplica un efecto según su tipo:
-     * ASIGNAR, TRANSFERENCIA, PRESTAMO, DEVOLUCION, REUBICACION o BAJA.
+     * Cabecera de movimientos. Agrupa uno o varios activos (ver
+     * detalle_movimiento_activo). El origen/destino vive POR ACTIVO en el
+     * detalle, no en la cabecera. El folio legible es codigo_movimiento (obs #3).
      */
     public function up(): void
     {
@@ -17,34 +17,44 @@ return new class extends Migration
             $table->integer('id_movimiento')->autoIncrement();
 
             $table->string('codigo_movimiento', 50)->unique('uk_movimiento_codigo');
-            $table->enum('tipo', ['ASIGNAR', 'TRANSFERENCIA', 'PRESTAMO', 'DEVOLUCION', 'REUBICACION', 'BAJA']);
-            $table->enum('estado', ['ABIERTO', 'CERRADO'])->default('CERRADO');
 
-            $table->integer('id_colaborador_origen')->nullable();
-            $table->integer('id_colaborador_destino')->nullable();
-            $table->integer('id_ubicacion_origen')->nullable();
-            $table->integer('id_ubicacion_destino')->nullable();
-
-            $table->dateTime('fecha_movimiento')->useCurrent();
-            $table->date('fecha_devolucion_programada')->nullable();
-            $table->dateTime('fecha_cierre')->nullable();
+            $table->enum('tipo', [
+                'ASIGNACION', 'TRANSFERENCIA', 'ORDEN_SALIDA', 'REINGRESO',
+                'DESPLAZAMIENTO_INTERNO', 'PRESTAMO_TEMPORAL', 'DEVOLUCION_INTERNA', 'REGULARIZACION',
+            ]);
 
             $table->text('motivo')->nullable();
-            $table->text('observaciones')->nullable();
+
+            $table->enum('estado', [
+                'REGISTRADO', 'PENDIENTE_TRAMITE', 'EN_TRAMITE',
+                'AUTORIZADO', 'EJECUTADO', 'RECHAZADO', 'CANCELADO',
+            ])->default('REGISTRADO');
 
             $table->integer('registrado_por')->nullable();
+            $table->integer('validado_oti_por')->nullable();
+            $table->integer('validado_patrimonio_por')->nullable();
+
+            $table->dateTime('fecha_registro')->useCurrent();
+            $table->dateTime('fecha_movimiento')->nullable();
+
+            $table->boolean('requiere_tramite')->default(false);
+
+            $table->enum('estado_siga', ['NO_APLICA', 'PENDIENTE_ACTUALIZACION', 'REGISTRADO', 'OBSERVADO'])->default('NO_APLICA');
+            $table->dateTime('fecha_registro_siga')->nullable();
+            $table->string('observacion_siga', 255)->nullable();
+
+            $table->text('observaciones')->nullable();
 
             $table->dateTime('creado_en')->useCurrent();
             $table->dateTime('actualizado_en')->nullable()->useCurrentOnUpdate();
 
-            $table->foreign('id_colaborador_origen')->references('id_colaborador')->on('colaboradores')->nullOnDelete();
-            $table->foreign('id_colaborador_destino')->references('id_colaborador')->on('colaboradores')->nullOnDelete();
-            $table->foreign('id_ubicacion_origen')->references('id_ubicacion')->on('ubicaciones')->nullOnDelete();
-            $table->foreign('id_ubicacion_destino')->references('id_ubicacion')->on('ubicaciones')->nullOnDelete();
             $table->foreign('registrado_por')->references('id_usuario')->on('usuarios')->nullOnDelete();
+            $table->foreign('validado_oti_por')->references('id_usuario')->on('usuarios')->nullOnDelete();
+            $table->foreign('validado_patrimonio_por')->references('id_usuario')->on('usuarios')->nullOnDelete();
 
             $table->index('tipo');
             $table->index('estado');
+            $table->index('estado_siga');
             $table->index('fecha_movimiento');
         });
     }
