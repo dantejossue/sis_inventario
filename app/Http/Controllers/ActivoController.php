@@ -6,11 +6,13 @@ use App\Models\Activo;
 use App\Models\ActivoTecnico;
 use App\Models\CategoriaActivo;
 use App\Models\Colaborador;
+use App\Models\DetalleMovimientoActivo;
 use App\Models\EstadoActivo;
 use App\Models\Modelo;
 use App\Models\Ubicacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -99,6 +101,126 @@ class ActivoController extends Controller
         ] = $this->catalogos();
 
         return view('content.activos.edit', compact('activo', 'modelos', 'condiciones', 'situaciones', 'colaboradores', 'ubicaciones'));
+    }
+
+    /**
+     * Ficha completa del activo: datos generales, técnicos, SIGA,
+     * movimientos, documentos y trazabilidad derivada.
+     */
+    public function show(int $id)
+    {
+        $activo = Activo::with([
+            'modelo.marca', 'modelo.categoriaActivo', 'categoria',
+            'condicion', 'situacion',
+            'responsable.sedeDependencia.dependencia', 'responsable.sedeDependencia.sede',
+            'ubicacion.sede', 'activoTecnico',
+            'patrimonialSiga', 'importacionSiga',
+            'creadoPor.colaborador', 'actualizadoPor.colaborador',
+            'documentos.subidoPor.colaborador',
+        ])->findOrFail($id);
+
+        // Garantiza que el activo tenga token QR para la etiqueta de la ficha.
+        $activo->ensureQrToken();
+
+        $ubicacionesPorId = Ubicacion::get(['id_ubicacion', 'id_ubicacion_padre', 'nombre'])
+            ->keyBy('id_ubicacion');
+        $rutaUbicacion = static::rutaUbicacion($activo->ubicacion, $ubicacionesPorId);
+
+        // Historial de movimientos del activo (más reciente primero).
+        $movimientos = DetalleMovimientoActivo::with([
+            'movimiento.registradoPor.colaborador',
+            'responsableOrigen', 'responsableDestino',
+            'ubicacionOrigen', 'ubicacionDestino',
+        ])
+            ->where('id_activo', $id)
+            ->get()
+            ->sortByDesc(fn($d) => $d->movimiento?->fecha_registro)
+            ->values();
+
+        // Mantenimientos: aún sin módulo propio, solo conteo para la ficha.
+        $totalMantenimientos = DB::table('mantenimientos')->where('id_activo', $id)->count();
+
+        $eventos = $this->lineaDeTiempo($activo, $movimientos);
+
+        return view('content.activos.ver', compact(
+            'activo', 'rutaUbicacion', 'movimientos', 'totalMantenimientos', 'eventos'
+        ));
+    }
+
+    /**
+     * Trazabilidad derivada de los hechos registrados del activo
+     * (registro/importación, movimientos, documentos, última edición),
+     * ordenada del más reciente al más antiguo.
+     */
+    private function lineaDeTiempo(Activo $activo, $movimientos): \Illuminate\Support\Collection
+    {
+        $nombreUsuario = fn($u) => $u?->colaborador?->nombre_completo ?: ($u?->nombre_usuario ?? 'Sistema');
+        $eventos = collect();
+
+        $origenes = [
+            'IMPORTADO_SIGA' => 'Activo importado desde el padrón SIGA',
+            'EXCEL'          => 'Activo cargado desde Excel',
+            'MANUAL'         => 'Activo registrado manualmente',
+            'REGULARIZACION' => 'Activo registrado por regularización',
+        ];
+        $detalleRegistro = 'Registrado por ' . $nombreUsuario($activo->creadoPor);
+        if ($activo->origen_registro === 'IMPORTADO_SIGA' && $activo->importacionSiga) {
+            $detalleRegistro .= ' · Archivo: ' . $activo->importacionSiga->nombre_archivo;
+        }
+        $eventos->push([
+            'fecha'   => $activo->creado_en,
+            'titulo'  => $origenes[$activo->origen_registro] ?? 'Activo registrado',
+            'detalle' => $detalleRegistro,
+            'icono'   => $activo->origen_registro === 'IMPORTADO_SIGA' ? 'bx-upload' : 'bx-plus-circle',
+            'color'   => 'primary',
+        ]);
+
+        foreach ($movimientos as $det) {
+            $mov = $det->movimiento;
+            if (! $mov) {
+                continue;
+            }
+            $origen  = $det->responsableOrigen?->nombre_completo ?: ($det->ubicacionOrigen?->nombre ?: 'Almacén');
+            $destino = $det->responsableDestino?->nombre_completo ?: ($det->ubicacionDestino?->nombre ?: '—');
+            $eventos->push([
+                'fecha'   => $mov->fecha_registro,
+                'titulo'  => 'Movimiento ' . ($mov->codigo_movimiento ?: '#' . $mov->id_movimiento)
+                    . ' · ' . ucfirst(strtolower(str_replace('_', ' ', $mov->tipo))),
+                'detalle' => "De {$origen} hacia {$destino}. Registrado por " . $nombreUsuario($mov->registradoPor),
+                'icono'   => 'bx-transfer-alt',
+                'color'   => 'warning',
+            ]);
+        }
+
+        foreach ($activo->documentos as $doc) {
+            $eventos->push([
+                'fecha'   => $doc->creado_en,
+                'titulo'  => 'Documento adjuntado: ' . $doc->tipo_documento,
+                'detalle' => ($doc->nombre_original ?: basename((string) $doc->archivo))
+                    . ' · Subido por ' . $nombreUsuario($doc->subidoPor),
+                'icono'   => 'bx-file',
+                'color'   => 'info',
+            ]);
+        }
+
+        if ($activo->actualizado_en && $activo->actualizado_en != $activo->creado_en) {
+            $eventos->push([
+                'fecha'   => $activo->actualizado_en,
+                'titulo'  => 'Datos del activo actualizados',
+                'detalle' => 'Última modificación por ' . $nombreUsuario($activo->actualizadoPor),
+                'icono'   => 'bx-edit',
+                'color'   => 'success',
+            ]);
+        }
+
+        return $eventos
+            ->filter(fn($e) => $e['fecha'])
+            ->map(function ($e) {
+                $e['fecha'] = $e['fecha'] instanceof \Carbon\Carbon ? $e['fecha'] : \Carbon\Carbon::parse($e['fecha']);
+                return $e;
+            })
+            ->sortByDesc('fecha')
+            ->values();
     }
 
     public function store(Request $request)
@@ -270,9 +392,20 @@ class ActivoController extends Controller
 
     /** Columnas de la ficha técnica, capturadas en el form con prefijo tec_. */
     private const CAMPOS_TECNICOS = [
-        'procesador', 'memoria_ram', 'almacenamiento', 'tipo_almacenamiento',
-        'sistema_operativo', 'direccion_mac', 'direccion_ip', 'nombre_equipo', 'dominio',
-        'licencia_office', 'antivirus', 'accesorios', 'observaciones_tecnicas', 'estado_operativo',
+        'procesador',
+        'memoria_ram',
+        'almacenamiento',
+        'tipo_almacenamiento',
+        'sistema_operativo',
+        'direccion_mac',
+        'direccion_ip',
+        'nombre_equipo',
+        'dominio',
+        'licencia_office',
+        'antivirus',
+        'accesorios',
+        'observaciones_tecnicas',
+        'estado_operativo',
     ];
 
     /** Reglas de validación de la ficha técnica (todas opcionales). */
@@ -371,6 +504,31 @@ class ActivoController extends Controller
         return view('content.activos.etiquetas', compact('etiquetas'));
     }
 
+    /**
+     * Ruta jerárquica completa de la ubicación física (Edificio › Piso › Oficina…),
+     * reconstruida subiendo por la cadena de padres a partir del mapa precargado.
+     */
+    public static function rutaUbicacion(?Ubicacion $ubic, $ubicacionesPorId = null): ?string
+    {
+        if (! $ubic) {
+            return null;
+        }
+
+        $cursor = $ubicacionesPorId?->get($ubic->id_ubicacion);
+        if (! $cursor) {
+            return $ubic->nombre;
+        }
+
+        $cadena = [];
+        $guard  = 0;
+        while ($cursor && $guard++ < 20) {
+            array_unshift($cadena, $cursor->nombre);
+            $cursor = $cursor->id_ubicacion_padre ? $ubicacionesPorId->get($cursor->id_ubicacion_padre) : null;
+        }
+
+        return implode(' › ', $cadena);
+    }
+
     public static function formatActivo(Activo $a, $ubicacionesPorId = null): array
     {
         $responsable = $a->responsable;
@@ -378,24 +536,8 @@ class ActivoController extends Controller
             ? trim("{$responsable->per_apepat} " . ($responsable->per_apemat ? "{$responsable->per_apemat}, " : ', ') . "{$responsable->per_nombre}")
             : null;
 
-        // Ruta jerárquica completa de la ubicación física (Edificio › Piso › Oficina…),
-        // reconstruida subiendo por la cadena de padres a partir del mapa precargado.
         $ubic = $a->ubicacion;
-        $rutaUbicacion = null;
-        if ($ubic) {
-            $cursor = $ubicacionesPorId?->get($ubic->id_ubicacion);
-            if ($cursor) {
-                $cadena = [];
-                $guard  = 0;
-                while ($cursor && $guard++ < 20) {
-                    array_unshift($cadena, $cursor->nombre);
-                    $cursor = $cursor->id_ubicacion_padre ? $ubicacionesPorId->get($cursor->id_ubicacion_padre) : null;
-                }
-                $rutaUbicacion = implode(' › ', $cadena);
-            } else {
-                $rutaUbicacion = $ubic->nombre;
-            }
-        }
+        $rutaUbicacion = static::rutaUbicacion($ubic, $ubicacionesPorId);
 
         return [
             'id_activo'             => $a->id_activo,

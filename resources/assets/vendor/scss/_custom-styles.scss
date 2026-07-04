@@ -3,3 +3,351 @@
 // .card {
 //    background-color: #fd0000;
 //  }
+body {
+  font-family: 'Nunito', sans-serif !important;
+  font-weight: 600;
+}
+table.dataTable thead th,
+table.dataTable thead td {
+  font-size: 0.75rem !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.04em !important;
+  color: #566a7f !important;
+  background-color: #f8f8fb !important;
+  font-weight: 700 !important;
+}
+
+// ficha activos
+.asset-main-card {
+  border: 0;
+  background: radial-gradient(circle at top right, rgba(var(--bs-primary-rgb), 0.18), transparent 40%), #fff;
+}
+
+.asset-code-box {
+  border: 1px dashed #d9dee3;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #f8f8ff;
+}
+
+.asset-code-box strong {
+  font-size: 1.15rem;
+  color: #566a7f;
+}
+
+.asset-mini-stat {
+  border-radius: 1rem;
+  background: #f5f5f9;
+  padding: 0.75rem 0.5rem;
+}
+
+.asset-mini-stat small {
+  color: #697a8d;
+}
+
+.info-box {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  height: 100%;
+  background: #fff;
+}
+
+.section-card {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  background: #fff;
+  height: 100%;
+}
+
+.section-card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #eceef1;
+}
+
+.section-card-body {
+  padding: 1.25rem;
+}
+
+.data-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.data-list-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid #f0f2f4;
+}
+
+.data-list-item:last-child {
+  border-bottom: 0;
+}
+
+.data-list-item span:first-child {
+  color: #697a8d;
+}
+
+.data-list-item strong {
+  color: #566a7f;
+  text-align: right;
+}
+.tech-detail-card {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  height: 100%;
+  background: #fff;
+}
+
+.tech-detail-card i {
+  font-size: 1.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.tech-detail-card span,
+.tech-detail-card strong {
+  display: block;
+}
+
+.tech-detail-card span {
+  color: #697a8d;
+  font-size: 0.8rem;
+}
+
+.technical-status-circle {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff 58%, transparent 59%), conic-gradient(#71dd37 0 96%, #eceef1 96% 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.technical-status-circle span {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #566a7f;
+}
+
+.technical-status-circle small {
+  color: #697a8d;
+}
+
+.comparison-box {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #fafafa;
+}
+
+.comparison-label {
+  display: block;
+  color: #697a8d;
+  font-size: 0.8rem;
+  margin-bottom: 0.4rem;
+}
+
+.comparison-box strong,
+.comparison-box small {
+  display: block;
+}
+
+.ocs-status-card {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: radial-gradient(circle at top right, rgba(3, 195, 236, 0.16), transparent 40%), #fff;
+  height: 100%;
+  text-align: center;
+}
+
+.ocs-pulse-icon {
+  width: 86px;
+  height: 86px;
+  border-radius: 1.5rem;
+  background: rgba(3, 195, 236, 0.14);
+  color: #03c3ec;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.75rem;
+  margin: 0 auto 1rem;
+}
+
+.ocs-data-item {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  height: 100%;
+}
+.document-card {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  height: 100%;
+}
+
+.document-icon {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.document-content {
+  flex: 1;
+}
+
+.timeline-wrapper {
+  position: relative;
+  padding-left: 0.5rem;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 1rem;
+  position: relative;
+  padding-bottom: 1.75rem;
+}
+
+.timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 42px;
+  bottom: 0;
+  width: 2px;
+  background: #eceef1;
+}
+
+.timeline-item:last-child::before {
+  display: none;
+}
+
+.timeline-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: inherit;
+  z-index: 1;
+}
+
+.timeline-content {
+  background: #fff;
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  flex: 1;
+}
+
+/* Responsive ficha activo */
+@media (max-width: 768px) {
+  .data-list-item {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .data-list-item strong {
+    text-align: left;
+  }
+
+  .sync-status-card {
+    align-items: flex-start;
+  }
+}
+
+// REGISTRAR ACTIVO
+.register-asset-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.85rem;
+}
+
+.register-asset-step {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.register-asset-step.active {
+  background: rgba(105, 108, 255, 0.12);
+  border-color: rgba(105, 108, 255, 0.35);
+}
+
+.register-asset-step-number {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  border-radius: 50%;
+  background: #eceef1;
+  color: #697a8d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.register-asset-step.active .register-asset-step-number {
+  background: #696cff;
+  color: #fff;
+}
+
+.register-asset-step strong,
+.register-asset-step small {
+  display: block;
+}
+
+.register-asset-step small {
+  color: #697a8d;
+}
+
+.register-asset-sticky {
+  position: sticky;
+  top: 90px;
+}
+
+/* Responsive registrar activo */
+@media (max-width: 1200px) {
+  .register-asset-steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .register-asset-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .register-asset-sticky {
+    position: static;
+  }
+
+  .register-asset-document-zone,
+  .register-asset-confirm-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

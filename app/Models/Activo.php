@@ -77,4 +77,39 @@ class Activo extends Model
     {
         return $this->belongsTo(CategoriaActivo::class, 'id_categoria', 'id_categoria');
     }
+
+    /** Datos patrimoniales oficiales importados desde SIGA (1-a-1). */
+    public function patrimonialSiga()
+    {
+        return $this->hasOne(ActivoPatrimonialSiga::class, 'id_activo', 'id_activo');
+    }
+
+    /** Lote de importación SIGA del que proviene el activo, si aplica. */
+    public function importacionSiga()
+    {
+        return $this->belongsTo(ImportacionSiga::class, 'id_importacion', 'id_importacion');
+    }
+
+    /** Participaciones del activo en movimientos (detalle por activo). */
+    public function detallesMovimiento()
+    {
+        return $this->hasMany(DetalleMovimientoActivo::class, 'id_activo', 'id_activo');
+    }
+
+    /** Documentos adjuntos asociados al activo (actas, guías, fotos…). */
+    public function documentos()
+    {
+        return $this->hasMany(DocumentoAdjunto::class, 'entidad_id', 'id_activo')
+            ->where('entidad_tipo', 'ACTIVO');
+    }
+
+    public function creadoPor()
+    {
+        return $this->belongsTo(User::class, 'creado_por', 'id_usuario');
+    }
+
+    public function actualizadoPor()
+    {
+        return $this->belongsTo(User::class, 'actualizado_por', 'id_usuario');
+    }
 }

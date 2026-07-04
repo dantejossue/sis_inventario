@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('dependencias', function (Blueprint $table) {
             $table->integer('id_dependencia')->autoIncrement();
             $table->string('nombre_dependencia', 150)->unique('uk_nombre_dependencia');
-            $table->string('descripcion', 255);
+            $table->string('descripcion', 255)->nullable();
             $table->enum('estado', ['ACTIVO', 'INACTIVO'])->default('ACTIVO');
             $table->dateTime('creado_en')->useCurrent();
             $table->dateTime('actualizado_en')->nullable()->useCurrentOnUpdate();

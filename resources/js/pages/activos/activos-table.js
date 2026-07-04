@@ -5,10 +5,10 @@ $(function () {
   window.activosSeleccionados = new Set();
 
   const condicionBadge = {
-    BUENO: 'bg-success',
-    REGULAR: 'bg-warning',
-    MALO: 'bg-danger',
-    OBSOLETO: 'bg-secondary'
+    BUENO: 'bg-label-success',
+    REGULAR: 'bg-label-warning',
+    MALO: 'bg-label-danger',
+    OBSOLETO: 'bg-label-secondary'
   };
 
   // Etiqueta (badge suave) de color según la situación del activo
@@ -34,7 +34,8 @@ $(function () {
   window.tablaActivos = $('#miTablaActivos').DataTable({
     ...dtDefaults,
     data: window.activos,
-    order: [[1, 'asc']],
+    // order: [[1, 'asc']],
+    order: [],
     // createdRow: function (row, data) {
     //   const cls = situacionRowClass[data.situacion_nombre];
     //   if (cls) row.classList.add(cls);
@@ -63,19 +64,23 @@ $(function () {
       },
       {
         data: 'sede_nombre',
-        render: d => (d && d !== '—' ? d : '<span class="text-muted">—</span>')
+        render: (d, t, row) =>
+          `<span class="fw-semibold d-block">${d ?? '—'}</span>` +
+          (row.ubicacion_ruta
+            ? `<small class="text-muted fw-light" style="font-size:0.7rem;">${row.ubicacion_ruta}</small>`
+            : '')
       },
-      {
-        data: 'ubicacion_nombre',
-        render: (d, t, row) => {
-          if (!row.id_ubicacion) return '<span class="text-muted">—</span>';
-          return (
-            `<button type="button" class="btn btn-sm btn-label-primary btn-ver-ubicacion" ` +
-            `data-id="${row.id_activo}" data-bs-toggle="tooltip" title="Ver ubicación física completa">` +
-            `<i class="bx bx-search me-1"></i>Ver</button>`
-          );
-        }
-      },
+      // {
+      //   data: 'ubicacion_nombre',
+      //   render: (d, t, row) => {
+      //     if (!row.id_ubicacion) return '<span class="text-muted">—</span>';
+      //     return (
+      //       `<button type="button" class="btn btn-sm btn-label-primary btn-ver-ubicacion" ` +
+      //       `data-id="${row.id_activo}" data-bs-toggle="tooltip" title="Ver ubicación física completa">` +
+      //       `<i class="bx bx-search me-1"></i>Ver</button>`
+      //     );
+      //   }
+      // },
       {
         data: 'responsable_nombre',
         render: d =>
@@ -83,7 +88,7 @@ $(function () {
       },
       {
         data: 'condicion_nombre',
-        render: d => `<span class="badge ${condicionBadge[d] ?? 'bg-secondary'}">${d}</span>`
+        render: d => `<span class="badge fw-bold ${condicionBadge[d] ?? 'bg-secondary'}">${d}</span>`
       },
       {
         data: 'situacion_nombre',
@@ -104,11 +109,15 @@ $(function () {
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li>
-                  <a class="dropdown-item btn-mas-info d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_activo}">
-                    <i class="bx bx-info-circle me-1"></i> <span style="margin-top:3px">Más Info</span> 
+                  <a class="dropdown-item btn-ficha-rapida d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_activo}">
+                    <i class="bx bx-show me-1"></i> <span style="margin-top:3px">Ver ficha rápida</span> 
                   </a>
                 </li>
-                <li><hr class="dropdown-divider"></li>
+                <li>
+                  <a class="dropdown-item btn-mas-info d-flex align-items-center" href="${window.routes.ver.replace('{id}', row.id_activo)}"">
+                    <i class="bx bx-detail me-1"></i> <span style="margin-top:3px">Ficha completa</span> 
+                  </a>
+                </li>
                 <li>
                   <a class="dropdown-item d-flex align-items-center" href="${window.routes.edit.replace('{id}', row.id_activo)}">
                     <i class="bx bx-edit-alt me-1"></i> <span style="margin-top:3px">Editar</span> 
@@ -117,6 +126,11 @@ $(function () {
                 <li>
                   <a class="dropdown-item btn-mover-activo d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_activo}">
                     <i class="bx bx-transfer me-1"></i> <span style="margin-top:3px">Mover</span> 
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item btn-mover-activo d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_activo}">
+                    <i class="bx bx-qr me-1"></i> <span style="margin-top:3px">Ver etiqueta</span> 
                   </a>
                 </li>
                 <li><hr class="dropdown-divider"></li>

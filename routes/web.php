@@ -18,6 +18,7 @@ use App\Http\Controllers\authentications\ForgotPasswordBasic;
 use App\Http\Controllers\cards\CardBasic;
 use App\Http\Controllers\ColaboradorController;
 use App\Http\Controllers\DependenciaController;
+use App\Http\Controllers\DocumentoAdjuntoController;
 use App\Http\Controllers\RolController;
 use App\Http\Controllers\SedeController;
 use App\Http\Controllers\UbicacionController;
@@ -148,9 +149,17 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     Route::get('/activos/qr/{token}', [ActivoController::class, 'qrShow'])->name('activos.qr');
     Route::get('/activos/crear', [ActivoController::class, 'create'])->name('activos.create');
     Route::post('/activos', [ActivoController::class, 'store'])->name('activos.store');
+
     Route::get('/activos/{id}/editar', [ActivoController::class, 'edit'])->name('activos.edit');
     Route::put('/activos/{id}', [ActivoController::class, 'update'])->name('activos.update');
     Route::delete('/activos/{id}', [ActivoController::class, 'destroy'])->name('activos.destroy');
+
+    Route::get('/activos/{id}/ver', [ActivoController::class, 'show'])->name('activos.ver');
+
+    // Documentos adjuntos (transversal: activos, movimientos, mantenimientos…)
+    Route::post('/documentos', [DocumentoAdjuntoController::class, 'store'])->name('documentos.store');
+    Route::get('/documentos/{id}/descargar', [DocumentoAdjuntoController::class, 'download'])->name('documentos.download');
+    Route::delete('/documentos/{id}', [DocumentoAdjuntoController::class, 'destroy'])->name('documentos.destroy');
 
     // Gestión de Movimientos (asignar, transferir, prestar, devolver, reubicar, baja)
     Route::get('/movimientos', [MovimientoController::class, 'index'])->name('movimientos.index');

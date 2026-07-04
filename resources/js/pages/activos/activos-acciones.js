@@ -117,7 +117,9 @@ $(function () {
     const t = activo.tecnico;
     if (activo.requiere_ficha && t) {
       const fila = (label, val) =>
-        val ? `<div class="col-6"><p class="text-muted small mb-0">${label}</p><p class="fw-semibold mb-0">${val}</p></div>` : '';
+        val
+          ? `<div class="col-6"><p class="text-muted small mb-0">${label}</p><p class="fw-semibold mb-0">${val}</p></div>`
+          : '';
       const eo = t.estado_operativo ? t.estado_operativo.replace(/_/g, ' ') : null;
       const disco = [t.almacenamiento, t.tipo_almacenamiento].filter(Boolean).join(' ');
       const cuerpo =
@@ -136,11 +138,14 @@ $(function () {
         (t.observaciones_tecnicas
           ? `<div class="col-12"><p class="text-muted small mb-0">Obs. técnicas</p><p class="mb-0">${t.observaciones_tecnicas}</p></div>`
           : '');
-      $ficha.html(
-        '<hr class="my-1"><div class="col-12"><p class="text-muted small mb-2 text-uppercase fw-semibold">' +
-          '<i class="bx bx-chip me-1"></i> Ficha Técnica TI</p></div>' +
-          (cuerpo || '<div class="col-12"><p class="text-muted small mb-0 fst-italic">Sin datos técnicos cargados.</p></div>')
-      ).removeClass('d-none');
+      $ficha
+        .html(
+          '<hr class="my-1"><div class="col-12"><p class="text-muted small mb-2 text-uppercase fw-semibold">' +
+            '<i class="bx bx-chip me-1"></i> Ficha Técnica TI</p></div>' +
+            (cuerpo ||
+              '<div class="col-12"><p class="text-muted small mb-0 fst-italic">Sin datos técnicos cargados.</p></div>')
+        )
+        .removeClass('d-none');
     } else {
       $ficha.addClass('d-none').empty();
     }
@@ -225,6 +230,15 @@ $(function () {
   // ═══════════════════════════════════════════
   // MOVER — Modal
   // ═══════════════════════════════════════════
+  const modalFicha = $('#modalFichaRapida');
+
+  function abrirModalFicha(ids) {
+    modalFicha.modal('show');
+  }
+
+  // ═══════════════════════════════════════════
+  // MOVER — Modal
+  // ═══════════════════════════════════════════
   const modalMover = $('#modalMover');
   const formMover = $('#formMover');
   const btnMover = $('#btnConfirmarMover');
@@ -290,9 +304,7 @@ $(function () {
   // Habilita solo los tipos válidos para TODOS los activos seleccionados.
   // Devuelve true si queda al menos un movimiento posible.
   function actualizarTiposDisponibles(ids) {
-    const situaciones = ids
-      .map(id => window.activos.find(x => x.id_activo === id)?.situacion_nombre)
-      .filter(Boolean);
+    const situaciones = ids.map(id => window.activos.find(x => x.id_activo === id)?.situacion_nombre).filter(Boolean);
 
     let hayValido = false;
     $('#mover-tipo option').each(function () {
@@ -334,13 +346,16 @@ $(function () {
     $('#mover-tipo').val('');
 
     if (!hayValido) {
-      const situaciones = [...new Set(
-        ids.map(id => window.activos.find(x => x.id_activo === id)?.situacion_nombre).filter(Boolean)
-      )].map(s => s.replace(/_/g, ' ')).join(', ');
+      const situaciones = [
+        ...new Set(ids.map(id => window.activos.find(x => x.id_activo === id)?.situacion_nombre).filter(Boolean))
+      ]
+        .map(s => s.replace(/_/g, ' '))
+        .join(', ');
       Swal.fire({
         icon: 'info',
         title: 'Sin movimientos disponibles',
-        html: `Por su situación actual (<strong>${situaciones || '—'}</strong>) no hay ningún movimiento ` +
+        html:
+          `Por su situación actual (<strong>${situaciones || '—'}</strong>) no hay ningún movimiento ` +
           `aplicable a la selección. Revisa que no estén DADOS DE BAJA o que mezcles situaciones incompatibles.`
       });
       return;
@@ -350,6 +365,11 @@ $(function () {
   }
 
   // Desde dropdown individual
+  $(document).on('click', '.btn-ficha-rapida', function () {
+    const id = parseInt($(this).data('id'));
+    abrirModalFicha([id]);
+  });
+
   $(document).on('click', '.btn-mover-activo', function () {
     const id = parseInt($(this).data('id'));
     abrirModalMover([id]);

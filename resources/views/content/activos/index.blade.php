@@ -19,9 +19,16 @@
     }
   </style>
 
-  <h4 class="mb-4 fw-bold text-primary d-flex align-items-center">
-    <i class="bx bx-desktop me-2"></i> Equipos de TI
+  <h4 class="fw-bold mb-0">
+    <span class="text-secondary d-block d-md-inline">
+      Gestión Principal
+    </span>
+    <span class="d-none d-md-inline"> / </span>
+    <span class="d-block d-md-inline">
+      Activos Tecnológicos
+    </span>
   </h4>
+  <p class="text-muted fw-light mb-5">Consulta, filtra y administra los activos tecnológicos registrados en el sistema.</p>
 
   @if (session('success'))
     <div class="alert alert-success alert-dismissible fade show mb-4 d-flex align-items-center" role="alert">
@@ -30,7 +37,196 @@
     </div>
   @endif
 
-  <div class="card">
+  <!-- KPIs rápidos -->
+  <div class="row g-4">
+
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+      <div class="card rounded-5 kpi-card">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="fw-semibold d-block mb-1">Total activos</span>
+              <h3 class="card-title mb-2">1,248</h3>
+              <small class="text-success fw-semibold">
+                <i class="bx bx-check-circle"></i>
+                1,117 validados
+              </small>
+            </div>
+
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-primary">
+                <i class="bx bx-laptop"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+      <div class="card rounded-5 kpi-card">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="fw-semibold d-block mb-1">En uso</span>
+              <h3 class="card-title mb-2">842</h3>
+              <small class="text-muted fw-semibold">
+                Asignados a usuarios
+              </small>
+            </div>
+
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-success">
+                <i class="bx bx-user-check"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+      <div class="card rounded-5 kpi-card">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="fw-semibold d-block mb-1">Observados</span>
+              <h3 class="card-title mb-2">38</h3>
+              <small class="text-warning fw-semibold">
+                Requieren revisión
+              </small>
+            </div>
+
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-warning">
+                <i class="bx bx-error-circle"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+      <div class="card rounded-5 kpi-card">
+        <div class="card-body">
+          <div class="d-flex align-items-start justify-content-between">
+            <div>
+              <span class="fw-semibold d-block mb-1">Sin etiqueta</span>
+              <h3 class="card-title mb-2">21</h3>
+              <small class="text-danger fw-semibold">
+                Pendiente QR / barras
+              </small>
+            </div>
+
+            <div class="avatar">
+              <span class="avatar-initial rounded bg-label-danger">
+                <i class="bx bx-barcode"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Filtros -->
+  <div class="card rounded-4 mb-4">
+    <div class="card-header">
+      <h5 class="mb-0">Filtros de búsqueda</h5>
+      <small class="text-muted">
+        Filtra por sede, categoría, estado, responsable o información patrimonial.
+      </small>
+    </div>
+
+    <div class="card-body">
+      <div class="row g-3">
+
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Código / Serie</label>
+          <input type="text" class="form-control" placeholder="Patrimonial, interno o serie" />
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Categoría</label>
+          <select class="form-select">
+            <option selected>Todas</option>
+            <option>Laptop</option>
+            <option>CPU</option>
+            <option>Monitor</option>
+            <option>Impresora</option>
+            <option>Switch</option>
+            <option>Access Point</option>
+          </select>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Sede</label>
+          <select class="form-select">
+            <option selected>Todas las sedes</option>
+            <option>Sede Central</option>
+            <option>Campus Académico</option>
+            <option>Filial Administrativa</option>
+          </select>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Situación</label>
+          <select class="form-select">
+            <option selected>Todas</option>
+            <option>En uso</option>
+            <option>En almacén</option>
+            <option>En mantenimiento</option>
+            <option>Pendiente de baja</option>
+            <option>Dado de baja</option>
+          </select>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Condición</label>
+          <select class="form-select">
+            <option selected>Todas</option>
+            <option>Bueno</option>
+            <option>Regular</option>
+            <option>Malo</option>
+            <option>RAEE</option>
+          </select>
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Responsable</label>
+          <input type="text" class="form-control" placeholder="Nombre del responsable" />
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Estado SIGA</label>
+          <select class="form-select">
+            <option selected>Todos</option>
+            <option>Validado</option>
+            <option>Pendiente validación</option>
+            <option>Observado</option>
+          </select>
+        </div>
+
+        <div class="col-lg-3 col-md-6 d-flex align-items-end">
+          <div class="d-flex gap-2 w-100">
+            <button class="btn btn-primary w-100">
+              <i class="bx bx-search me-1"></i>
+              Buscar
+            </button>
+
+            <button class="btn btn-outline-secondary">
+              <i class="bx bx-reset"></i>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="card rounded-4">
     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
       <h5 class="mb-0 fw-bold">Inventario de Activos</h5>
       <a href="{{ route('activos.create') }}" class="btn btn-primary">
@@ -104,7 +300,7 @@
             <th class="fw-bold">Código</th>
             <th class="fw-bold">Modelo</th>
             {{-- <th class="fw-bold">N° Serie</th> --}}
-            <th class="fw-bold">Sede</th>
+            {{-- <th class="fw-bold">Sede</th> --}}
             <th class="fw-bold">Ubicación</th>
             <th class="fw-bold">Responsable</th>
             <th class="fw-bold">Condición</th>
@@ -304,6 +500,166 @@
     </div>
   </div>
 
+  {{-- ════════════════════════════════════════════════════════════════════════════
+       MODAL — VER FICHA RAPIDA
+  ════════════════════════════════════════════════════════════════════════════ --}}
+  <div class="modal fade" id="modalFichaRapida" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+      <div class="modal-content">
+
+        <div class="modal-header border-bottom py-5 d-block">
+          <div class="d-flex align-items-center">
+            <i class="bx bx-laptop me-1"></i>
+            <h5 class="modal-title fw-bold">Ficha rápida del activo</h5>
+          </div>
+          <small class="text-muted fw-light">
+            Resumen operativo, patrimonial y técnico del activo.
+          </small>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+
+          <div class="row">
+
+            <!-- Resumen del activo -->
+            <div class="col-md-4 mb-4">
+              <div class="border rounded-4 p-6 text-center">
+                <div class="bg-label-primary mx-auto mb-3 rounded-5 d-inline-flex p-3" style="font-size: 2rem;">
+                  💻
+                </div>
+
+                <h5 class="mb-1" style="line-height: 1.1;">Laptop Lenovo ThinkPad E14</h5>
+                <p class="text-muted mb-2">
+                  Categoría: Laptop</p>
+
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                  <span class="badge bg-label-success">Bueno</span>
+                  <span class="badge bg-label-info">En uso</span>
+                </div>
+
+                <button class="btn btn-primary btn-sm w-100">
+                  <i class="bx bx-detail me-1"></i>
+                  Ver ficha completa
+                </button>
+              </div>
+            </div>
+
+            <!-- Datos principales -->
+            <div class="col-md-8">
+
+              <div class="row g-3">
+
+                <div class="col-md-6">
+                  <label class="text-muted small">Código patrimonial</label>
+                  <div class="fw-bold">740899500012</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="text-muted small">Código interno</label>
+                  <div class="fw-bold">LAP-OTI-000124</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="text-muted small">N.º de serie</label>
+                  <div class="fw-bold">PF3X92LA</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="text-muted small">Marca / Modelo</label>
+                  <div class="fw-bold">Lenovo ThinkPad E14</div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="text-muted small">Responsable</label>
+                  <div class="fw-bold">María Torres</div>
+                  <small class="text-muted">Dirección Académica</small>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="text-muted small">Ubicación actual</label>
+                  <div class="fw-bold">Oficina 204</div>
+                  <small class="text-muted">Sede Central › Pabellón A › Piso 2</small>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="text-muted small">Garantía</label>
+                  <div>
+                    <span class="badge bg-label-success">Vigente hasta 15/11/2026</span>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <label class="text-muted small">OCS Inventory</label>
+                  <div>
+                    <span class="badge bg-label-success">
+                      <i class="bx bx-check-circle me-1"></i>
+                      Sincronizado
+                    </span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <hr class="my-4" />
+
+          <!-- Datos técnicos breves -->
+          <div class="row g-3">
+
+            <div class="col-md-3 col-6">
+              <div class="border rounded-4 p-5">
+                <i class="bx bx-chip text-primary"></i>
+                <span class="d-block text-muted small">Procesador</span>
+                <strong>Intel Core i5</strong>
+              </div>
+            </div>
+
+            <div class="col-md-3 col-6">
+              <div class="border rounded-4 p-5">
+                <i class="bx bx-memory-card text-info"></i>
+                <span class="d-block text-muted small">RAM</span>
+                <strong>16 GB</strong>
+              </div>
+            </div>
+
+            <div class="col-md-3 col-6">
+              <div class="border rounded-4 p-5">
+                <i class="bx bx-hdd text-warning"></i>
+                <span class="d-block text-muted small">Disco</span>
+                <strong>512 GB SSD</strong>
+              </div>
+            </div>
+
+            <div class="col-md-3 col-6">
+              <div class="border rounded-4 p-5">
+                <i class="bx bx-desktop text-success"></i>
+                <span class="d-block text-muted small">Sistema</span>
+                <strong>Windows 11</strong>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="modal-footer border-top py-5">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            Cerrar
+          </button>
+
+          <a href="ficha-activo.html" class="btn btn-primary">
+            Abrir ficha completa
+          </a>
+        </div>
+
+      </div>
+    </div>
+  </div>
 
   {{-- ════════════════════════════════════════════════════════════════════════════
        OFFCANVAS — MÁS INFO
@@ -451,6 +807,7 @@
       destroy: '/activos/{id}',
       mover: '{{ route('movimientos.store') }}',
       etiquetas: '{{ route('activos.etiquetas') }}',
+      ver: '/activos/{id}/ver',
     };
   </script>
   @vite(['resources/js/vendors/index.js', 'resources/js/pages/activos/activos-table.js', 'resources/js/pages/activos/activos-acciones.js'])

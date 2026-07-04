@@ -21,7 +21,7 @@
       ]
     },
     {
-      "menuHeader": "Gestión Patrimonial",
+      "menuHeader": "Gestión Principal",
       "roles": [
         "ADMINISTRADOR",
         "ALMACEN",
@@ -53,6 +53,11 @@
           "url": "javascript:void(0)",
           "name": "Editar",
           "slug": "activos.edit"
+        },
+        {
+          "url": "javascript:void(0)",
+          "name": "Ver",
+          "slug": "activos.ver"
         }
       ]
     },
