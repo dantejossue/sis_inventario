@@ -30,7 +30,9 @@
       "Bash(grep *)",
       "Bash(NODE_PATH=__TRACKED_VAR__/pw/node_modules node __TRACKED_VAR__/verify-import.js)",
       "Bash(pnpm build *)",
-      "Bash(git commit -m 'F4.5: ficha del activo con datos reales + documentos adjuntos *)"
+      "Bash(git commit -m 'F4.5: ficha del activo con datos reales + documentos adjuntos *)",
+      "Bash(python *)",
+      "Bash(git commit -m 'F5: módulo de mantenimientos \\(ciclo completo\\) *)"
     ]
   }
 }

@@ -128,7 +128,7 @@
 
             <div class="col-4">
               <div class="asset-mini-stat">
-                <h5 class="mb-0">{{ $totalMantenimientos }}</h5>
+                <h5 class="mb-0">{{ $mantenimientos->count() }}</h5>
                 <small>Mant.</small>
               </div>
             </div>
@@ -302,6 +302,14 @@
             <i class="bx bx-transfer-alt me-1"></i>
             Movimientos
             <span class="badge bg-label-primary ms-1">{{ $movimientos->count() }}</span>
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-mantenimientos" role="tab">
+            <i class="bx bx-wrench me-1"></i>
+            Mantenimientos
+            <span class="badge bg-label-primary ms-1">{{ $mantenimientos->count() }}</span>
           </button>
         </li>
 
@@ -866,6 +874,101 @@
 
         </div>
         <!-- / TAB MOVIMIENTOS -->
+
+        <!-- TAB MANTENIMIENTOS -->
+        <div class="tab-pane fade" id="tab-mantenimientos" role="tabpanel">
+
+          @php
+            $badgeEstadoMant = [
+              'SOLICITADO' => 'primary', 'EN_REVISION' => 'info', 'EN_MANTENIMIENTO' => 'warning',
+              'DERIVADO_PROVEEDOR' => 'warning', 'ATENDIDO' => 'success', 'SIN_REPARACION' => 'danger',
+              'RECOMENDADO_BAJA' => 'danger', 'CERRADO' => 'success', 'CANCELADO' => 'secondary',
+            ];
+            $badgeTipoMant = [
+              'PREVENTIVO' => 'info', 'CORRECTIVO' => 'danger', 'GARANTIA' => 'primary', 'REVISION_TECNICA' => 'warning',
+            ];
+          @endphp
+
+          <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+            <div>
+              <h5 class="mb-1">Historial de mantenimientos</h5>
+              <p class="text-muted mb-0">
+                Preventivos, correctivos, garantías y revisiones técnicas del activo.
+              </p>
+            </div>
+
+            <a href="{{ route('mantenimientos.index') }}" class="btn btn-primary mt-3 mt-md-0">
+              <i class="bx bx-wrench me-1"></i>
+              Ir a Mantenimientos
+            </a>
+          </div>
+
+          @if ($mantenimientos->isEmpty())
+            <div class="text-center py-5">
+              <div class="rounded-5 p-4 d-inline-flex bg-label-secondary mb-3">
+                <i class="bx bx-wrench" style="font-size: 2.5rem;"></i>
+              </div>
+              <h5 class="mb-1">Sin mantenimientos registrados</h5>
+              <p class="text-muted mb-0">
+                Este activo aún no tiene mantenimientos ni revisiones técnicas.
+              </p>
+            </div>
+          @else
+            <div class="table-responsive">
+              <table class="table table-hover">
+                <thead>
+                  <tr>
+                    <th>Código</th>
+                    <th>Tipo</th>
+                    <th>Problema / Diagnóstico</th>
+                    <th>Técnico</th>
+                    <th>Estado</th>
+                    <th>Costo</th>
+                    <th>Fechas</th>
+                  </tr>
+                </thead>
+
+                <tbody>
+                  @foreach ($mantenimientos as $mant)
+                    <tr>
+                      <td><strong>{{ $mant->codigo }}</strong></td>
+                      <td>
+                        <span class="badge bg-label-{{ $badgeTipoMant[$mant->tipo_mantenimiento] ?? 'secondary' }}">
+                          {{ $tipoLegible($mant->tipo_mantenimiento) }}
+                        </span>
+                      </td>
+                      <td>
+                        <span class="d-block">{{ \Illuminate\Support\Str::limit($mant->descripcion, 60) }}</span>
+                        @if ($mant->diagnostico)
+                          <small class="text-muted">{{ \Illuminate\Support\Str::limit($mant->diagnostico, 60) }}</small>
+                        @endif
+                      </td>
+                      <td>{{ $mant->tecnicoResponsable?->nombre_completo ?? ($mant->proveedor ?: 'Por asignar') }}</td>
+                      <td>
+                        <span class="badge bg-label-{{ $badgeEstadoMant[$mant->estado] ?? 'secondary' }}">
+                          {{ $tipoLegible($mant->estado) }}
+                        </span>
+                        @if ($mant->recomienda_baja)
+                          <span class="badge bg-label-danger d-block mt-1">Recomienda baja</span>
+                        @endif
+                      </td>
+                      <td>{{ $fmtMoneda($mant->costo) ?: '—' }}</td>
+                      <td>
+                        <span class="d-block">{{ $fmtFecha($mant->fecha_reporte) ?: '—' }}</span>
+                        @if ($mant->fecha_fin)
+                          <small class="text-muted">Fin: {{ $fmtFecha($mant->fecha_fin) }}</small>
+                        @endif
+                      </td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+          @endif
+
+        </div>
+        <!-- / TAB MANTENIMIENTOS -->
 
         <!-- TAB DOCUMENTOS -->
         <div class="tab-pane fade" id="tab-documentos" role="tabpanel">

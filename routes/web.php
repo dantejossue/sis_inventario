@@ -56,6 +56,7 @@ use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\UsuarioController;
 use App\Http\Controllers\ActivoController;
 use App\Http\Controllers\MovimientoController;
+use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\ImportacionSigaController;
 
 // Main Page Route
@@ -164,6 +165,14 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     // Gestión de Movimientos (asignar, transferir, prestar, devolver, reubicar, baja)
     Route::get('/movimientos', [MovimientoController::class, 'index'])->name('movimientos.index');
     Route::post('/movimientos', [MovimientoController::class, 'store'])->name('movimientos.store');
+
+    // Mantenimientos (preventivo, correctivo, garantía, revisión técnica)
+    Route::get('/mantenimientos', [MantenimientoController::class, 'index'])->name('mantenimientos.index');
+    Route::post('/mantenimientos', [MantenimientoController::class, 'store'])->name('mantenimientos.store');
+    Route::put('/mantenimientos/{id}/avanzar', [MantenimientoController::class, 'avanzar'])->name('mantenimientos.avanzar');
+    Route::put('/mantenimientos/{id}/finalizar', [MantenimientoController::class, 'finalizar'])->name('mantenimientos.finalizar');
+    Route::put('/mantenimientos/{id}/cerrar', [MantenimientoController::class, 'cerrar'])->name('mantenimientos.cerrar');
+    Route::put('/mantenimientos/{id}/cancelar', [MantenimientoController::class, 'cancelar'])->name('mantenimientos.cancelar');
 
     // Importación SIGA (padrón patrimonial → base operativa)
     Route::get('/importaciones', [ImportacionSigaController::class, 'index'])->name('importaciones.index');

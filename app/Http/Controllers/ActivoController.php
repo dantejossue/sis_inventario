@@ -8,11 +8,11 @@ use App\Models\CategoriaActivo;
 use App\Models\Colaborador;
 use App\Models\DetalleMovimientoActivo;
 use App\Models\EstadoActivo;
+use App\Models\Mantenimiento;
 use App\Models\Modelo;
 use App\Models\Ubicacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
@@ -137,13 +137,15 @@ class ActivoController extends Controller
             ->sortByDesc(fn($d) => $d->movimiento?->fecha_registro)
             ->values();
 
-        // Mantenimientos: aún sin módulo propio, solo conteo para la ficha.
-        $totalMantenimientos = DB::table('mantenimientos')->where('id_activo', $id)->count();
+        $mantenimientos = Mantenimiento::with('tecnicoResponsable')
+            ->where('id_activo', $id)
+            ->orderByDesc('id_mantenimiento')
+            ->get();
 
-        $eventos = $this->lineaDeTiempo($activo, $movimientos);
+        $eventos = $this->lineaDeTiempo($activo, $movimientos, $mantenimientos);
 
         return view('content.activos.ver', compact(
-            'activo', 'rutaUbicacion', 'movimientos', 'totalMantenimientos', 'eventos'
+            'activo', 'rutaUbicacion', 'movimientos', 'mantenimientos', 'eventos'
         ));
     }
 
@@ -152,7 +154,7 @@ class ActivoController extends Controller
      * (registro/importación, movimientos, documentos, última edición),
      * ordenada del más reciente al más antiguo.
      */
-    private function lineaDeTiempo(Activo $activo, $movimientos): \Illuminate\Support\Collection
+    private function lineaDeTiempo(Activo $activo, $movimientos, $mantenimientos = null): \Illuminate\Support\Collection
     {
         $nombreUsuario = fn($u) => $u?->colaborador?->nombre_completo ?: ($u?->nombre_usuario ?? 'Sistema');
         $eventos = collect();
@@ -189,6 +191,17 @@ class ActivoController extends Controller
                 'detalle' => "De {$origen} hacia {$destino}. Registrado por " . $nombreUsuario($mov->registradoPor),
                 'icono'   => 'bx-transfer-alt',
                 'color'   => 'warning',
+            ]);
+        }
+
+        foreach ($mantenimientos ?? [] as $mant) {
+            $eventos->push([
+                'fecha'   => $mant->creado_en,
+                'titulo'  => "Mantenimiento {$mant->codigo} · " . ucfirst(strtolower(str_replace('_', ' ', $mant->tipo_mantenimiento))),
+                'detalle' => \Illuminate\Support\Str::limit($mant->descripcion, 120)
+                    . ' · Estado: ' . ucfirst(strtolower(str_replace('_', ' ', $mant->estado))),
+                'icono'   => 'bx-wrench',
+                'color'   => 'danger',
             ]);
         }
 
