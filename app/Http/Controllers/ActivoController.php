@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activo;
 use App\Models\ActivoTecnico;
+use App\Models\BajaActivo;
 use App\Models\CategoriaActivo;
 use App\Models\Colaborador;
 use App\Models\DetalleMovimientoActivo;
@@ -142,10 +143,14 @@ class ActivoController extends Controller
             ->orderByDesc('id_mantenimiento')
             ->get();
 
-        $eventos = $this->lineaDeTiempo($activo, $movimientos, $mantenimientos);
+        $bajas = BajaActivo::where('id_activo', $id)
+            ->orderByDesc('id_baja')
+            ->get();
+
+        $eventos = $this->lineaDeTiempo($activo, $movimientos, $mantenimientos, $bajas);
 
         return view('content.activos.ver', compact(
-            'activo', 'rutaUbicacion', 'movimientos', 'mantenimientos', 'eventos'
+            'activo', 'rutaUbicacion', 'movimientos', 'mantenimientos', 'bajas', 'eventos'
         ));
     }
 
@@ -154,7 +159,7 @@ class ActivoController extends Controller
      * (registro/importación, movimientos, documentos, última edición),
      * ordenada del más reciente al más antiguo.
      */
-    private function lineaDeTiempo(Activo $activo, $movimientos, $mantenimientos = null): \Illuminate\Support\Collection
+    private function lineaDeTiempo(Activo $activo, $movimientos, $mantenimientos = null, $bajas = null): \Illuminate\Support\Collection
     {
         $nombreUsuario = fn($u) => $u?->colaborador?->nombre_completo ?: ($u?->nombre_usuario ?? 'Sistema');
         $eventos = collect();
@@ -203,6 +208,26 @@ class ActivoController extends Controller
                 'icono'   => 'bx-wrench',
                 'color'   => 'danger',
             ]);
+        }
+
+        foreach ($bajas ?? [] as $baja) {
+            $eventos->push([
+                'fecha'   => $baja->creado_en,
+                'titulo'  => "Propuesta de baja {$baja->codigo} · " . ucfirst(strtolower(str_replace('_', ' ', $baja->causal_baja))),
+                'detalle' => \Illuminate\Support\Str::limit($baja->motivo, 120)
+                    . ' · Estado: ' . ucfirst(strtolower(str_replace('_', ' ', $baja->estado))),
+                'icono'   => 'bx-down-arrow-circle',
+                'color'   => 'secondary',
+            ]);
+            if ($baja->fecha_baja) {
+                $eventos->push([
+                    'fecha'   => $baja->fecha_baja,
+                    'titulo'  => "Baja ejecutada ({$baja->codigo})",
+                    'detalle' => 'El activo quedó DADO DE BAJA formalmente.',
+                    'icono'   => 'bx-x-circle',
+                    'color'   => 'danger',
+                ]);
+            }
         }
 
         foreach ($activo->documentos as $doc) {

@@ -17,6 +17,10 @@ table.dataTable thead td {
   font-weight: 700 !important;
 }
 
+.badge {
+  border-radius: 6px;
+}
+
 // ficha activos
 .asset-main-card {
   border: 0;
@@ -430,9 +434,7 @@ table.dataTable thead td {
   border: 1px solid #eceef1;
   border-radius: 1rem;
   padding: 1.5rem;
-  background:
-    radial-gradient(circle at top right, rgba(255, 171, 0, 0.16), transparent 40%),
-    #fff;
+  background: radial-gradient(circle at top right, rgba(255, 171, 0, 0.16), transparent 40%), #fff;
   height: 100%;
 }
 
@@ -451,9 +453,7 @@ table.dataTable thead td {
   border: 1px solid #eceef1;
   border-radius: 1rem;
   padding: 1.25rem;
-  background:
-    radial-gradient(circle at top right, rgba(255, 62, 29, 0.08), transparent 35%),
-    #fff;
+  background: radial-gradient(circle at top right, rgba(255, 62, 29, 0.08), transparent 35%), #fff;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -526,7 +526,7 @@ table.dataTable thead td {
 }
 
 .maintenance-timeline-item::before {
-  content: "";
+  content: '';
   position: absolute;
   left: 20px;
   top: 42px;
@@ -668,5 +668,615 @@ table.dataTable thead td {
 
   .maintenance-timeline-item::before {
     display: none;
+  }
+}
+
+/* =========================================================
+   MÓDULO DE BAJAS DE ACTIVOS
+   ========================================================= */
+
+.disposal-kpi-card {
+  border: 0;
+  transition: all 0.2s ease-in-out;
+}
+
+.disposal-kpi-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.75rem 1.5rem rgba(67, 89, 113, 0.12);
+}
+
+.disposal-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.disposal-flow-step {
+  min-width: 125px;
+  text-align: center;
+}
+
+.disposal-flow-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 1rem;
+  margin: 0 auto 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.65rem;
+}
+
+.disposal-flow-step h6 {
+  margin-bottom: 0.15rem;
+}
+
+.disposal-flow-line {
+  height: 2px;
+  flex: 1;
+  background: #e7e7ff;
+  border-radius: 999px;
+}
+
+.disposal-alert-item {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.9rem 0;
+  border-bottom: 1px solid #eceef1;
+}
+
+.disposal-alert-item:last-child {
+  border-bottom: 0;
+}
+
+.disposal-alert-icon {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+}
+
+.table-disposal td {
+  vertical-align: middle;
+}
+
+.disposal-create-summary {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1.5rem;
+  background: radial-gradient(circle at top right, rgba(255, 62, 29, 0.16), transparent 40%), #fff;
+  height: 100%;
+}
+
+.disposal-create-icon {
+  width: 70px;
+  height: 70px;
+  border-radius: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.disposal-detail-header {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: radial-gradient(circle at top right, rgba(255, 62, 29, 0.12), transparent 35%), #fff;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.disposal-detail-status {
+  min-width: 130px;
+  border-radius: 1rem;
+  padding: 0.9rem;
+  text-align: center;
+  background: rgba(3, 195, 236, 0.12);
+  color: #03c3ec;
+}
+
+.disposal-detail-status span,
+.disposal-detail-status strong {
+  display: block;
+}
+
+.disposal-detail-status span {
+  font-size: 0.75rem;
+}
+
+.disposal-detail-status strong {
+  font-size: 1.05rem;
+}
+
+.disposal-linked-asset {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.disposal-linked-icon {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+}
+
+.disposal-reason-box {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #fff;
+}
+
+.disposal-reason-box span {
+  display: block;
+  color: #697a8d;
+  font-size: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.disposal-reason-box p {
+  margin-bottom: 0;
+  color: #566a7f;
+}
+
+.disposal-timeline-item {
+  display: flex;
+  gap: 1rem;
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+
+.disposal-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: 20px;
+  top: 42px;
+  bottom: 0;
+  width: 2px;
+  background: #eceef1;
+}
+
+.disposal-timeline-item:last-child::before {
+  display: none;
+}
+
+.disposal-timeline-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+}
+
+.disposal-timeline-content {
+  background: #f8f8fb;
+  border-radius: 1rem;
+  padding: 1rem;
+  flex: 1;
+}
+
+.disposal-file-card {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  height: 100%;
+}
+
+.disposal-file-icon {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  border-radius: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+}
+
+.disposal-side-card {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: #fff;
+}
+
+.disposal-recommendation {
+  display: flex;
+  gap: 0.9rem;
+  align-items: flex-start;
+  background: #f8f8fb;
+  border-radius: 1rem;
+  padding: 1rem;
+}
+
+.disposal-recommendation-icon {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+
+.disposal-recommendation strong,
+.disposal-recommendation small {
+  display: block;
+}
+
+.disposal-recommendation small {
+  color: #697a8d;
+}
+
+/* Responsive bajas */
+@media (max-width: 992px) {
+  .disposal-flow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .disposal-flow-step {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .disposal-flow-icon {
+    margin: 0;
+  }
+
+  .disposal-flow-line {
+    width: 2px;
+    height: 24px;
+    margin-left: 27px;
+    flex: initial;
+  }
+
+  .disposal-detail-header {
+    flex-direction: column;
+  }
+
+  .disposal-detail-status {
+    width: 100%;
+  }
+
+  .disposal-linked-asset {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 576px) {
+  .disposal-file-card {
+    align-items: flex-start;
+  }
+
+  .disposal-timeline-item {
+    flex-direction: column;
+  }
+
+  .disposal-timeline-item::before {
+    display: none;
+  }
+}
+
+// ======================================================
+// SIDEBAR ESTILO SNEAT OSCURO
+// ======================================================
+
+.layout-menu,
+.menu-vertical {
+  background-color: #2b2c40;
+}
+
+// Marca o nombre del sistema
+.layout-menu .app-brand-text {
+  color: #ffffff !important;
+  font-weight: 700;
+}
+
+// Logo
+.layout-menu .app-brand-logo {
+  color: #2092ec;
+}
+
+// Botón circular para contraer el sidebar
+.layout-menu .layout-menu-toggle {
+  background-color: #2495e8 !important;
+  border-color: #2b2c40 !important;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+
+  i {
+    color: #ffffff !important;
+  }
+}
+
+// Texto e iconos normales
+.layout-menu .menu-link {
+  color: #b6b7c8;
+}
+
+.layout-menu .menu-icon {
+  color: #b6b7c8;
+}
+
+// Hover
+.layout-menu .menu-item:not(.active):not(.open) > .menu-link:hover {
+  // color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+// Elemento principal activo sin submenu
+.layout-menu .menu-inner > .menu-item.active > .menu-link:not(.menu-toggle) {
+  color: #ffffff !important;
+  background-color: #2092ec !important;
+}
+
+// Elemento padre abierto o activo
+.layout-menu .menu-inner > .menu-item.active > .menu-link.menu-toggle {
+  color: #ffffff !important;
+  background-color: #2092ec !important;
+}
+
+// Iconos dentro de elemento seleccionado
+.layout-menu .menu-item.active > .menu-link .menu-icon {
+  color: #ffffff !important;
+}
+
+// Flecha dentro del elemento seleccionado
+.layout-menu .menu-item.active > .menu-toggle::after,
+.layout-menu .menu-item.open > .menu-toggle::after {
+  color: #ffffff;
+}
+
+// Redondeado de los enlaces
+.layout-menu .menu-vertical .menu-link,
+.layout-menu.menu-vertical .menu-link {
+  border-radius: 0.5rem;
+}
+
+// Encabezados: "APPS & PAGES"
+.layout-menu .menu-header-text {
+  color: #7c7d94 !important;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.04rem;
+}
+
+// Línea pequeña al lado del encabezado
+.layout-menu .menu-header::before {
+  background-color: #55576b !important;
+}
+
+// Submenu
+.layout-menu .menu-sub {
+  background-color: transparent;
+}
+
+// Enlaces del submenu
+.layout-menu .menu-sub > .menu-item > .menu-link {
+  color: #b6b7c8;
+  background-color: transparent !important;
+}
+
+// Hover del submenu
+.layout-menu .menu-sub > .menu-item:not(.active) > .menu-link:hover {
+  // color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+// Submenu activo
+.layout-menu .menu-sub > .menu-item.active > .menu-link {
+  color: #ffffff !important;
+  background-color: transparent !important;
+  font-weight: 500;
+}
+
+// Punto normal del submenu
+.layout-menu .menu-sub > .menu-item > .menu-link::before {
+  background-color: #77798e !important;
+  box-shadow: none !important;
+}
+
+// Punto azul del submenu activo
+.layout-menu .menu-sub > .menu-item.active > .menu-link::before {
+  width: 0.5rem !important;
+  height: 0.5rem !important;
+  background-color: #2092ec !important;
+  box-shadow: 0 0 0 3px rgba(36, 149, 232, 0.18) !important;
+}
+
+// Badges del sidebar
+.layout-menu .menu-link .badge {
+  border-radius: 50rem;
+}
+
+// Badge rojo, como el número 5 de la imagen
+.layout-menu .menu-link .badge.bg-danger {
+  color: #ffffff;
+  background-color: #ff3e1d !important;
+}
+
+// Scrollbar
+.layout-menu .ps__thumb-y {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+// DOCUMENTOS Y EVIDENCIAS DEL REGISTRO DE ACTIVOS
+.register-asset-document-zone {
+  border: 2px dashed #d9dee3;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: #f8f8fb;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  cursor: pointer;
+}
+
+.register-asset-document-icon {
+  width: 56px;
+  height: 56px;
+  min-width: 56px;
+  border-radius: 1rem;
+  background: rgba(105, 108, 255, 0.14);
+  color: #696cff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+}
+
+.register-asset-confirm-box {
+  border: 1px solid #eceef1;
+  border-radius: 1rem;
+  padding: 1rem;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.register-asset-confirm-icon {
+  width: 58px;
+  height: 58px;
+  min-width: 58px;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.7rem;
+}
+
+/* =========================================================
+   MÓDULO EDITAR ACTIVO
+   ========================================================= */
+
+.edit-asset-flow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+}
+
+.edit-asset-flow-step {
+  min-width: 135px;
+  text-align: center;
+}
+
+.edit-asset-flow-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 1rem;
+  margin: 0 auto 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.65rem;
+}
+
+.edit-asset-flow-step h6 {
+  margin-bottom: 0.15rem;
+}
+
+.edit-asset-flow-step small {
+  color: #697a8d;
+}
+
+.edit-asset-flow-line {
+  height: 2px;
+  flex: 1;
+  background: #e7e7ff;
+  border-radius: 999px;
+}
+
+/* Responsive registrar activo */
+@media (max-width: 1200px) {
+  .register-asset-steps {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .register-asset-steps {
+    grid-template-columns: 1fr;
+  }
+
+  .register-asset-sticky {
+    position: static;
+  }
+
+  .register-asset-document-zone,
+  .register-asset-confirm-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Responsive editar activo */
+@media (max-width: 992px) {
+  .edit-asset-flow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .edit-asset-flow-step {
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+  }
+
+  .edit-asset-flow-icon {
+    margin: 0;
+  }
+
+  .edit-asset-flow-line {
+    width: 2px;
+    height: 24px;
+    margin-left: 27px;
+    flex: initial;
+  }
+
+  .edit-asset-current-box {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .edit-asset-sticky {
+    position: static;
+  }
+}
+
+@media (max-width: 576px) {
+  .edit-asset-impact-card,
+  .edit-asset-risk-box,
+  .edit-impact-item,
+  .edit-confirm-box {
+    flex-direction: column;
   }
 }

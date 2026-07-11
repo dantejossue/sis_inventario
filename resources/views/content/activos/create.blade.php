@@ -3,7 +3,7 @@
 @section('title', 'Nuevo Activo - OTI')
 
 @section('content')
-  <div class="d-flex align-items-center justify-content-between mb-4">
+  <div class="d-flex align-items-center justify-content-between mb-2">
     <div>
       <h4 class="fw-bold mb-0">
         <span class="d-block d-md-inline"><a class="text-secondary" href="{{ route('activos.index') }}">

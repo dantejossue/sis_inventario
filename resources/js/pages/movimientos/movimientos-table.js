@@ -34,7 +34,8 @@ $(function () {
     processing: false,
     ajax: null,
     data: window.movimientos,
-    order: [[4, 'desc']],
+    // order: [[4, 'desc']],
+    order: [],
     columns: [
       {
         data: 'codigo',
@@ -42,34 +43,60 @@ $(function () {
       },
       {
         data: 'tipo',
-        render: t => `<span class="badge ${tipoBadge[t] ?? 'bg-label-secondary'}">${(t ?? '').replace(/_/g, ' ')}</span>`
+        render: t =>
+          `<span class="badge ${tipoBadge[t] ?? 'bg-label-secondary'}">${(t ?? '').replace(/_/g, ' ')}</span>`
       },
+      // {
+      //   data: 'activos',
+      //   orderable: false,
+      //   render: arr => {
+      //     if (!arr || !arr.length) return dash;
+      //     const max = 4;
+      //     const chips = arr
+      //       .slice(0, max)
+      //       .map(c => `<span class="badge bg-label-dark me-1">${c}</span>`)
+      //       .join('');
+      //     const resto = arr.length > max ? `<span class="badge bg-label-secondary">+${arr.length - max}</span>` : '';
+      //     return chips + resto;
+      //   }
+      // },
+      // {
+      //   // Origen → destino: muestra colaborador y/o ubicación según corresponda
+      //   data: null,
+      //   orderable: false,
+      //   render: row => {
+      //     const linea = (label, origen, destino) => {
+      //       if (!origen && !destino) return '';
+      //       const o = origen || '—';
+      //       const d = destino || '—';
+      //       return `<div><span class="text-muted">${label}:</span> ${o} <i class="bx bx-right-arrow-alt"></i> <span class="fw-semibold">${d}</span></div>`;
+      //     };
+      //     const colab = linea('Colaborador', row.colaborador_origen, row.colaborador_destino);
+      //     const ubic = linea('Ubicación', row.ubicacion_origen, row.ubicacion_destino);
+      //     return colab + ubic || dash;
+      //   }
+      // },
       {
-        data: 'activos',
+        // Origen → destino: muestra colaborador y/o ubicación según corresponda
+        data: 'ubicacion_origen',
         orderable: false,
-        render: arr => {
-          if (!arr || !arr.length) return dash;
-          const max = 4;
-          const chips = arr.slice(0, max).map(c => `<span class="badge bg-label-dark me-1">${c}</span>`).join('');
-          const resto = arr.length > max ? `<span class="badge bg-label-secondary">+${arr.length - max}</span>` : '';
-          return chips + resto;
-        }
+        render: d => `<span class="fw-semibold">${d}</span>`
       },
       {
         // Origen → destino: muestra colaborador y/o ubicación según corresponda
-        data: null,
+        data: 'ubicacion_destino',
         orderable: false,
-        render: row => {
-          const linea = (label, origen, destino) => {
-            if (!origen && !destino) return '';
-            const o = origen || '—';
-            const d = destino || '—';
-            return `<div><span class="text-muted">${label}:</span> ${o} <i class="bx bx-right-arrow-alt"></i> <span class="fw-semibold">${d}</span></div>`;
-          };
-          const colab = linea('Colaborador', row.colaborador_origen, row.colaborador_destino);
-          const ubic = linea('Ubicación', row.ubicacion_origen, row.ubicacion_destino);
-          return colab + ubic || dash;
-        }
+        render: d => `<span class="fw-semibold">${d}</span>`
+      },
+      {
+        data: 'estado',
+        render: e =>
+          `<span class="badge ${estadoBadge[e] ?? 'bg-label-secondary'} fw-bold">${(e ?? '').replace(/_/g, ' ')}</span>`
+      },
+      {
+        data: 'siga',
+        render: e =>
+          `<span class="badge ${estadoBadge[e] ?? 'bg-label-secondary'} fw-bold">${(e ?? '').replace(/_/g, ' ')}</span>`
       },
       {
         data: 'fecha',
@@ -81,13 +108,13 @@ $(function () {
           return `<span>${d}</span>${dev}`;
         }
       },
-      {
-        data: 'estado',
-        render: e =>
-          `<span class="badge ${estadoBadge[e] ?? 'bg-label-secondary'} fw-bold">${(e ?? '').replace(/_/g, ' ')}</span>`
-      },
+
       {
         data: 'registrado_por',
+        render: d => d ?? dash
+      },
+      {
+        data: null,
         render: d => d ?? dash
       }
     ]

@@ -5,10 +5,18 @@ $(function () {
   window.activosSeleccionados = new Set();
 
   const condicionBadge = {
+    NUEVO: 'bg-label-primary',
     BUENO: 'bg-label-success',
     REGULAR: 'bg-label-warning',
     MALO: 'bg-label-danger',
     OBSOLETO: 'bg-label-secondary'
+  };
+  const condicionMinus = {
+    NUEVO: 'Nuevo',
+    BUENO: 'Bueno',
+    REGULAR: 'Regular',
+    MALO: 'Malo',
+    OBSOLETO: 'Obsoleto'
   };
 
   // Etiqueta (badge suave) de color según la situación del activo
@@ -88,14 +96,22 @@ $(function () {
       },
       {
         data: 'condicion_nombre',
-        render: d => `<span class="badge fw-bold ${condicionBadge[d] ?? 'bg-secondary'}">${d}</span>`
+        render: d =>
+          `<span class="badge fw-bold ${condicionBadge[d] ?? 'bg-secondary'}">${condicionMinus[d]} ` ?? ` ${d}</span>`
       },
       {
         data: 'situacion_nombre',
         render: d => {
           if (!d || d === '—') return '<span class="text-muted">—</span>';
+
           const cls = situacionBadge[d] ?? 'bg-label-secondary';
-          return `<span class="badge ${cls} fw-bold">${d.replace(/_/g, ' ')}</span>`;
+
+          const texto = d
+            .replace(/_/g, ' ')
+            .toLowerCase()
+            .replace(/^./, c => c.toUpperCase());
+
+          return `<span class="badge ${cls} fw-bold">${texto}</span>`;
         }
       },
       {
@@ -129,7 +145,7 @@ $(function () {
                   </a>
                 </li>
                 <li>
-                  <a class="dropdown-item btn-mover-activo d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_activo}">
+                  <a class="dropdown-item btn-ver-etiqueta d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_activo}">
                     <i class="bx bx-qr me-1"></i> <span style="margin-top:3px">Ver etiqueta</span> 
                   </a>
                 </li>

@@ -55,7 +55,7 @@
 
             <div class="avatar">
               <span class="avatar-initial rounded bg-label-primary">
-                <i class="bx bx-laptop"></i>
+                <i class="bx bx-laptop fs-3"></i>
               </span>
             </div>
           </div>
@@ -77,7 +77,7 @@
 
             <div class="avatar">
               <span class="avatar-initial rounded bg-label-success">
-                <i class="bx bx-user-check"></i>
+                <i class="bx bx-user-check fs-3"></i>
               </span>
             </div>
           </div>
@@ -99,7 +99,7 @@
 
             <div class="avatar">
               <span class="avatar-initial rounded bg-label-warning">
-                <i class="bx bx-error-circle"></i>
+                <i class="bx bx-error-circle fs-3"></i>
               </span>
             </div>
           </div>
@@ -121,7 +121,7 @@
 
             <div class="avatar">
               <span class="avatar-initial rounded bg-label-danger">
-                <i class="bx bx-barcode"></i>
+                <i class="bx bx-barcode fs-3"></i>
               </span>
             </div>
           </div>
@@ -349,7 +349,6 @@
                     <option value="PRESTAMO">Préstamo</option>
                     <option value="DEVOLUCION">Devolución</option>
                     <option value="REUBICACION">Reubicación</option>
-                    <option value="BAJA">Baja</option>
                   </select>
                   <label>Tipo de Movimiento <span class="text-danger">*</span></label>
                   <div class="invalid-feedback"></div>
@@ -660,6 +659,75 @@
       </div>
     </div>
   </div>
+
+  <!-- Modal: etiqueta -->
+  <div class="modal fade" id="modalEtiqueta" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header border-bottom py-4">
+          <div>
+            <h5 class="modal-title">
+              <i class="bx bx-qr me-1"></i>
+              Etiqueta del activo
+            </h5>
+            <small class="text-muted">
+              Vista previa para impresión.
+            </small>
+          </div>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="d-flex justify-content-center">
+
+            <div class="d-inline-flex flex-column align-items-center rounded-4 p-5" style="border: 2px dashed #d9dee3;">
+
+              <div class="text-center border-bottom pb-3" style="line-height: 1;">
+                <strong class="d-block">UNDC - Activo Tecnológico</strong>
+                <small class="text-secondary">Oficina de Tecnologías de la Información</small>
+              </div>
+              <div class="d-flex py-3 justify-content-center border-bottom">
+                <div class="me-2" id="eti-qr">
+                  <i class="bx bx-qr"></i>
+                </div>
+
+                <div class="d-flex flex-column align-items-start lh-2">
+                  <strong><small id="eti_cod_interno"></small></strong>
+                  <small>Patrimonial: <small id="eti_cod_patrimonial"></small></small>
+                  <small>Serie: <small id="eti_num_serie"></small></small>
+                  <small id="eti_marca"></small>
+                </div>
+
+              </div>
+
+              <div class="text-center pt-3">
+                <svg id="eti-barcode"></svg><br>
+                <span id="eti_barcode_text"></span>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer border-top py-4">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+            Cerrar
+          </button>
+
+          {{-- <a href="{{ route('activos.etiquetas', ['ids' => $activo->id_activo]) }}" target="_blank"
+            class="btn btn-primary">
+            <i class="bx bx-printer me-1"></i>
+            Imprimir
+          </a> --}}
+        </div>
+
+      </div>
+    </div>
+  </div>
+  <!-- / Modal: etiqueta -->
 
   {{-- ════════════════════════════════════════════════════════════════════════════
        OFFCANVAS — MÁS INFO

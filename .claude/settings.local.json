@@ -32,7 +32,10 @@
       "Bash(pnpm build *)",
       "Bash(git commit -m 'F4.5: ficha del activo con datos reales + documentos adjuntos *)",
       "Bash(python *)",
-      "Bash(git commit -m 'F5: módulo de mantenimientos \\(ciclo completo\\) *)"
+      "Bash(git commit -m 'F5: módulo de mantenimientos \\(ciclo completo\\) *)",
+      "Bash(sed -n '/2321/,$p')",
+      "Bash(awk 'NR>=2320 && /MÓDULO/ && NR>2325 {print NR\": \"$0; exit}' /d/cara_inventario_ti/assets/css/activos-ti.css)",
+      "Bash(php -r 'echo file_get_contents\\(\"database/migrations/2026_06_19_000009_create_tramites_referencias_table.php\"\\);')"
     ]
   }
 }

@@ -228,12 +228,115 @@ $(function () {
   });
 
   // ═══════════════════════════════════════════
-  // MOVER — Modal
+  // FICHA — Modal
   // ═══════════════════════════════════════════
   const modalFicha = $('#modalFichaRapida');
 
   function abrirModalFicha(ids) {
     modalFicha.modal('show');
+  }
+
+  // ═══════════════════════════════════════════
+  // ETIQUETA — Modal
+  // ═══════════════════════════════════════════
+  const modalEtiqueta = $('#modalEtiqueta');
+
+  function abrirModalEtiqueta(id) {
+    const activo = window.activos.find(a => Number(a.id_activo) === Number(id));
+
+    if (!activo) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Activo no encontrado',
+        text: 'No se pudo cargar la información de la etiqueta.'
+      });
+
+      return;
+    }
+
+    const codigoInterno = activo.codigo_interno || 'SIN CÓDIGO';
+    const codigoPatrimonial = activo.codigo_patrimonial || '';
+    const numeroSerie = activo.numero_serie || 'Sin serie';
+    const marca = activo.marca_nombre || 'Sin marca';
+    const modelo = activo.modelo_nombre || '';
+
+    // Llenar información textual
+    $('#eti_cod_interno').text(codigoInterno);
+    $('#eti_cod_patrimonial').text(codigoPatrimonial || 'Sin código');
+    $('#eti_num_serie').text(numeroSerie);
+    $('#eti_marca').text(`${marca} ${modelo}`.trim());
+
+    // El código que utilizará el código de barras
+    const valorBarcode = codigoPatrimonial || codigoInterno;
+
+    $('#eti_barcode_text').text(valorBarcode);
+
+    generarQrEtiqueta(activo);
+    generarBarcodeEtiqueta(valorBarcode);
+
+    modalEtiqueta.modal('show');
+  }
+
+  function generarQrEtiqueta(activo) {
+    const qrBox = document.getElementById('eti-qr');
+
+    if (!qrBox) return;
+
+    qrBox.innerHTML = '';
+
+    const urlQr = activo.qr_url || `${window.location.origin}${window.location.pathname}?ver=${activo.id_activo}`;
+
+    QRCode.toString(
+      urlQr,
+      {
+        type: 'svg',
+        width: 90,
+        margin: 0,
+        errorCorrectionLevel: 'H'
+      },
+      function (error, svg) {
+        if (error) {
+          console.error('Error generando QR:', error);
+
+          qrBox.innerHTML = `
+          <i class="bx bx-error-circle text-danger fs-1"></i>
+        `;
+
+          return;
+        }
+
+        qrBox.innerHTML = svg;
+      }
+    );
+  }
+
+  function generarBarcodeEtiqueta(valor) {
+    const barcodeEl = document.getElementById('eti-barcode');
+
+    if (!barcodeEl) return;
+
+    barcodeEl.innerHTML = '';
+
+    if (!valor) {
+      $('#eti-barcode-text').text('Sin código');
+      return;
+    }
+
+    try {
+      JsBarcode(barcodeEl, String(valor), {
+        format: 'CODE128',
+        displayValue: false,
+        fontSize: 12,
+        height: 42,
+        margin: 0,
+        width: 1.4
+      });
+    } catch (error) {
+      console.error('Error generando código de barras:', error);
+
+      barcodeEl.innerHTML = '';
+      $('#eti-barcode-text').text('Código no válido');
+    }
   }
 
   // ═══════════════════════════════════════════
@@ -276,13 +379,9 @@ $(function () {
       ubicacion: 'req',
       devolucion: false,
       ayuda: 'Solo cambia la ubicación física del activo.'
-    },
-    BAJA: {
-      colaborador: false,
-      ubicacion: false,
-      devolucion: false,
-      ayuda: 'Da de baja el activo (situación DADO_DE_BAJA).'
     }
+    // La BAJA ya no es un movimiento rápido: se gestiona en el módulo de
+    // Bajas (propuesta → evaluación → expediente → aprobación → ejecución).
   };
 
   // Máquina de estados (espejo de MovimientoController::TRANSICIONES): situación
@@ -295,8 +394,7 @@ $(function () {
     TRANSFERENCIA: ['EN_USO'],
     PRESTAMO: ['EN_ALMACEN'],
     DEVOLUCION: ['EN_DESPLAZAMIENTO'],
-    REUBICACION: ['EN_ALMACEN', 'EN_USO', 'EN_DESPLAZAMIENTO', 'EN_MANTENIMIENTO'],
-    BAJA: ['EN_ALMACEN', 'EN_USO', 'EN_MANTENIMIENTO']
+    REUBICACION: ['EN_ALMACEN', 'EN_USO', 'EN_DESPLAZAMIENTO', 'EN_MANTENIMIENTO']
   };
 
   let idsParaMover = [];
@@ -373,6 +471,11 @@ $(function () {
   $(document).on('click', '.btn-mover-activo', function () {
     const id = parseInt($(this).data('id'));
     abrirModalMover([id]);
+  });
+
+  $(document).on('click', '.btn-ver-etiqueta', function () {
+    const id = parseInt($(this).data('id'));
+    abrirModalEtiqueta([id]);
   });
 
   // Desde barra bulk

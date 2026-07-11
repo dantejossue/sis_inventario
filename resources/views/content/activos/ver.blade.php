@@ -5,35 +5,92 @@
 @php
   use Carbon\Carbon;
 
-  $badgeCondicion = ['BUENO' => 'success', 'REGULAR' => 'warning', 'MALO' => 'danger', 'RAEE' => 'dark', 'CHATARRA' => 'secondary'];
-  $badgeSituacion = ['EN_USO' => 'info', 'EN_ALMACEN' => 'primary', 'EN_MANTENIMIENTO' => 'warning', 'EN_DESPLAZAMIENTO' => 'warning', 'PENDIENTE_BAJA' => 'danger', 'DADO_DE_BAJA' => 'secondary'];
-  $badgeValidacion = ['VALIDADO' => ['success', 'Validado'], 'PENDIENTE_VALIDACION' => ['warning', 'Pendiente de validación'], 'OBSERVADO' => ['danger', 'Observado']];
-  $badgeEstadoMov = ['REGISTRADO' => 'primary', 'PENDIENTE_TRAMITE' => 'warning', 'EN_TRAMITE' => 'warning', 'AUTORIZADO' => 'info', 'EJECUTADO' => 'success', 'RECHAZADO' => 'danger', 'CANCELADO' => 'secondary'];
-  $badgeEstadoSiga = ['NO_APLICA' => 'secondary', 'PENDIENTE_ACTUALIZACION' => 'warning', 'REGISTRADO' => 'success', 'OBSERVADO' => 'danger'];
-  $iconoCategoria = ['LAPTOP' => 'bx-laptop', 'CPU' => 'bx-desktop', 'MONITOR' => 'bx-tv', 'IMPRESORA' => 'bx-printer', 'PROYECTOR' => 'bx-video', 'SWITCH' => 'bx-network-chart', 'ROUTER' => 'bx-wifi', 'ACCESS POINT' => 'bx-broadcast', 'SERVIDOR' => 'bx-server', 'UPS' => 'bx-plug', 'ESTABILIZADOR' => 'bx-plug'];
-  $iconoDoc = ['pdf' => ['bxs-file-pdf', 'danger'], 'jpg' => ['bx-image', 'primary'], 'jpeg' => ['bx-image', 'primary'], 'png' => ['bx-image', 'primary'], 'webp' => ['bx-image', 'primary'], 'doc' => ['bx-file', 'info'], 'docx' => ['bx-file', 'info'], 'xls' => ['bx-spreadsheet', 'success'], 'xlsx' => ['bx-spreadsheet', 'success']];
+  $badgeCondicion = [
+      'BUENO' => 'success',
+      'REGULAR' => 'warning',
+      'MALO' => 'danger',
+      'RAEE' => 'dark',
+      'CHATARRA' => 'secondary',
+  ];
+  $badgeSituacion = [
+      'EN_USO' => 'info',
+      'EN_ALMACEN' => 'primary',
+      'EN_MANTENIMIENTO' => 'warning',
+      'EN_DESPLAZAMIENTO' => 'warning',
+      'PENDIENTE_BAJA' => 'danger',
+      'DADO_DE_BAJA' => 'secondary',
+  ];
+  $badgeValidacion = [
+      'VALIDADO' => ['success', 'Validado'],
+      'PENDIENTE_VALIDACION' => ['warning', 'Pendiente de validación'],
+      'OBSERVADO' => ['danger', 'Observado'],
+  ];
+  $badgeEstadoMov = [
+      'REGISTRADO' => 'primary',
+      'PENDIENTE_TRAMITE' => 'warning',
+      'EN_TRAMITE' => 'warning',
+      'AUTORIZADO' => 'info',
+      'EJECUTADO' => 'success',
+      'RECHAZADO' => 'danger',
+      'CANCELADO' => 'secondary',
+  ];
+  $badgeEstadoSiga = [
+      'NO_APLICA' => 'secondary',
+      'PENDIENTE_ACTUALIZACION' => 'warning',
+      'REGISTRADO' => 'success',
+      'OBSERVADO' => 'danger',
+  ];
+  $iconoCategoria = [
+      'LAPTOP' => 'bx-laptop',
+      'CPU' => 'bx-desktop',
+      'MONITOR' => 'bx-tv',
+      'IMPRESORA' => 'bx-printer',
+      'PROYECTOR' => 'bx-video',
+      'SWITCH' => 'bx-network-chart',
+      'ROUTER' => 'bx-wifi',
+      'ACCESS POINT' => 'bx-broadcast',
+      'SERVIDOR' => 'bx-server',
+      'UPS' => 'bx-plug',
+      'ESTABILIZADOR' => 'bx-plug',
+  ];
+  $iconoDoc = [
+      'pdf' => ['bxs-file-pdf', 'danger'],
+      'jpg' => ['bx-image', 'primary'],
+      'jpeg' => ['bx-image', 'primary'],
+      'png' => ['bx-image', 'primary'],
+      'webp' => ['bx-image', 'primary'],
+      'doc' => ['bx-file', 'info'],
+      'docx' => ['bx-file', 'info'],
+      'xls' => ['bx-spreadsheet', 'success'],
+      'xlsx' => ['bx-spreadsheet', 'success'],
+  ];
 
-  $tipoLegible   = fn($t) => ucfirst(strtolower(str_replace('_', ' ', (string) $t)));
-  $fmtFecha      = fn($f) => $f ? Carbon::parse($f)->format('d/m/Y') : null;
-  $fmtMoneda     = fn($v) => $v !== null ? 'S/ ' . number_format((float) $v, 2) : null;
-  $nombreUsuario = fn($u) => $u?->colaborador?->nombre_completo ?: ($u?->nombre_usuario ?? '—');
+  $tipoLegible = fn($t) => ucfirst(strtolower(str_replace('_', ' ', (string) $t)));
+  $fmtFecha = fn($f) => $f ? Carbon::parse($f)->format('d/m/Y') : null;
+  $fmtMoneda = fn($v) => $v !== null ? 'S/ ' . number_format((float) $v, 2) : null;
+  $nombreUsuario = fn($u) => $u?->colaborador?->nombre_completo ?: $u?->nombre_usuario ?? '—';
 
-  $categoria   = $activo->categoria ?? $activo->modelo?->categoriaActivo;
+  $categoria = $activo->categoria ?? $activo->modelo?->categoriaActivo;
   $marcaModelo = trim(($activo->modelo?->marca?->nombre ?? '') . ' ' . ($activo->modelo?->nombre ?? ''));
-  $titulo      = trim(($categoria ? $tipoLegible($categoria->nombre) . ' ' : '') . $marcaModelo) ?: 'Activo #' . $activo->id_activo;
-  $condicion   = $activo->condicion;
-  $situacion   = $activo->situacion;
+  $titulo =
+      trim(($categoria ? $tipoLegible($categoria->nombre) . ' ' : '') . $marcaModelo) ?:
+      'Activo #' . $activo->id_activo;
+  $condicion = $activo->condicion;
+  $situacion = $activo->situacion;
   $responsable = $activo->responsable;
   $dependencia = $responsable?->sedeDependencia?->dependencia?->nombre_dependencia;
-  $sedeResp    = $responsable?->sedeDependencia?->sede?->nombre_sede;
-  $siga        = $activo->patrimonialSiga;
-  $tec         = $activo->activoTecnico;
-  $documentos  = $activo->documentos->sortByDesc('creado_en')->values();
+  $sedeResp = $responsable?->sedeDependencia?->sede?->nombre_sede;
+  $siga = $activo->patrimonialSiga;
+  $tec = $activo->activoTecnico;
+  $documentos = $activo->documentos->sortByDesc('creado_en')->values();
 
-  $garantiaFin     = $activo->garantia_fin ? Carbon::parse($activo->garantia_fin) : null;
+  $garantiaFin = $activo->garantia_fin ? Carbon::parse($activo->garantia_fin) : null;
   $garantiaVigente = $garantiaFin ? $garantiaFin->endOfDay()->isFuture() : null;
 
-  [$valColor, $valTexto] = $badgeValidacion[$activo->estado_validacion] ?? ['secondary', $tipoLegible($activo->estado_validacion)];
+  [$valColor, $valTexto] = $badgeValidacion[$activo->estado_validacion] ?? [
+      'secondary',
+      $tipoLegible($activo->estado_validacion),
+  ];
   $ultimoMovimiento = $movimientos->first()?->movimiento;
 @endphp
 
@@ -77,6 +134,30 @@
     </div>
   @endif
 
+  @php $bajaVigente = $bajas->first(fn($b) => in_array($b->estado, \App\Models\BajaActivo::ESTADOS_ABIERTOS) || $b->estado === 'EJECUTADA'); @endphp
+  @if ($bajaVigente)
+    <div
+      class="alert {{ $bajaVigente->estado === 'EJECUTADA' ? 'alert-danger' : 'alert-warning' }} d-flex align-items-start"
+      role="alert">
+      <i class="bx bx-down-arrow-circle fs-4 me-2"></i>
+      <div>
+        <strong>
+          {{ $bajaVigente->estado === 'EJECUTADA' ? 'Activo dado de baja' : 'Propuesta de baja en curso' }}
+          ({{ $bajaVigente->codigo }})
+        </strong>
+        <p class="mb-0">
+          Causal: {{ ucfirst(strtolower(str_replace('_', ' ', $bajaVigente->causal_baja))) }}
+          · Estado: {{ ucfirst(strtolower(str_replace('_', ' ', $bajaVigente->estado))) }}
+          @if ($bajaVigente->fecha_baja)
+            · Ejecutada el {{ $bajaVigente->fecha_baja->format('d/m/Y') }}
+          @endif
+          — gestiona el proceso en
+          <a href="{{ route('bajas.index') }}" class="alert-link">Bajas de activos</a>.
+        </p>
+      </div>
+    </div>
+  @endif
+
   <!-- Resumen superior -->
   <div class="row g-4">
 
@@ -105,10 +186,12 @@
               <span class="badge bg-label-primary">{{ $tipoLegible($categoria->nombre) }}</span>
             @endif
             @if ($condicion)
-              <span class="badge bg-label-{{ $badgeCondicion[$condicion->codigo] ?? 'secondary' }}">{{ $condicion->nombre }}</span>
+              <span
+                class="badge bg-label-{{ $badgeCondicion[$condicion->codigo] ?? 'secondary' }}">{{ $condicion->nombre }}</span>
             @endif
             @if ($situacion)
-              <span class="badge bg-label-{{ $badgeSituacion[$situacion->codigo] ?? 'secondary' }}">{{ $situacion->nombre }}</span>
+              <span
+                class="badge bg-label-{{ $badgeSituacion[$situacion->codigo] ?? 'secondary' }}">{{ $situacion->nombre }}</span>
             @endif
             <span class="badge bg-label-{{ $valColor }}">{{ $valTexto }}</span>
           </div>
@@ -194,7 +277,8 @@
               <div class="info-box d-block">
                 <span class="info-label fw-light d-block">Responsable actual</span>
                 <strong>{{ $responsable?->nombre_completo ?? 'Sin responsable' }}</strong>
-                <small class="text-muted d-block">{{ $dependencia ?: ($responsable ? '—' : 'Bajo custodia de almacén') }}</small>
+                <small
+                  class="text-muted d-block">{{ $dependencia ?: ($responsable ? '—' : 'Bajo custodia de almacén') }}</small>
               </div>
             </div>
 
@@ -275,7 +359,8 @@
       <ul class="nav nav-pills card-header-pills flex-column flex-md-row gap-2" role="tablist">
 
         <li class="nav-item">
-          <button type="button" class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general" role="tab">
+          <button type="button" class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general"
+            role="tab">
             <i class="bx bx-info-circle me-1"></i>
             General
           </button>
@@ -283,7 +368,8 @@
 
         @if ($tec)
           <li class="nav-item">
-            <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-tecnico" role="tab">
+            <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-tecnico"
+              role="tab">
               <i class="bx bx-chip me-1"></i>
               Técnico
             </button>
@@ -298,7 +384,8 @@
         </li>
 
         <li class="nav-item">
-          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-movimientos" role="tab">
+          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-movimientos"
+            role="tab">
             <i class="bx bx-transfer-alt me-1"></i>
             Movimientos
             <span class="badge bg-label-primary ms-1">{{ $movimientos->count() }}</span>
@@ -306,7 +393,8 @@
         </li>
 
         <li class="nav-item">
-          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-mantenimientos" role="tab">
+          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-mantenimientos"
+            role="tab">
             <i class="bx bx-wrench me-1"></i>
             Mantenimientos
             <span class="badge bg-label-primary ms-1">{{ $mantenimientos->count() }}</span>
@@ -314,7 +402,8 @@
         </li>
 
         <li class="nav-item">
-          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-documentos" role="tab">
+          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-documentos"
+            role="tab">
             <i class="bx bx-file me-1"></i>
             Documentos
             <span class="badge bg-label-primary ms-1">{{ $documentos->count() }}</span>
@@ -322,7 +411,8 @@
         </li>
 
         <li class="nav-item">
-          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-trazabilidad" role="tab">
+          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-trazabilidad"
+            role="tab">
             <i class="bx bx-history me-1"></i>
             Trazabilidad
           </button>
@@ -404,7 +494,8 @@
                     <div class="data-list-item">
                       <span>Condición</span>
                       @if ($condicion)
-                        <span class="badge bg-label-{{ $badgeCondicion[$condicion->codigo] ?? 'secondary' }}">{{ $condicion->nombre }}</span>
+                        <span
+                          class="badge bg-label-{{ $badgeCondicion[$condicion->codigo] ?? 'secondary' }}">{{ $condicion->nombre }}</span>
                       @else
                         <strong>—</strong>
                       @endif
@@ -413,7 +504,8 @@
                     <div class="data-list-item">
                       <span>Situación</span>
                       @if ($situacion)
-                        <span class="badge bg-label-{{ $badgeSituacion[$situacion->codigo] ?? 'secondary' }}">{{ $situacion->nombre }}</span>
+                        <span
+                          class="badge bg-label-{{ $badgeSituacion[$situacion->codigo] ?? 'secondary' }}">{{ $situacion->nombre }}</span>
                       @else
                         <strong>—</strong>
                       @endif
@@ -544,16 +636,7 @@
                   <div class="section-card-body">
                     <div class="row g-3">
 
-                      @foreach ([
-                        ['Procesador', $tec->procesador, 'bx-chip text-primary'],
-                        ['Memoria RAM', $tec->memoria_ram, 'bx-memory-card text-info'],
-                        ['Almacenamiento', trim(($tec->almacenamiento ?? '') . ' ' . ($tec->tipo_almacenamiento ?? '')) ?: null, 'bx-hdd text-warning'],
-                        ['Sistema operativo', $tec->sistema_operativo, 'bx-desktop text-success'],
-                        ['Dirección IP', $tec->direccion_ip, 'bx-wifi text-primary'],
-                        ['Dirección MAC', $tec->direccion_mac, 'bx-barcode text-secondary'],
-                        ['Nombre de equipo', $tec->nombre_equipo, 'bx-laptop text-info'],
-                        ['Accesorios', $tec->accesorios, 'bx-plug text-secondary'],
-                      ] as [$label, $valor, $icono])
+                      @foreach ([['Procesador', $tec->procesador, 'bx-chip text-primary'], ['Memoria RAM', $tec->memoria_ram, 'bx-memory-card text-info'], ['Almacenamiento', trim(($tec->almacenamiento ?? '') . ' ' . ($tec->tipo_almacenamiento ?? '')) ?: null, 'bx-hdd text-warning'], ['Sistema operativo', $tec->sistema_operativo, 'bx-desktop text-success'], ['Dirección IP', $tec->direccion_ip, 'bx-wifi text-primary'], ['Dirección MAC', $tec->direccion_mac, 'bx-barcode text-secondary'], ['Nombre de equipo', $tec->nombre_equipo, 'bx-laptop text-info'], ['Accesorios', $tec->accesorios, 'bx-plug text-secondary']] as [$label, $valor, $icono])
                         @if ($valor)
                           <div class="col-md-6">
                             <div class="tech-detail-card">
@@ -844,7 +927,9 @@
                     @php $mov = $det->movimiento; @endphp
                     @if ($mov)
                       <tr>
-                        <td><strong>{{ $mov->codigo_movimiento ?: 'MOV-' . str_pad($mov->id_movimiento, 6, '0', STR_PAD_LEFT) }}</strong></td>
+                        <td>
+                          <strong>{{ $mov->codigo_movimiento ?: 'MOV-' . str_pad($mov->id_movimiento, 6, '0', STR_PAD_LEFT) }}</strong>
+                        </td>
                         <td>{{ $tipoLegible($mov->tipo) }}</td>
                         <td>
                           {{ $det->responsableOrigen?->nombre_completo ?? ($det->ubicacionOrigen?->nombre ?? 'Almacén') }}
@@ -880,12 +965,21 @@
 
           @php
             $badgeEstadoMant = [
-              'SOLICITADO' => 'primary', 'EN_REVISION' => 'info', 'EN_MANTENIMIENTO' => 'warning',
-              'DERIVADO_PROVEEDOR' => 'warning', 'ATENDIDO' => 'success', 'SIN_REPARACION' => 'danger',
-              'RECOMENDADO_BAJA' => 'danger', 'CERRADO' => 'success', 'CANCELADO' => 'secondary',
+                'SOLICITADO' => 'primary',
+                'EN_REVISION' => 'info',
+                'EN_MANTENIMIENTO' => 'warning',
+                'DERIVADO_PROVEEDOR' => 'warning',
+                'ATENDIDO' => 'success',
+                'SIN_REPARACION' => 'danger',
+                'RECOMENDADO_BAJA' => 'danger',
+                'CERRADO' => 'success',
+                'CANCELADO' => 'secondary',
             ];
             $badgeTipoMant = [
-              'PREVENTIVO' => 'info', 'CORRECTIVO' => 'danger', 'GARANTIA' => 'primary', 'REVISION_TECNICA' => 'warning',
+                'PREVENTIVO' => 'info',
+                'CORRECTIVO' => 'danger',
+                'GARANTIA' => 'primary',
+                'REVISION_TECNICA' => 'warning',
             ];
           @endphp
 
@@ -941,7 +1035,8 @@
                       <td>
                         <span class="d-block">{{ \Illuminate\Support\Str::limit($mant->descripcion, 60) }}</span>
                         @if ($mant->diagnostico)
-                          <small class="text-muted">{{ \Illuminate\Support\Str::limit($mant->diagnostico, 60) }}</small>
+                          <small
+                            class="text-muted">{{ \Illuminate\Support\Str::limit($mant->diagnostico, 60) }}</small>
                         @endif
                       </td>
                       <td>{{ $mant->tecnicoResponsable?->nombre_completo ?? ($mant->proveedor ?: 'Por asignar') }}</td>
@@ -1009,7 +1104,9 @@
                     </div>
 
                     <div class="document-content">
-                      <h6 class="mb-1">{{ $doc->tipo_documento }}{{ $doc->numero_documento ? ' · ' . $doc->numero_documento : '' }}</h6>
+                      <h6 class="mb-1">
+                        {{ $doc->tipo_documento }}{{ $doc->numero_documento ? ' · ' . $doc->numero_documento : '' }}
+                      </h6>
                       <small class="text-muted d-block">
                         {{ strtoupper($doc->extension ?: 'ARCHIVO') }}{{ $doc->tamano_kb ? ' · ' . ($doc->tamano_kb >= 1024 ? number_format($doc->tamano_kb / 1024, 1) . ' MB' : $doc->tamano_kb . ' KB') : '' }}
                       </small>
@@ -1024,7 +1121,8 @@
                         <i class="bx bx-download"></i>
                       </a>
                       <button type="button" class="btn btn-sm btn-icon btn-outline-danger btn-eliminar-doc"
-                        data-id="{{ $doc->id_documento }}" data-nombre="{{ $doc->tipo_documento }}" title="Eliminar">
+                        data-id="{{ $doc->id_documento }}" data-nombre="{{ $doc->tipo_documento }}"
+                        title="Eliminar">
                         <i class="bx bx-trash"></i>
                       </button>
                     </div>
@@ -1119,7 +1217,7 @@
     <div class="modal-dialog modal-md modal-dialog-centered">
       <div class="modal-content">
 
-        <div class="modal-header">
+        <div class="modal-header border-bottom py-4">
           <div>
             <h5 class="modal-title">
               <i class="bx bx-qr me-1"></i>
@@ -1134,39 +1232,39 @@
         </div>
 
         <div class="modal-body">
+          <div class="d-flex justify-content-center">
 
-          <div class="asset-label-preview mx-auto">
+            <div class="d-inline-flex flex-column align-items-center rounded-4 p-5" style="border: 2px dashed #d9dee3;">
 
-            <div class="asset-label-header">
-              <strong>UNDC - Activo Tecnológico</strong>
-              <small>Oficina de Tecnologías de la Información</small>
-            </div>
+              <div class="text-center border-bottom pb-3" style="line-height: 1;">
+                <strong class="d-block">UNDC - Activo Tecnológico</strong>
+                <small class="text-secondary">Oficina de Tecnologías de la Información</small>
+              </div>
+              <div class="d-flex py-3 justify-content-center border-bottom">
+                <div class="me-2" id="etiqueta-qr">
+                  <i class="bx bx-qr"></i>
+                </div>
 
-            <div class="asset-label-body">
+                <div class="d-flex flex-column align-items-start lh-2">
+                  <small><strong>{{ $activo->codigo_interno ?: $activo->codigo_patrimonial }}</strong></small>
+                  <small>Patrimonial: {{ $activo->codigo_patrimonial }}</small>
+                  <small>Serie: {{ $activo->numero_serie ?: '—' }}</small>
+                  <small>{{ $marcaModelo ?: '—' }}</small>
+                </div>
 
-              <div class="asset-qr-box" id="etiqueta-qr">
-                <i class="bx bx-qr"></i>
               </div>
 
-              <div class="asset-label-info">
-                <strong>{{ $activo->codigo_interno ?: $activo->codigo_patrimonial }}</strong>
-                <span>Patrimonial: {{ $activo->codigo_patrimonial }}</span>
-                <span>Serie: {{ $activo->numero_serie ?: '—' }}</span>
-                <span>{{ $marcaModelo ?: '—' }}</span>
+              <div class="text-center pt-3">
+                <svg id="etiqueta-barcode"></svg><br>
+                <span>{{ $activo->codigo_patrimonial }}</span>
               </div>
 
             </div>
-
-            <div class="asset-barcode">
-              <svg id="etiqueta-barcode"></svg>
-              <span>{{ $activo->codigo_patrimonial }}</span>
-            </div>
-
           </div>
 
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer border-top py-4">
           <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
             Cerrar
           </button>

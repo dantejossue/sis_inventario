@@ -52,11 +52,8 @@ class MovimientoController extends Controller
             'colaborador' => false, 'ubicacion' => true, 'devolucion' => false,
             'origen' => ['EN_ALMACEN', 'EN_USO', 'EN_DESPLAZAMIENTO', 'EN_MANTENIMIENTO'],
         ],
-        'BAJA' => [
-            'mov' => 'REGULARIZACION', 'situacion' => 'DADO_DE_BAJA',
-            'colaborador' => false, 'ubicacion' => false, 'devolucion' => false,
-            'origen' => ['EN_ALMACEN', 'EN_USO', 'EN_MANTENIMIENTO'],
-        ],
+        // La BAJA ya no es un movimiento rápido: se gestiona en el módulo de
+        // Bajas (BajaActivoController) con evaluación, expediente y aprobación.
     ];
 
     public function index()
@@ -225,7 +222,6 @@ class MovimientoController extends Controller
             'ASIGNAR', 'PRESTAMO' => 'Solo se permite con activos en almacén.',
             'TRANSFERENCIA'       => 'Solo se permite con activos que estén EN USO.',
             'DEVOLUCION'          => 'Solo se permite con activos que estén EN DESPLAZAMIENTO (prestados).',
-            'BAJA'                => 'No se permite si el activo está en desplazamiento (devuélvelo primero) o ya está dado de baja.',
             'REUBICACION'         => 'No se permite con activos dados de baja.',
             default               => '',
         };

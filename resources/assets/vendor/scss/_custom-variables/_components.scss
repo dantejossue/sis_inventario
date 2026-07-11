@@ -4,3 +4,42 @@
 // ================================================================================================
 
 // $menu-color: #000 !default;
+// ======================================================
+// SIDEBAR PERSONALIZADO
+// ======================================================
+
+// Dimensiones
+$menu-width: 16.25rem;
+$menu-collapsed-width: 5.25rem;
+
+// Fondo general
+$menu-bg: #2b2c40;
+$menu-bg-rgb: 43, 44, 64;
+
+// Texto e iconos
+$menu-color: #b6b7c8;
+$menu-color-rgb: 182, 183, 200;
+
+// Hover
+$menu-hover-bg: rgba(255, 255, 255, 0.06);
+$menu-hover-color: #ffffff;
+
+// Elemento principal seleccionado
+$menu-active-bg: #2495e8;
+$menu-active-color: #ffffff;
+
+// Padre abierto con submenú
+$menu-sub-active-bg: #2495e8;
+$menu-sub-active-color: #ffffff;
+
+// Fondo de submenu toggle activo
+$menu-active-toggle-bg: #2495e8;
+
+// Menú horizontal, aunque no lo estés utilizando
+$menu-horizontal-active-bg: rgba(36, 149, 232, 0.12);
+
+// Separadores
+$menu-divider-color: rgba(255, 255, 255, 0.08);
+
+// Sombra
+$menu-box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.18);
