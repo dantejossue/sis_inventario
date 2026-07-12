@@ -5,11 +5,13 @@ namespace App\Http\Controllers;
 use App\Models\Activo;
 use App\Models\AuditoriaCambio;
 use App\Models\DetalleMovimientoActivo;
+use App\Models\DocumentoAdjunto;
 use App\Models\Movimiento;
 use App\Models\Ubicacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -46,10 +48,10 @@ class MovimientoController extends Controller
     public function index()
     {
         $movimientos = Movimiento::with([
-                'detalles.activo:id_activo,codigo_interno',
+                'detalles.activo:id_activo,codigo_interno,codigo_patrimonial',
                 'detalles.responsableOrigen', 'detalles.responsableDestino',
                 'detalles.ubicacionOrigen', 'detalles.ubicacionDestino',
-                'registradoPor',
+                'registradoPor.colaborador', 'documentos.subidoPor',
             ])
             ->orderByDesc('fecha_movimiento')
             ->get()
@@ -72,9 +74,19 @@ class MovimientoController extends Controller
             'situacion_actual'          => ['nullable', 'in:' . implode(',', Activo::SITUACIONES)],
             'motivo'                    => 'nullable|string|max:500',
             'observaciones'             => 'nullable|string|max:500',
+            'tipo_documento'            => 'nullable|string|max:100',
+            // Documento de sustento OBLIGATORIO (acta de entrega / conformidad, etc.).
+            'documento'                 => ['required', 'file', 'max:5120', function ($attr, $value, $fail) {
+                $ext = strtolower($value->getClientOriginalExtension());
+                $ok = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar'];
+                if (! in_array($ext, $ok, true)) {
+                    $fail('Formato de documento no permitido (.' . $ext . ').');
+                }
+            }],
         ], [
             'tipo.required'       => 'Debes seleccionar un tipo de movimiento.',
             'activo_ids.required' => 'Debes seleccionar al menos un activo.',
+            'documento.required'  => 'Adjunta el documento de sustento del movimiento (acta de entrega/conformidad).',
         ]);
 
         $tipo = $request->tipo;
@@ -119,8 +131,42 @@ class MovimientoController extends Controller
             ]);
         }
 
+        // ── Regla OTI: todo activo movido debe estar a cargo de un colaborador de
+        // la dependencia de OTI. Se deniega si algún activo no tiene responsable o
+        // su responsable pertenece a otra dependencia.
+        $sinResp = $activos->filter(fn($a) => ! $a->id_responsable_actual);
+        if ($sinResp->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'activo_ids' => 'Solo se mueven activos a cargo de un colaborador de OTI. Sin responsable: '
+                    . $sinResp->pluck('codigo_interno')->implode(', ') . '.',
+            ]);
+        }
+
+        $otiDeps = $this->dependenciasOtiIds();
+        $depPorColab = DB::table('colaboradores')
+            ->whereIn('id_colaborador', $activos->pluck('id_responsable_actual')->unique())
+            ->pluck('id_sede_dependencia', 'id_colaborador');
+        $sdOti = DB::table('sede_dependencia')->whereIn('id_dependencia', $otiDeps)->pluck('id_sede_dependencia')->all();
+
+        $fueraOti = $activos->filter(fn($a) => ! in_array($depPorColab[$a->id_responsable_actual] ?? null, $sdOti, true));
+        if ($fueraOti->isNotEmpty()) {
+            throw ValidationException::withMessages([
+                'activo_ids' => 'Solo se permiten movimientos de activos a cargo de OTI. Responsable de otra dependencia en: '
+                    . $fueraOti->pluck('codigo_interno')->implode(', ') . '.',
+            ]);
+        }
+
+        // ── Atribución (registrado_por): si todos los activos comparten un mismo
+        // responsable, el movimiento se registra a su nombre; si hay responsables
+        // distintos, se atribuye al jefe de OTI. Fallback: quien opera el sistema.
+        $responsablesUnicos = $activos->pluck('id_responsable_actual')->unique()->values();
+        $registradoPor = $responsablesUnicos->count() === 1
+            ? ($this->usuarioDeColaborador($responsablesUnicos->first()) ?? $this->jefeOtiUsuarioId())
+            : $this->jefeOtiUsuarioId();
+        $registradoPor = $registradoPor ?: Auth::id();
+
         $mov = null;
-        DB::transaction(function () use ($request, $tipo, $op, $colaboradorDestino, $ubicacionDestino, $activos, &$mov) {
+        DB::transaction(function () use ($request, $tipo, $op, $colaboradorDestino, $ubicacionDestino, $activos, $registradoPor, &$mov) {
             $mov = Movimiento::create([
                 'codigo_movimiento'         => 'TMP',
                 'tipo'                      => $tipo,
@@ -131,7 +177,8 @@ class MovimientoController extends Controller
                 'estado_devolucion'         => $op['devolucion'] ? 'PENDIENTE_DEVOLUCION' : 'NO_APLICA',
                 'motivo'                    => $request->motivo ?: null,
                 'observaciones'             => $request->observaciones ?: null,
-                'registrado_por'            => Auth::id(),
+                // registrado_por = responsable de los activos (o jefe OTI).
+                'registrado_por'            => $registradoPor,
                 'ejecutado_por'             => Auth::id(),
                 'fecha_ejecucion'           => now(),
                 'requiere_tramite'          => false,
@@ -179,6 +226,9 @@ class MovimientoController extends Controller
                 ]);
             }
         });
+
+        // Documento de sustento del movimiento (acta de entrega/conformidad).
+        $this->guardarSustento($mov, $request);
 
         AuditoriaCambio::registrar('MOVIMIENTO', $mov->id_movimiento, 'EJECUTAR', null, [
             'codigo' => $mov->codigo_movimiento,
@@ -278,6 +328,87 @@ class MovimientoController extends Controller
             ->values();
     }
 
+    /** Elimina un movimiento y su rastro (detalle por cascada + documentos). No
+     *  revierte el estado de los activos (acción administrativa). */
+    public function destroy(int $id)
+    {
+        $mov = Movimiento::with('documentos')->findOrFail($id);
+
+        DB::transaction(function () use ($mov) {
+            foreach ($mov->documentos as $doc) {
+                if ($doc->archivo && Storage::disk('local')->exists($doc->archivo)) {
+                    Storage::disk('local')->delete($doc->archivo);
+                }
+                $doc->delete();
+            }
+            AuditoriaCambio::registrar('MOVIMIENTO', $mov->id_movimiento, 'ELIMINAR', ['codigo' => $mov->codigo_movimiento], null);
+            $mov->delete(); // detalle_movimiento_activo cae por FK cascade
+        });
+
+        return response()->json(['success' => true, 'message' => 'Movimiento eliminado.']);
+    }
+
+    /** Ids de dependencia consideradas OTI (por descripción 'OTI' o nombre). */
+    private function dependenciasOtiIds(): array
+    {
+        return DB::table('dependencias')
+            ->where(function ($q) {
+                $q->whereRaw("UPPER(COALESCE(descripcion,'')) = 'OTI'")
+                    ->orWhere('nombre_dependencia', 'like', '%Tecnolog%');
+            })
+            ->pluck('id_dependencia')->all();
+    }
+
+    /** Usuario ACTIVO vinculado a un colaborador (si tiene cuenta), o null. */
+    private function usuarioDeColaborador(?int $idColaborador): ?int
+    {
+        if (! $idColaborador) {
+            return null;
+        }
+
+        return DB::table('usuarios')
+            ->where('id_colaborador', $idColaborador)->where('estado', 'ACTIVO')
+            ->value('id_usuario');
+    }
+
+    /** Usuario del jefe de OTI (rol JEFE_AREA/ADMINISTRADOR en dependencia OTI), o null. */
+    private function jefeOtiUsuarioId(): ?int
+    {
+        $sdOti = DB::table('sede_dependencia')
+            ->whereIn('id_dependencia', $this->dependenciasOtiIds())
+            ->pluck('id_sede_dependencia');
+
+        return DB::table('usuarios')
+            ->join('colaboradores', 'usuarios.id_colaborador', '=', 'colaboradores.id_colaborador')
+            ->join('roles', 'usuarios.id_rol', '=', 'roles.id_rol')
+            ->whereIn('colaboradores.id_sede_dependencia', $sdOti)
+            ->whereIn('roles.nombre', ['JEFE_AREA', 'ADMINISTRADOR'])
+            ->orderByRaw("FIELD(roles.nombre,'JEFE_AREA','ADMINISTRADOR')")
+            ->value('usuarios.id_usuario');
+    }
+
+    /** Guarda el documento de sustento del movimiento (disco privado 'local'). */
+    private function guardarSustento(Movimiento $mov, Request $request): void
+    {
+        if (! $request->hasFile('documento')) {
+            return;
+        }
+
+        $file = $request->file('documento');
+        $ruta = $file->store('documentos/movimiento', 'local');
+
+        DocumentoAdjunto::create([
+            'entidad_tipo'    => 'MOVIMIENTO',
+            'entidad_id'      => $mov->id_movimiento,
+            'tipo_documento'  => $request->tipo_documento ? trim($request->tipo_documento) : 'ACTA_SUSTENTO',
+            'archivo'         => $ruta,
+            'nombre_original' => $file->getClientOriginalName(),
+            'extension'       => strtolower($file->getClientOriginalExtension()),
+            'tamano_kb'       => (int) round($file->getSize() / 1024),
+            'subido_por'      => Auth::id(),
+        ]);
+    }
+
     /** Mensaje legible que explica por qué una operación fue rechazada. */
     private function motivoRegla(string $tipo): string
     {
@@ -302,6 +433,13 @@ class MovimientoController extends Controller
             return $u->count() === 1 ? $u->first() : ($u->count() > 1 ? 'Varios' : null);
         };
 
+        // Responsable del movimiento (registrado_por): nombre del colaborador
+        // vinculado a la cuenta, o el usuario.
+        $respUser = $m->registradoPor;
+        $responsableNombre = $respUser?->colaborador?->nombre_completo ?: $respUser?->nombre_usuario;
+
+        $sustento = $m->documentos->first();
+
         return [
             'id_movimiento'             => $m->id_movimiento,
             'codigo'                    => $m->codigo_movimiento,
@@ -309,6 +447,7 @@ class MovimientoController extends Controller
             'estado'                    => $m->estado,
             'estado_devolucion'         => $m->estado_devolucion,
             'fecha'                     => $m->fecha_movimiento?->format('Y-m-d H:i'),
+            'fecha_registro'            => $m->fecha_registro?->format('Y-m-d'),
             'fecha_devolucion_estimada' => $m->fecha_devolucion_estimada?->format('Y-m-d'),
             'fecha_devolucion_real'     => $m->fecha_devolucion_real?->format('Y-m-d'),
             'es_prestamo_pendiente'     => $m->tipo === 'PRESTAMO' && $m->estado_devolucion === 'PENDIENTE_DEVOLUCION',
@@ -318,7 +457,13 @@ class MovimientoController extends Controller
             'ubicacion_origen'          => $agg($m->detalles->map(fn($d) => $d->ubicacionOrigen?->nombre)),
             'ubicacion_destino'         => $agg($m->detalles->map(fn($d) => $d->ubicacionDestino?->nombre)),
             'motivo'                    => $m->motivo,
-            'registrado_por'            => $m->registradoPor?->nombre_usuario,
+            'observaciones'             => $m->observaciones,
+            'registrado_por_id'         => $m->registrado_por,
+            'registrado_por'            => $responsableNombre,
+            'sustento'                  => $sustento ? [
+                'nombre' => $sustento->nombre_original,
+                'url'    => route('documentos.download', $sustento->id_documento),
+            ] : null,
         ];
     }
 }

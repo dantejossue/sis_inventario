@@ -116,66 +116,60 @@
     </div>
 
     <div class="card-body">
+      @php
+        $respsMov = collect($movimientos)
+            ->filter(fn($m) => $m['registrado_por_id'] && $m['registrado_por'])
+            ->map(fn($m) => ['id' => $m['registrado_por_id'], 'nombre' => $m['registrado_por']])
+            ->unique('id')->sortBy('nombre')->values();
+      @endphp
       <div class="row g-3">
 
         <div class="col-lg-3 col-md-6">
-          <label class="form-label">Código</label>
-          <input type="text" class="form-control" placeholder="MOV-000001..." />
-        </div>
-
-        <div class="col-lg-3 col-md-6">
           <label class="form-label">Tipo de movimiento</label>
-          <select class="form-select">
-            <option selected>Todos</option>
-            <option>Préstamo</option>
-            <option>Transferencia</option>
-            <option>Regularización</option>
-          </select>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-          <label class="form-label">Estado</label>
-          <select class="form-select">
-            <option selected>Todos</option>
-            <option>Borrador</option>
-            <option>Ejecutado</option>
-            <option>Observado</option>
-            <option>Cancelado</option>
+          <select class="form-select" id="filtro-tipo">
+            <option value="">Todos</option>
+            <option value="PRESTAMO">Préstamo</option>
+            <option value="TRANSFERENCIA">Transferencia</option>
+            <option value="REGULARIZACION">Regularización</option>
           </select>
         </div>
 
         <div class="col-lg-3 col-md-6">
           <label class="form-label">Devolución</label>
-          <select class="form-select">
-            <option selected>Todas</option>
-            <option>Pendiente</option>
-            <option>Devuelto</option>
-            <option>Devuelto (observado)</option>
-            <option>Vencido</option>
+          <select class="form-select" id="filtro-devolucion">
+            <option value="">Todas</option>
+            <option value="PENDIENTE_DEVOLUCION">Pendiente</option>
+            <option value="DEVUELTO">Devuelto</option>
+            <option value="DEVUELTO_OBSERVADO">Devuelto (observado)</option>
+            <option value="VENCIDO">Vencido</option>
+            <option value="NO_APLICA">No aplica</option>
           </select>
         </div>
 
         <div class="col-lg-3 col-md-6">
-          <label class="form-label">Responsable / área</label>
-          <input type="text" class="form-control" placeholder="Responsable, área o dependencia" />
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-          <label class="form-label">Fecha desde</label>
-          <input type="date" class="form-control" />
+          <label class="form-label">Responsable del movimiento</label>
+          <select class="form-select select2-filtro" id="filtro-responsable" data-placeholder="Todos">
+            <option value=""></option>
+            @foreach ($respsMov as $r)
+              <option value="{{ $r['id'] }}">{{ $r['nombre'] }}</option>
+            @endforeach
+          </select>
         </div>
 
         <div class="col-lg-3 col-md-6 d-flex align-items-end">
-          <div class="d-flex gap-2 w-100">
-            <button class="btn btn-primary w-100">
-              <i class="bx bx-search me-1"></i>
-              Buscar
-            </button>
+          <button class="btn btn-outline-secondary w-100" id="filtro-reset">
+            <i class="bx bx-reset me-1"></i> Limpiar
+          </button>
+        </div>
 
-            <button class="btn btn-outline-secondary">
-              <i class="bx bx-reset"></i>
-            </button>
-          </div>
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Fecha inicio</label>
+          <input type="date" class="form-control" id="filtro-fecha-inicio" />
+        </div>
+
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Fecha fin</label>
+          <input type="date" class="form-control" id="filtro-fecha-fin" />
         </div>
 
       </div>
@@ -212,13 +206,56 @@
       </table>
     </div>
   </div>
+
+  {{-- Modal detalle de movimiento --}}
+  <div class="modal fade" id="modalDetalleMov" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <div>
+            <h5 class="modal-title"><i class="bx bx-transfer-alt me-1"></i> Movimiento <span id="det-mov-codigo"></span></h5>
+            <small class="text-muted" id="det-mov-sub"></small>
+          </div>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <div class="row g-3">
+            <div class="col-md-6"><div class="data-list-item"><span>Tipo</span><strong id="det-mov-tipo"></strong></div></div>
+            <div class="col-md-6"><div class="data-list-item"><span>Estado</span><strong id="det-mov-estado"></strong></div></div>
+            <div class="col-md-6"><div class="data-list-item"><span>Devolución</span><strong id="det-mov-devolucion"></strong></div></div>
+            <div class="col-md-6"><div class="data-list-item"><span>Registrado por</span><strong id="det-mov-responsable"></strong></div></div>
+            <div class="col-md-6"><div class="data-list-item"><span>Origen</span><strong id="det-mov-origen"></strong></div></div>
+            <div class="col-md-6"><div class="data-list-item"><span>Destino</span><strong id="det-mov-destino"></strong></div></div>
+            <div class="col-md-6"><div class="data-list-item"><span>Fecha</span><strong id="det-mov-fecha"></strong></div></div>
+            <div class="col-md-6"><div class="data-list-item"><span>Dev. estimada / real</span><strong id="det-mov-devfechas"></strong></div></div>
+            <div class="col-12">
+              <span class="text-muted small">Activos</span>
+              <div id="det-mov-activos" class="d-flex flex-wrap gap-1 mt-1"></div>
+            </div>
+            <div class="col-12">
+              <span class="text-muted small">Motivo / observaciones</span>
+              <p class="mb-0" id="det-mov-motivo"></p>
+            </div>
+            <div class="col-12">
+              <span class="text-muted small">Documento de sustento</span>
+              <div id="det-mov-sustento" class="mt-1"></div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
+        </div>
+      </div>
+    </div>
+  </div>
 @endsection
 
 @section('page-script')
   <script>
     window.movimientos = @json($movimientos);
     window.routes = {
-      devolver: '{{ route('movimientos.devolver', ['id' => '__ID__']) }}'
+      devolver: '{{ route('movimientos.devolver', ['id' => '__ID__']) }}',
+      destroy: '{{ route('movimientos.destroy', ['id' => '__ID__']) }}'
     };
   </script>
   @vite(['resources/js/vendors/index.js', 'resources/js/pages/movimientos/movimientos-table.js'])

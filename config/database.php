@@ -53,6 +53,9 @@ return [
             'unix_socket' => env('DB_SOCKET', ''),
             'charset' => env('DB_CHARSET', 'utf8mb4'),
             'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            // Hora de Lima, Perú (UTC-5, sin horario de verano) para que
+            // CURRENT_TIMESTAMP / useCurrent() coincidan con la app.
+            'timezone' => '-05:00',
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,

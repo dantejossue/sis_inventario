@@ -162,6 +162,7 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     Route::get('/movimientos', [MovimientoController::class, 'index'])->name('movimientos.index');
     Route::post('/movimientos', [MovimientoController::class, 'store'])->name('movimientos.store');
     Route::put('/movimientos/{id}/devolver', [MovimientoController::class, 'devolver'])->name('movimientos.devolver');
+    Route::delete('/movimientos/{id}', [MovimientoController::class, 'destroy'])->name('movimientos.destroy');
 
     // Mantenimientos (preventivo, correctivo, garantía, revisión técnica)
     Route::get('/mantenimientos', [MantenimientoController::class, 'index'])->name('mantenimientos.index');

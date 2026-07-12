@@ -17,6 +17,33 @@
     #miTablaActivos tr.flash-scan>* {
       animation: flashScan 1.2s ease-out;
     }
+
+    /* Select2 con la misma altura que los form-select de Sneat */
+    #filtro-responsable+.select2-container .select2-selection--single {
+      height: 38px !important;
+      min-height: 38px !important;
+      display: flex;
+      align-items: center;
+      border: 1px solid #d9dee3;
+      border-radius: 0.375rem;
+    }
+
+    /* Texto y placeholder */
+    #filtro-responsable+.select2-container .select2-selection--single .select2-selection__rendered {
+      line-height: normal !important;
+      padding-left: 0.875rem;
+      padding-right: 2.25rem;
+      color: #697a8d;
+    }
+
+    /* Flecha del Select2 */
+    #filtro-responsable+.select2-container .select2-selection--single .select2-selection__arrow {
+      height: 100% !important;
+      top: 0 !important;
+      right: 0.65rem;
+      display: flex;
+      align-items: center;
+    }
   </style>
 
   <h4 class="fw-bold mb-0">
@@ -49,8 +76,24 @@
     $kpiCards = [
         ['Total activos', $kTotal, 'primary', 'bx-devices', $kDisponible . ' disponibles', 'text-success', 'todas'],
         ['En uso', $kEnUso, 'success', 'bx-user-check', 'Asignados a responsable', 'text-muted', 'EN_USO'],
-        ['En préstamo', $kPrestamo, 'info', 'bx-time-five', $kMantenimiento . ' en mantenimiento', 'text-muted', 'EN_PRESTAMO'],
-        ['Observados', $kObservado, 'warning', 'bx-error-circle', $kBaja . ' dados de baja', 'text-danger', 'OBSERVADO'],
+        [
+            'En préstamo',
+            $kPrestamo,
+            'info',
+            'bx-time-five',
+            $kMantenimiento . ' en mantenimiento',
+            'text-muted',
+            'EN_PRESTAMO',
+        ],
+        [
+            'Observados',
+            $kObservado,
+            'warning',
+            'bx-error-circle',
+            $kBaja . ' dados de baja',
+            'text-danger',
+            'OBSERVADO',
+        ],
     ];
   @endphp
 
@@ -103,7 +146,7 @@
 
         <div class="col-lg-3 col-md-6">
           <label class="form-label">Responsable</label>
-          <select class="form-select select2-filtro" id="filtro-responsable" data-placeholder="Todos">
+          <select class="form-select" id="filtro-responsable" data-placeholder="Todos">
             <option value=""></option>
             @foreach ($respsFiltro as $r)
               <option value="{{ $r['id'] }}">{{ $r['nombre'] }}</option>
@@ -368,6 +411,28 @@
                   <label>Motivo / Observaciones</label>
                   <div class="invalid-feedback"></div>
                 </div>
+              </div>
+
+              {{-- Documento de sustento OBLIGATORIO (acta de entrega / conformidad de retorno, etc.) --}}
+              <div class="col-md-5">
+                <label class="form-label" for="mover-tipo-doc">Tipo de documento</label>
+                <select class="form-select" id="mover-tipo-doc" name="tipo_documento">
+                  <option value="ACTA_ENTREGA">Acta de entrega</option>
+                  <option value="ACTA_CONFORMIDAD">Acta de conformidad</option>
+                  <option value="ACTA_RETORNO">Acta de conformidad de retorno</option>
+                  <option value="OFICIO">Oficio / memorando</option>
+                  <option value="OTRO">Otro</option>
+                </select>
+              </div>
+
+              <div class="col-md-7">
+                <label class="form-label" for="mover-documento">
+                  Documento de sustento <span class="text-danger">*</span>
+                </label>
+                <input type="file" class="form-control" id="mover-documento" name="documento" required
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,.xls,.xlsx,.doc,.docx,.zip,.rar">
+                <div class="invalid-feedback"></div>
+                <small class="text-muted">Obligatorio. Acta de entrega/conformidad que respalda el movimiento.</small>
               </div>
 
             </div>

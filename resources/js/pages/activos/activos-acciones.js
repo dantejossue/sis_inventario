@@ -533,23 +533,35 @@ $(function () {
       }
     }
 
+    // Documento de sustento obligatorio.
+    const documento = document.getElementById('mover-documento').files[0];
+    if (!documento) {
+      marcarError('#mover-documento', 'Adjunta el documento de sustento del movimiento.');
+      return;
+    }
+
     btnMover.prop('disabled', true);
     spinnerMov.removeClass('d-none');
+
+    const fd = new FormData();
+    idsParaMover.forEach(id => fd.append('activo_ids[]', id));
+    fd.append('tipo', tipo);
+    if (cfg.colaborador && colabDest) fd.append('id_colaborador_destino', colabDest);
+    if (cfg.ubicacion && ubicDest) fd.append('id_ubicacion_destino', ubicDest);
+    if (cfg.devolucion && fechaDev) fd.append('fecha_devolucion_estimada', fechaDev);
+    if (cfg.regulariza && condReg) fd.append('condicion_actual', condReg);
+    if (cfg.regulariza && sitReg) fd.append('situacion_actual', sitReg);
+    if (motivo) fd.append('motivo', motivo);
+    fd.append('tipo_documento', $('#mover-tipo-doc').val() || 'OTRO');
+    fd.append('documento', documento);
 
     $.ajax({
       url: window.routes.mover,
       type: 'POST',
       headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-      data: {
-        activo_ids: idsParaMover,
-        tipo: tipo,
-        id_colaborador_destino: cfg.colaborador && colabDest ? colabDest : null,
-        id_ubicacion_destino: cfg.ubicacion && ubicDest ? ubicDest : null,
-        fecha_devolucion_estimada: cfg.devolucion ? fechaDev : null,
-        condicion_actual: cfg.regulariza && condReg ? condReg : null,
-        situacion_actual: cfg.regulariza && sitReg ? sitReg : null,
-        motivo: motivo || null
-      },
+      data: fd,
+      processData: false,
+      contentType: false,
 
       success: function (res) {
         btnMover.prop('disabled', false);

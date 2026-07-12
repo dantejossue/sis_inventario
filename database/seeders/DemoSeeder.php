@@ -6,6 +6,7 @@ use App\Models\Activo;
 use App\Models\ActivoTecnico;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
 /**
@@ -71,6 +72,18 @@ class DemoSeeder extends Seeder
                 'nro_documento' => $doc, 'per_nombre' => $nom, 'per_apepat' => $ap, 'per_apemat' => $am,
                 'cargo' => $cargo, 'tipo_colaborador' => $tipo, 'id_sede_dependencia' => $idSD,
                 'estado' => 'ACTIVO', 'creado_en' => $now,
+            ]);
+        }
+
+        // ── Cuentas de usuario del personal OTI ───────────────────────
+        // Necesarias para atribuir movimientos al responsable y al jefe de OTI.
+        $rolJefe = DB::table('roles')->where('nombre', 'JEFE_AREA')->value('id_rol')
+            ?? DB::table('roles')->where('nombre', 'ADMINISTRADOR')->value('id_rol');
+        $rolColab = DB::table('roles')->where('nombre', 'COLABORADOR')->value('id_rol') ?? $rolJefe;
+        foreach ([[$colabs[0], 'jperez', $rolJefe], [$colabs[1], 'mgomez', $rolColab], [$colabs[2], 'lramirez', $rolColab]] as [$idc, $user, $rol]) {
+            DB::table('usuarios')->insert([
+                'id_colaborador' => $idc, 'id_rol' => $rol, 'nombre_usuario' => $user,
+                'contrasena' => Hash::make('Demo1234*'), 'estado' => 'ACTIVO', 'creado_en' => $now,
             ]);
         }
 

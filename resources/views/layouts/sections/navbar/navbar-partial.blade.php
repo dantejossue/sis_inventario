@@ -24,15 +24,29 @@
 @endif
 
 <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-  <!-- Search -->
+  <!-- Reloj (hora de Lima, Perú) -->
   <div class="navbar-nav align-items-center">
     <div class="nav-item d-flex align-items-center">
-      <i class="icon-base bx bx-search icon-md"></i>
-      <input type="text" class="form-control border-0 shadow-none ps-1 ps-sm-2" placeholder="Search..."
-        aria-label="Search...">
+      <i class="icon-base bx bx-time-five icon-md me-2 text-primary"></i>
+      <span id="navbar-reloj" class="fw-semibold text-heading" style="font-variant-numeric: tabular-nums;">—</span>
     </div>
   </div>
-  <!-- /Search -->
+  <script>
+    (function () {
+      function tick() {
+        var el = document.getElementById('navbar-reloj');
+        if (!el) return;
+        var now = new Date();
+        var opts = { timeZone: 'America/Lima' };
+        var fecha = now.toLocaleDateString('es-PE', Object.assign({ weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }, opts));
+        var hora = now.toLocaleTimeString('es-PE', Object.assign({ hour12: false }, opts));
+        el.textContent = fecha + ' · ' + hora;
+      }
+      tick();
+      setInterval(tick, 1000);
+    })();
+  </script>
+  <!-- /Reloj -->
   <ul class="navbar-nav flex-row align-items-center ms-auto">
     <!-- Place this tag where you want the button to render. -->
     <li class="nav-item lh-1 me-4">

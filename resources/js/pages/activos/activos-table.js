@@ -289,8 +289,9 @@ $(function () {
     return true;
   });
 
-  $('#filtro-responsable, #filtro-categoria, #filtro-sede, #filtro-situacion, #filtro-condicion')
-    .on('change', () => window.tablaActivos.draw());
+  $('#filtro-responsable, #filtro-categoria, #filtro-sede, #filtro-situacion, #filtro-condicion').on('change', () =>
+    window.tablaActivos.draw()
+  );
   $('#filtro-reset').on('click', function () {
     $('#filtro-categoria, #filtro-sede, #filtro-situacion, #filtro-condicion').val('');
     $('#filtro-responsable').val('').trigger('change');

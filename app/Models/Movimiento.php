@@ -57,6 +57,13 @@ class Movimiento extends Model
         return $this->hasMany(DetalleMovimientoActivo::class, 'id_movimiento', 'id_movimiento');
     }
 
+    /** Documentos de sustento del movimiento (actas de entrega/conformidad). */
+    public function documentos()
+    {
+        return $this->hasMany(DocumentoAdjunto::class, 'entidad_id', 'id_movimiento')
+            ->where('entidad_tipo', 'MOVIMIENTO');
+    }
+
     public function registradoPor()
     {
         return $this->belongsTo(User::class, 'registrado_por', 'id_usuario');

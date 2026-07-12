@@ -33,7 +33,7 @@
               @error('codigo_patrimonial')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
-              <small class="text-muted">Identificador principal del activo (obligatorio y único).</small>
+              {{-- <small class="text-muted">Identificador principal del activo (obligatorio y único).</small> --}}
             </div>
           </div>
 
@@ -112,10 +112,10 @@
           <div class="col-md-4">
             <div class="form-floating form-floating-outline">
               <input type="text" class="form-control" id="situacion_actual_info" readonly
-                value="{{ $activo ? ($situaciones[$activo->situacion_actual] ?? $activo->situacion_actual) : 'Se asigna automáticamente' }}">
+                value="{{ $activo ? $situaciones[$activo->situacion_actual] ?? $activo->situacion_actual : 'Se asigna automáticamente' }}">
               <label>Situación</label>
             </div>
-            <small class="text-muted">La gestionan los movimientos (préstamo, transferencia, regularización).</small>
+            {{-- <small class="text-muted">La gestionan los movimientos (préstamo, transferencia, regularización).</small> --}}
           </div>
 
           <div class="col-md-12">
@@ -174,6 +174,19 @@
           </div>
 
           <div class="col-md-6">
+            <div class="form-floating form-floating-outline">
+              <input type="date" class="form-control @error('fecha_asignacion') is-invalid @enderror"
+                id="fecha_asignacion" name="fecha_asignacion"
+                value="{{ old('fecha_asignacion', optional($activo?->fecha_asignacion)->format('Y-m-d')) }}">
+              <label>Fecha de asignación</label>
+              @error('fecha_asignacion')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+              {{-- <small class="text-muted">Fecha en que el activo se entregó/asignó al responsable.</small> --}}
+            </div>
+          </div>
+
+          <div class="col-md-12">
             <label class="form-label d-flex align-items-center mb-1"><i class="bx bx-map me-1"></i>Ubicación
               Física <span class="text-danger ms-1">*</span></label>
 
@@ -200,18 +213,7 @@
             @enderror
           </div>
 
-          <div class="col-md-6">
-            <div class="form-floating form-floating-outline">
-              <input type="date" class="form-control @error('fecha_asignacion') is-invalid @enderror"
-                id="fecha_asignacion" name="fecha_asignacion"
-                value="{{ old('fecha_asignacion', optional($activo?->fecha_asignacion)->format('Y-m-d')) }}">
-              <label>Fecha de asignación</label>
-              @error('fecha_asignacion')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-              <small class="text-muted">Fecha en que el activo se entregó/asignó al responsable.</small>
-            </div>
-          </div>
+
 
           {{-- <div class="col-md-6">
             @php
@@ -469,9 +471,11 @@
 
           <div class="col-md-4">
             <div class="form-floating form-floating-outline">
-              <input type="text" class="form-control text-uppercase @error('numero_orden_compra') is-invalid @enderror"
+              <input type="text"
+                class="form-control text-uppercase @error('numero_orden_compra') is-invalid @enderror"
                 id="numero_orden_compra" name="numero_orden_compra"
-                value="{{ old('numero_orden_compra', $activo?->numero_orden_compra) }}" placeholder="Ej: OC-2025-045">
+                value="{{ old('numero_orden_compra', $activo?->numero_orden_compra) }}"
+                placeholder="Ej: OC-2025-045">
               <label>N° Orden de Compra</label>
               @error('numero_orden_compra')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -485,7 +489,8 @@
                 name="estado_siga">
                 @php $es = old('estado_siga', $activo?->estado_siga ?? 'NO_APLICA'); @endphp
                 <option value="NO_APLICA" {{ $es === 'NO_APLICA' ? 'selected' : '' }}>No aplica</option>
-                <option value="PENDIENTE_ACTUALIZACION" {{ $es === 'PENDIENTE_ACTUALIZACION' ? 'selected' : '' }}>Pendiente de actualización</option>
+                <option value="PENDIENTE_ACTUALIZACION" {{ $es === 'PENDIENTE_ACTUALIZACION' ? 'selected' : '' }}>
+                  Pendiente de actualización</option>
                 <option value="REGISTRADO" {{ $es === 'REGISTRADO' ? 'selected' : '' }}>Registrado</option>
                 <option value="OBSERVADO" {{ $es === 'OBSERVADO' ? 'selected' : '' }}>Observado</option>
               </select>
