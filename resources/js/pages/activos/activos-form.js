@@ -35,7 +35,7 @@ $(function () {
     const categoria = opt.data('categoria') || '—';
     const icono = opt.data('icono') || 'bx-box';
 
-    const codigo = ($('#codigo_interno').val() || '').trim().toUpperCase() || '—';
+    const codigo = ($('#codigo_patrimonial').val() || $('#codigo_interno').val() || '').trim().toUpperCase() || '—';
     const condSel = document.querySelector('#condicion_actual option:checked');
     const condicion = condSel && condSel.value ? condSel.textContent.trim() : '—';
     const respSel = document.querySelector('#id_responsable_actual option:checked');
@@ -58,7 +58,7 @@ $(function () {
   }
 
   $('#id_modelo, #condicion_actual, #id_responsable_actual').on('change', actualizarResumen);
-  $('#codigo_interno').on('input', actualizarResumen);
+  $('#codigo_interno, #codigo_patrimonial').on('input', actualizarResumen);
   actualizarResumen();
 
   // ── Lista de documentos seleccionados ─────────────────────────────────────

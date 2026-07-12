@@ -16,10 +16,11 @@
               <input type="text" class="form-control text-uppercase @error('codigo_interno') is-invalid @enderror"
                 id="codigo_interno" name="codigo_interno" value="{{ old('codigo_interno', $activo?->codigo_interno) }}"
                 placeholder="Ej: TI-001">
-              <label>Código Interno <span class="text-danger">*</span></label>
+              <label>Código Interno</label>
               @error('codigo_interno')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
+              <small class="text-muted">Opcional; código secundario interno de OTI.</small>
             </div>
           </div>
 
@@ -29,11 +30,11 @@
                 class="form-control text-uppercase @error('codigo_patrimonial') is-invalid @enderror"
                 id="codigo_patrimonial" name="codigo_patrimonial"
                 value="{{ old('codigo_patrimonial', $activo?->codigo_patrimonial) }}" placeholder="Ej: 740800001234">
-              <label>Código Patrimonial</label>
+              <label>Código Patrimonial <span class="text-danger">*</span></label>
               @error('codigo_patrimonial')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
-              <small class="text-muted">Opcional; único si se registra (dato referencial SIGA/Patrimonio).</small>
+              <small class="text-muted">Identificador principal del activo (obligatorio y único).</small>
             </div>
           </div>
 

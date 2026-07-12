@@ -70,10 +70,10 @@ $(function () {
         render: row => `<input type="checkbox" class="form-check-input row-check" data-id="${row.id_activo}">`
       },
       {
-        data: 'codigo_interno',
+        data: 'codigo_patrimonial',
         render: (d, t, row) =>
-          `<span class="fw-semibold d-block">${d}</span>` +
-          `<small class="text-muted">${row.codigo_patrimonial}</small>`
+          `<span class="fw-semibold d-block">${d ?? '—'}</span>` +
+          (row.codigo_interno ? `<small class="text-muted">Int.: ${row.codigo_interno}</small>` : '')
       },
       {
         data: 'modelo_nombre',
