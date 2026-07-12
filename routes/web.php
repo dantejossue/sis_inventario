@@ -160,6 +160,7 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
 
     // Gestión de Movimientos internos OTI (préstamo, transferencia, regularización)
     Route::get('/movimientos', [MovimientoController::class, 'index'])->name('movimientos.index');
+    Route::get('/movimientos/{id}/ver', [MovimientoController::class, 'show'])->name('movimientos.ver');
     Route::post('/movimientos', [MovimientoController::class, 'store'])->name('movimientos.store');
     Route::put('/movimientos/{id}/devolver', [MovimientoController::class, 'devolver'])->name('movimientos.devolver');
     Route::delete('/movimientos/{id}', [MovimientoController::class, 'destroy'])->name('movimientos.destroy');

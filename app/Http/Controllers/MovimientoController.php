@@ -61,6 +61,19 @@ class MovimientoController extends Controller
         return view('content.movimientos.index', compact('movimientos'));
     }
 
+    /** Página de detalle del movimiento (submódulo): datos + tabla de activos. */
+    public function show(int $id)
+    {
+        $mov = Movimiento::with([
+            'detalles.activo.modelo.marca', 'detalles.activo.categoria',
+            'detalles.responsableOrigen', 'detalles.responsableDestino',
+            'detalles.ubicacionOrigen', 'detalles.ubicacionDestino',
+            'registradoPor.colaborador', 'documentos.subidoPor.colaborador',
+        ])->findOrFail($id);
+
+        return view('content.movimientos.ver', compact('mov'));
+    }
+
     public function store(Request $request)
     {
         $request->validate([

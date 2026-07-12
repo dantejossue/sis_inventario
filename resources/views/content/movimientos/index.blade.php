@@ -207,56 +207,21 @@
     </div>
   </div>
 
-  {{-- Modal detalle de movimiento --}}
-  <div class="modal fade" id="modalDetalleMov" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
-        <div class="modal-header">
-          <div>
-            <h5 class="modal-title"><i class="bx bx-transfer-alt me-1"></i> Movimiento <span id="det-mov-codigo"></span></h5>
-            <small class="text-muted" id="det-mov-sub"></small>
-          </div>
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-        <div class="modal-body">
-          <div class="row g-3">
-            <div class="col-md-6"><div class="data-list-item"><span>Tipo</span><strong id="det-mov-tipo"></strong></div></div>
-            <div class="col-md-6"><div class="data-list-item"><span>Estado</span><strong id="det-mov-estado"></strong></div></div>
-            <div class="col-md-6"><div class="data-list-item"><span>Devolución</span><strong id="det-mov-devolucion"></strong></div></div>
-            <div class="col-md-6"><div class="data-list-item"><span>Registrado por</span><strong id="det-mov-responsable"></strong></div></div>
-            <div class="col-md-6"><div class="data-list-item"><span>Origen</span><strong id="det-mov-origen"></strong></div></div>
-            <div class="col-md-6"><div class="data-list-item"><span>Destino</span><strong id="det-mov-destino"></strong></div></div>
-            <div class="col-md-6"><div class="data-list-item"><span>Fecha</span><strong id="det-mov-fecha"></strong></div></div>
-            <div class="col-md-6"><div class="data-list-item"><span>Dev. estimada / real</span><strong id="det-mov-devfechas"></strong></div></div>
-            <div class="col-12">
-              <span class="text-muted small">Activos</span>
-              <div id="det-mov-activos" class="d-flex flex-wrap gap-1 mt-1"></div>
-            </div>
-            <div class="col-12">
-              <span class="text-muted small">Motivo / observaciones</span>
-              <p class="mb-0" id="det-mov-motivo"></p>
-            </div>
-            <div class="col-12">
-              <span class="text-muted small">Documento de sustento</span>
-              <div id="det-mov-sustento" class="mt-1"></div>
-            </div>
-          </div>
-        </div>
-        <div class="modal-footer">
-          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">Cerrar</button>
-        </div>
-      </div>
-    </div>
-  </div>
+  @include('content.movimientos.partials.modal-devolucion')
 @endsection
 
 @section('page-script')
   <script>
     window.movimientos = @json($movimientos);
     window.routes = {
+      ver: '{{ route('movimientos.ver', ['id' => '__ID__']) }}',
       devolver: '{{ route('movimientos.devolver', ['id' => '__ID__']) }}',
       destroy: '{{ route('movimientos.destroy', ['id' => '__ID__']) }}'
     };
   </script>
-  @vite(['resources/js/vendors/index.js', 'resources/js/pages/movimientos/movimientos-table.js'])
+  @vite([
+    'resources/js/vendors/index.js',
+    'resources/js/pages/movimientos/movimientos-table.js',
+    'resources/js/pages/movimientos/movimientos-devolucion.js',
+  ])
 @endsection

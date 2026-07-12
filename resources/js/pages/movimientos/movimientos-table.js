@@ -103,7 +103,7 @@ $(function () {
         searchable: false,
         className: 'text-end',
         render: row => {
-          let items = `<li><a class="dropdown-item btn-detalle-mov d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_movimiento}"><i class="bx bx-show me-1"></i> Ver detalle</a></li>`;
+          let items = `<li><a class="dropdown-item d-flex align-items-center" href="${window.routes.ver.replace('__ID__', row.id_movimiento)}"><i class="bx bx-show me-1"></i> Ver detalle</a></li>`;
           if (row.es_prestamo_pendiente) {
             items += `<li><a class="dropdown-item btn-devolver d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_movimiento}" data-codigo="${row.codigo}"><i class="bx bx-undo me-1"></i> Devolución</a></li>`;
           }
@@ -120,34 +120,8 @@ $(function () {
     ]
   });
 
-  const buscarMov = id => window.movimientos.find(m => m.id_movimiento === id);
-
   window.tablaMovimientos.on('draw.dt', initTooltips);
   initTooltips();
-
-  // ── Ver detalle ────────────────────────────────────────────────────
-  $(document).on('click', '.btn-detalle-mov', function () {
-    const m = buscarMov(parseInt($(this).data('id')));
-    if (!m) return;
-    const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-    set('det-mov-codigo', m.codigo);
-    set('det-mov-sub', `${tipoLabel[m.tipo] ?? m.tipo} · ${m.fecha ?? '—'}`);
-    set('det-mov-tipo', tipoLabel[m.tipo] ?? m.tipo);
-    set('det-mov-estado', (m.estado ?? '').replace(/_/g, ' '));
-    set('det-mov-devolucion', devolucionLabel[m.estado_devolucion] ?? '—');
-    set('det-mov-responsable', m.registrado_por ?? '—');
-    set('det-mov-origen', m.colaborador_origen || m.ubicacion_origen || '—');
-    set('det-mov-destino', m.colaborador_destino || m.ubicacion_destino || '—');
-    set('det-mov-fecha', m.fecha ?? '—');
-    set('det-mov-devfechas', `${m.fecha_devolucion_estimada ?? '—'} / ${m.fecha_devolucion_real ?? '—'}`);
-    set('det-mov-motivo', m.motivo || m.observaciones || '—');
-    document.getElementById('det-mov-activos').innerHTML =
-      (m.activos || []).map(c => `<span class="badge bg-label-dark">${c}</span>`).join('') || '—';
-    document.getElementById('det-mov-sustento').innerHTML = m.sustento
-      ? `<a href="${m.sustento.url}" class="btn btn-sm btn-outline-primary"><i class="bx bx-download me-1"></i>${m.sustento.nombre}</a>`
-      : '<span class="text-muted">Sin documento.</span>';
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalleMov')).show();
-  });
 
   // ── Eliminar movimiento ────────────────────────────────────────────
   $(document).on('click', '.btn-eliminar-mov', function () {
@@ -205,86 +179,5 @@ $(function () {
     window.tablaMovimientos.draw();
   });
 
-  // ── Devolución de préstamo ─────────────────────────────────────────
-  $(document).on('click', '.btn-devolver', function () {
-    const id = $(this).data('id');
-    const codigo = $(this).data('codigo');
-
-    Swal.fire({
-      title: `Devolver préstamo ${codigo}`,
-      html: `
-        <div class="text-start">
-          <label class="form-label mt-2">Condición de retorno</label>
-          <select id="swal-condicion" class="form-select">
-            <option value="BUENO">Bueno</option>
-            <option value="NUEVO">Nuevo</option>
-            <option value="REGULAR">Regular</option>
-            <option value="MALO">Malo</option>
-          </select>
-          <label class="form-label mt-3">Resultado</label>
-          <select id="swal-estado" class="form-select">
-            <option value="DEVUELTO">Conforme</option>
-            <option value="DEVUELTO_OBSERVADO">Observado</option>
-          </select>
-          <label class="form-label mt-3">Tipo de documento</label>
-          <select id="swal-tipodoc" class="form-select">
-            <option value="ACTA_RETORNO">Acta de conformidad de retorno</option>
-            <option value="ACTA_ENTREGA">Acta de entrega</option>
-            <option value="OFICIO">Oficio / memorando</option>
-            <option value="OTRO">Otro</option>
-          </select>
-          <label class="form-label mt-3">Documento de sustento <span class="text-danger">*</span></label>
-          <input type="file" id="swal-doc" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp,.xls,.xlsx,.doc,.docx,.zip,.rar">
-          <label class="form-label mt-3">Observación (opcional)</label>
-          <textarea id="swal-obs" class="form-control" rows="2"></textarea>
-        </div>`,
-      showCancelButton: true,
-      confirmButtonText: 'Registrar devolución',
-      cancelButtonText: 'Cancelar',
-      preConfirm: () => {
-        const doc = document.getElementById('swal-doc').files[0];
-        if (!doc) {
-          Swal.showValidationMessage('Adjunta el documento de sustento (acta de conformidad de retorno).');
-          return false;
-        }
-        return {
-          condicion_retorno: document.getElementById('swal-condicion').value,
-          estado_devolucion: document.getElementById('swal-estado').value,
-          tipo_documento: document.getElementById('swal-tipodoc').value,
-          observacion_devolucion: document.getElementById('swal-obs').value,
-          documento: doc
-        };
-      }
-    }).then(result => {
-      if (!result.isConfirmed) return;
-      const v = result.value;
-
-      const fd = new FormData();
-      fd.append('_method', 'PUT'); // spoofing: PHP no parsea archivos en PUT multipart
-      fd.append('condicion_retorno', v.condicion_retorno);
-      fd.append('estado_devolucion', v.estado_devolucion);
-      fd.append('tipo_documento', v.tipo_documento);
-      if (v.observacion_devolucion) fd.append('observacion_devolucion', v.observacion_devolucion);
-      fd.append('documento', v.documento);
-
-      $.ajax({
-        url: window.routes.devolver.replace('__ID__', id),
-        type: 'POST',
-        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: fd,
-        processData: false,
-        contentType: false,
-        success: res => {
-          Swal.fire({ icon: 'success', title: 'Devolución registrada', text: res.message, timer: 2200, showConfirmButton: false })
-            .then(() => window.location.reload());
-        },
-        error: xhr => {
-          const msg = xhr.responseJSON?.message
-            || Object.values(xhr.responseJSON?.errors ?? {})[0]?.[0]
-            || 'No se pudo registrar la devolución.';
-          Swal.fire({ icon: 'error', title: 'Error', text: msg });
-        }
-      });
-    });
-  });
+  // La devolución se maneja en movimientos-devolucion.js (modal reutilizable).
 });
