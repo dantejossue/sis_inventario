@@ -20,6 +20,9 @@ use Illuminate\Support\Str;
 
 class ActivoController extends Controller
 {
+    /** Extensiones permitidas para documentos/evidencias del activo. */
+    private const EXT_DOCUMENTOS = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar'];
+
     public function index()
     {
         $ubicacionesPorId = Ubicacion::get(['id_ubicacion', 'id_ubicacion_padre', 'nombre'])
@@ -260,29 +263,34 @@ class ActivoController extends Controller
             'id_modelo'           => 'required|integer|exists:modelo,id_modelo',
             'condicion_actual'    => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
             'codigo_patrimonial'  => 'required|string|max:100|unique:activo,codigo_patrimonial',
-            'codigo_interno'      => 'nullable|string|max:50|unique:activo,codigo_interno',
-            'numero_serie'        => 'nullable|string|max:150|unique:activo,numero_serie',
+            'codigo_interno'      => 'required|string|max:50|unique:activo,codigo_interno',
+            'numero_serie'        => 'required|string|max:150|unique:activo,numero_serie',
             'descripcion'         => 'nullable|string|max:255',
             'imagen'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'fecha_adquisicion'   => 'nullable|date',
+            'fecha_asignacion'    => 'nullable|date',
             'valor_compra'        => 'nullable|numeric|min:0',
             'proveedor'           => 'nullable|string|max:150',
             'garantia_inicio'     => 'nullable|date',
             'garantia_fin'        => 'nullable|date|after_or_equal:garantia_inicio',
             'observaciones'       => 'nullable|string',
-            'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
-            'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
+            'id_responsable_actual' => 'required|integer|exists:colaboradores,id_colaborador',
+            'id_ubicacion_actual'   => ['required', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
         ] + $this->reglasTecnicas() + $this->reglasPatrimoniales(), [
-            'id_modelo.required'          => 'Debes seleccionar un modelo.',
-            'condicion_actual.required'   => 'La condición es obligatoria.',
-            'condicion_actual.in'         => 'La condición seleccionada no es válida.',
-            'codigo_patrimonial.required' => 'El código patrimonial es obligatorio (identificador del activo).',
-            'codigo_patrimonial.unique'   => 'Ya existe un activo con ese código patrimonial.',
-            'codigo_interno.unique'       => 'Ya existe un activo con ese código interno.',
-            'numero_serie.unique'         => 'Ese número de serie ya está registrado.',
-            'imagen.image'                => 'El archivo debe ser una imagen.',
-            'imagen.max'                  => 'La imagen no puede superar los 2 MB.',
-            'garantia_fin.after_or_equal' => 'La fecha de fin de garantía debe ser igual o posterior al inicio.',
+            'id_modelo.required'            => 'Debes seleccionar un modelo.',
+            'condicion_actual.required'     => 'La condición es obligatoria.',
+            'condicion_actual.in'           => 'La condición seleccionada no es válida.',
+            'codigo_patrimonial.required'   => 'El código patrimonial es obligatorio (identificador del activo).',
+            'codigo_patrimonial.unique'     => 'Ya existe un activo con ese código patrimonial.',
+            'codigo_interno.required'       => 'El código interno es obligatorio.',
+            'codigo_interno.unique'         => 'Ya existe un activo con ese código interno.',
+            'numero_serie.required'         => 'El número de serie es obligatorio.',
+            'numero_serie.unique'           => 'Ese número de serie ya está registrado.',
+            'id_responsable_actual.required' => 'Debes asignar un responsable.',
+            'id_ubicacion_actual.required'  => 'Debes seleccionar la ubicación física.',
+            'imagen.image'                  => 'El archivo debe ser una imagen.',
+            'imagen.max'                    => 'La imagen no puede superar los 2 MB.',
+            'garantia_fin.after_or_equal'   => 'La fecha de fin de garantía debe ser igual o posterior al inicio.',
         ]);
 
         $modelo = Modelo::findOrFail($request->id_modelo);
@@ -306,6 +314,7 @@ class ActivoController extends Controller
                 ? $request->file('imagen')->store('activos', 'public')
                 : null,
             'fecha_adquisicion'     => $request->fecha_adquisicion ?: null,
+            'fecha_asignacion'      => $request->fecha_asignacion ?: null,
             'valor_compra'          => $request->valor_compra ?: null,
             'proveedor'             => $request->proveedor ? strtoupper(trim($request->proveedor)) : null,
             'garantia_inicio'       => $request->garantia_inicio ?: null,
@@ -338,29 +347,34 @@ class ActivoController extends Controller
             'id_modelo'           => 'required|integer|exists:modelo,id_modelo',
             'condicion_actual'    => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
             'codigo_patrimonial'  => "required|string|max:100|unique:activo,codigo_patrimonial,{$id},id_activo",
-            'codigo_interno'      => "nullable|string|max:50|unique:activo,codigo_interno,{$id},id_activo",
-            'numero_serie'        => "nullable|string|max:150|unique:activo,numero_serie,{$id},id_activo",
+            'codigo_interno'      => "required|string|max:50|unique:activo,codigo_interno,{$id},id_activo",
+            'numero_serie'        => "required|string|max:150|unique:activo,numero_serie,{$id},id_activo",
             'descripcion'         => 'nullable|string|max:255',
             'imagen'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
             'fecha_adquisicion'   => 'nullable|date',
+            'fecha_asignacion'    => 'nullable|date',
             'valor_compra'        => 'nullable|numeric|min:0',
             'proveedor'           => 'nullable|string|max:150',
             'garantia_inicio'     => 'nullable|date',
             'garantia_fin'        => 'nullable|date|after_or_equal:garantia_inicio',
             'observaciones'       => 'nullable|string',
-            'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
-            'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
+            'id_responsable_actual' => 'required|integer|exists:colaboradores,id_colaborador',
+            'id_ubicacion_actual'   => ['required', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
         ] + $this->reglasTecnicas() + $this->reglasPatrimoniales(), [
-            'id_modelo.required'          => 'Debes seleccionar un modelo.',
-            'condicion_actual.required'   => 'La condición es obligatoria.',
-            'condicion_actual.in'         => 'La condición seleccionada no es válida.',
-            'codigo_patrimonial.required' => 'El código patrimonial es obligatorio (identificador del activo).',
-            'codigo_patrimonial.unique'   => 'Ya existe un activo con ese código patrimonial.',
-            'codigo_interno.unique'       => 'Ya existe un activo con ese código interno.',
-            'numero_serie.unique'         => 'Ese número de serie ya está registrado.',
-            'imagen.image'                => 'El archivo debe ser una imagen.',
-            'imagen.max'                  => 'La imagen no puede superar los 2 MB.',
-            'garantia_fin.after_or_equal' => 'La fecha de fin de garantía debe ser igual o posterior al inicio.',
+            'id_modelo.required'            => 'Debes seleccionar un modelo.',
+            'condicion_actual.required'     => 'La condición es obligatoria.',
+            'condicion_actual.in'           => 'La condición seleccionada no es válida.',
+            'codigo_patrimonial.required'   => 'El código patrimonial es obligatorio (identificador del activo).',
+            'codigo_patrimonial.unique'     => 'Ya existe un activo con ese código patrimonial.',
+            'codigo_interno.required'       => 'El código interno es obligatorio.',
+            'codigo_interno.unique'         => 'Ya existe un activo con ese código interno.',
+            'numero_serie.required'         => 'El número de serie es obligatorio.',
+            'numero_serie.unique'           => 'Ese número de serie ya está registrado.',
+            'id_responsable_actual.required' => 'Debes asignar un responsable.',
+            'id_ubicacion_actual.required'  => 'Debes seleccionar la ubicación física.',
+            'imagen.image'                  => 'El archivo debe ser una imagen.',
+            'imagen.max'                    => 'La imagen no puede superar los 2 MB.',
+            'garantia_fin.after_or_equal'   => 'La fecha de fin de garantía debe ser igual o posterior al inicio.',
         ]);
 
         $modelo = Modelo::findOrFail($request->id_modelo);
@@ -386,6 +400,7 @@ class ActivoController extends Controller
             'descripcion'           => $request->descripcion ? trim($request->descripcion) : null,
             'imagen'                => $imagen,
             'fecha_adquisicion'     => $request->fecha_adquisicion ?: null,
+            'fecha_asignacion'      => $request->fecha_asignacion ?: null,
             'valor_compra'          => $request->valor_compra ?: null,
             'proveedor'             => $request->proveedor ? strtoupper(trim($request->proveedor)) : null,
             'garantia_inicio'       => $request->garantia_inicio ?: null,
@@ -519,7 +534,14 @@ class ActivoController extends Controller
             'fecha_alta_siga'     => 'nullable|date',
             'estado_siga'         => 'nullable|in:NO_APLICA,PENDIENTE_ACTUALIZACION,REGISTRADO,OBSERVADO',
             'documentos'          => 'nullable|array',
-            'documentos.*'        => 'file|mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx|max:5120',
+            // Se valida por la EXTENSIÓN del archivo (fiable para .rar, cuyo MIME
+            // no siempre detecta bien la regla mimes).
+            'documentos.*'        => ['file', 'max:5120', function ($attr, $value, $fail) {
+                $ext = strtolower($value->getClientOriginalExtension());
+                if (! in_array($ext, self::EXT_DOCUMENTOS, true)) {
+                    $fail('Formato no permitido (.' . $ext . '). Usa: ' . implode(', ', self::EXT_DOCUMENTOS) . '.');
+                }
+            }],
             'tipo_documento'      => 'nullable|string|max:100',
         ];
     }

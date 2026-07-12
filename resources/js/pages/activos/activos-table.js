@@ -267,10 +267,17 @@ $(function () {
       .draw(false);
   };
 
-  // ── Filtros de la tabla (categoría / sede / situación / condición) ────────────
+  // ── Filtros (responsable / categoría / sede / situación / condición) ──────────
+  // Select2 en el filtro de responsable (si el plugin está disponible).
+  if ($.fn.select2) {
+    $('#filtro-responsable').select2({ width: '100%', placeholder: 'Todos', allowClear: true });
+  }
+
   $.fn.dataTable.ext.search.push((settings, _data, dataIndex) => {
     if (settings.nTable.id !== 'miTablaActivos') return true;
     const row = window.tablaActivos.row(dataIndex).data();
+    const resp = $('#filtro-responsable').val();
+    if (resp && String(row.id_responsable_actual) !== String(resp)) return false;
     const cat = $('#filtro-categoria').val();
     if (cat && row.categoria_nombre !== cat) return false;
     const sede = $('#filtro-sede').val();
@@ -282,12 +289,11 @@ $(function () {
     return true;
   });
 
-  $('#filtro-categoria, #filtro-sede, #filtro-situacion, #filtro-condicion').on('change', () => window.tablaActivos.draw());
-  $('#filtro-texto').on('input', function () {
-    window.tablaActivos.search(this.value).draw();
-  });
+  $('#filtro-responsable, #filtro-categoria, #filtro-sede, #filtro-situacion, #filtro-condicion')
+    .on('change', () => window.tablaActivos.draw());
   $('#filtro-reset').on('click', function () {
-    $('#filtro-categoria, #filtro-sede, #filtro-situacion, #filtro-condicion, #filtro-texto').val('');
+    $('#filtro-categoria, #filtro-sede, #filtro-situacion, #filtro-condicion').val('');
+    $('#filtro-responsable').val('').trigger('change');
     window.tablaActivos.search('').draw();
   });
 

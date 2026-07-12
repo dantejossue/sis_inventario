@@ -32,6 +32,7 @@ return new class extends Migration
             $table->string('descripcion', 255)->nullable();
             $table->string('imagen', 255)->nullable();
             $table->date('fecha_adquisicion')->nullable();
+            $table->date('fecha_asignacion')->nullable(); // fecha en que se asignó al responsable
             $table->decimal('valor_compra', 12, 2)->nullable();
             $table->string('proveedor', 150)->nullable();
             $table->date('garantia_inicio')->nullable();

@@ -92,12 +92,23 @@
       @php
         $catsFiltro = $acts->pluck('categoria_nombre')->filter(fn($c) => $c && $c !== '—')->unique()->sort()->values();
         $sedesFiltro = $acts->pluck('sede_nombre')->filter(fn($s) => $s && $s !== '—')->unique()->sort()->values();
+        $respsFiltro = $acts
+            ->filter(fn($a) => $a['id_responsable_actual'] && $a['responsable_nombre'])
+            ->map(fn($a) => ['id' => $a['id_responsable_actual'], 'nombre' => $a['responsable_nombre']])
+            ->unique('id')
+            ->sortBy('nombre')
+            ->values();
       @endphp
       <div class="row g-3">
 
-        <div class="col-lg-4 col-md-6">
-          <label class="form-label">Código, serie o responsable</label>
-          <input type="text" class="form-control" id="filtro-texto" placeholder="Buscar en la tabla…" />
+        <div class="col-lg-3 col-md-6">
+          <label class="form-label">Responsable</label>
+          <select class="form-select select2-filtro" id="filtro-responsable" data-placeholder="Todos">
+            <option value=""></option>
+            @foreach ($respsFiltro as $r)
+              <option value="{{ $r['id'] }}">{{ $r['nombre'] }}</option>
+            @endforeach
+          </select>
         </div>
 
         <div class="col-lg-2 col-md-6">
@@ -140,9 +151,9 @@
           </select>
         </div>
 
-        <div class="col-lg-2 col-md-6 d-flex align-items-end">
-          <button class="btn btn-outline-secondary w-100" id="filtro-reset">
-            <i class="bx bx-reset me-1"></i> Limpiar
+        <div class="col-lg-1 col-md-6 d-flex align-items-end">
+          <button class="btn btn-outline-secondary w-100" id="filtro-reset" title="Limpiar filtros">
+            <i class="bx bx-reset"></i>
           </button>
         </div>
 

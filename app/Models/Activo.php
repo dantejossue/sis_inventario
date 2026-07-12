@@ -57,7 +57,7 @@ class Activo extends Model
         'condicion_actual', 'situacion_actual',
         'codigo_interno', 'codigo_patrimonial', 'codigo_siga',
         'numero_pecosa', 'numero_orden_compra', 'fecha_alta_siga', 'numero_serie',
-        'descripcion', 'imagen', 'fecha_adquisicion', 'valor_compra', 'proveedor',
+        'descripcion', 'imagen', 'fecha_adquisicion', 'fecha_asignacion', 'valor_compra', 'proveedor',
         'garantia_inicio', 'garantia_fin', 'observaciones', 'qr_token',
         'origen_registro', 'estado_siga',
         'creado_por', 'actualizado_por',
@@ -66,6 +66,7 @@ class Activo extends Model
     protected $casts = [
         'fecha_alta_siga'    => 'date',
         'fecha_adquisicion'  => 'date',
+        'fecha_asignacion'   => 'date',
         'garantia_inicio'    => 'date',
         'garantia_fin'       => 'date',
         'valor_compra'       => 'decimal:2',

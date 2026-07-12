@@ -16,11 +16,10 @@
               <input type="text" class="form-control text-uppercase @error('codigo_interno') is-invalid @enderror"
                 id="codigo_interno" name="codigo_interno" value="{{ old('codigo_interno', $activo?->codigo_interno) }}"
                 placeholder="Ej: TI-001">
-              <label>Código Interno</label>
+              <label>Código Interno <span class="text-danger">*</span></label>
               @error('codigo_interno')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
-              <small class="text-muted">Opcional; código secundario interno de OTI.</small>
             </div>
           </div>
 
@@ -84,7 +83,7 @@
               <input type="text" class="form-control @error('numero_serie') is-invalid @enderror" id="numero_serie"
                 name="numero_serie" value="{{ old('numero_serie', $activo?->numero_serie) }}"
                 placeholder="Ej: 5CD123456">
-              <label>Número de Serie</label>
+              <label>Número de Serie <span class="text-danger">*</span></label>
               @error('numero_serie')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
@@ -167,7 +166,7 @@
                   </option>
                 @endforeach
               </select>
-              <label>Responsable asignado</label>
+              <label>Responsable asignado <span class="text-danger">*</span></label>
               @error('id_responsable_actual')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
@@ -176,7 +175,7 @@
 
           <div class="col-md-6">
             <label class="form-label d-flex align-items-center mb-1"><i class="bx bx-map me-1"></i>Ubicación
-              Física</label>
+              Física <span class="text-danger ms-1">*</span></label>
 
             {{-- Valor real que viaja al servidor: el id del ambiente final (nodo hoja). --}}
             <input type="hidden" name="id_ubicacion_actual" id="id_ubicacion_actual"
@@ -199,6 +198,19 @@
             @error('id_ubicacion_actual')
               <div class="invalid-feedback d-block">{{ $message }}</div>
             @enderror
+          </div>
+
+          <div class="col-md-6">
+            <div class="form-floating form-floating-outline">
+              <input type="date" class="form-control @error('fecha_asignacion') is-invalid @enderror"
+                id="fecha_asignacion" name="fecha_asignacion"
+                value="{{ old('fecha_asignacion', optional($activo?->fecha_asignacion)->format('Y-m-d')) }}">
+              <label>Fecha de asignación</label>
+              @error('fecha_asignacion')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+              <small class="text-muted">Fecha en que el activo se entregó/asignó al responsable.</small>
+            </div>
           </div>
 
           {{-- <div class="col-md-6">
@@ -617,13 +629,13 @@
                 </h6>
 
                 <small class="text-muted">
-                  Puedes adjuntar PDF, imágenes y documentos de Office (máx. 5 MB c/u).
+                  Puedes adjuntar PDF, imágenes, documentos de Office y comprimidos ZIP o RAR (máx. 5 MB c/u).
                 </small>
               </div>
             </label>
 
             <input type="file" id="documentos_activo" name="documentos[]" class="d-none" multiple
-              accept=".pdf,.jpg,.jpeg,.png,.webp,.xls,.xlsx,.doc,.docx" />
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.xls,.xlsx,.doc,.docx,.zip,.rar" />
 
             <div id="listaDocumentos" class="mt-3"></div>
           </div>
