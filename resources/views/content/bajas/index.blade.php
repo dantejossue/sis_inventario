@@ -298,7 +298,7 @@
     <div class="card-header border-bottom">
       <h5 class="mb-0">Listado de bajas</h5>
       <small class="text-muted">
-        Propuestas, evaluaciones, expedientes y bajas ejecutadas.
+        Registro, evaluación técnica, recomendación, validación y ejecución.
       </small>
     </div>
 

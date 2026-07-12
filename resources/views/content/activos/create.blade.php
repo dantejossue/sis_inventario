@@ -46,8 +46,8 @@
         <div class="register-asset-step">
           <div class="register-asset-step-number">2</div>
           <div>
-            <strong>Asignación</strong>
-            <small>Responsable y ubicación</small>
+            <strong>Responsable y ubicación</strong>
+            <small>Colaborador y ambiente físico</small>
           </div>
         </div>
 

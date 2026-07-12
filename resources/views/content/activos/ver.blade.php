@@ -887,7 +887,7 @@
             <div>
               <h5 class="mb-1">Historial de movimientos</h5>
               <p class="text-muted mb-0">
-                Asignaciones, transferencias, desplazamientos internos y regularizaciones.
+                Préstamos, transferencias y regularizaciones.
               </p>
             </div>
 

@@ -175,10 +175,12 @@
           <label class="form-label">Situación</label>
           <select class="form-select">
             <option selected>Todas</option>
+            <option>Disponible</option>
             <option>En uso</option>
-            <option>En almacén</option>
+            <option>En préstamo</option>
             <option>En mantenimiento</option>
-            <option>Pendiente de baja</option>
+            <option>En proveedor</option>
+            <option>Observado</option>
             <option>Dado de baja</option>
           </select>
         </div>

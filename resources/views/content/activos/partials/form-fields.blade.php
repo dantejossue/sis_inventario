@@ -140,11 +140,11 @@
       </div>
     </div>
 
-    {{-- Card 2: Asignación, responsable y ubicación física --}}
+    {{-- Card 2: Responsable y ubicación física --}}
     <div class="card mb-4 rounded-4">
       <div class="card-header border-bottom d-flex align-items-center py-4">
         <i class="bx bx-map-pin me-2 text-primary"></i>
-        <h6 class="mb-0 fw-bold d-flex align-items-center">Asignación, responsable y ubicación física</h6>
+        <h6 class="mb-0 fw-bold d-flex align-items-center">Responsable y ubicación física</h6>
       </div>
       <div class="card-body pt-4">
         <div class="row g-4">
@@ -284,16 +284,6 @@
             </div>
           </div>
 
-          <div class="col-md-6">
-            <div class="form-floating form-floating-outline">
-              <input type="date" class="form-control @error('fecha_asignacion') is-invalid @enderror"
-                id="fecha_asignacion" name="fecha_asignacion" {{-- value="{{ old('fecha_ingreso', $activo?->fecha_ingreso) }}" --}}>
-              <label>Fecha de Asignación</label>
-              @error('fecha_asignacion')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
-          </div>
 
         </div>
       </div>

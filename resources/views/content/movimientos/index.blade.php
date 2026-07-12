@@ -119,8 +119,8 @@
       <div class="row g-3">
 
         <div class="col-lg-3 col-md-6">
-          <label class="form-label">Código / expediente</label>
-          <input type="text" class="form-control" placeholder="MOV-0001, EXP-2026..." />
+          <label class="form-label">Código</label>
+          <input type="text" class="form-control" placeholder="MOV-000001..." />
         </div>
 
         <div class="col-lg-3 col-md-6">
