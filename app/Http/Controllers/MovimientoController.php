@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Activo;
+use App\Models\AuditoriaCambio;
 use App\Models\DetalleMovimientoActivo;
 use App\Models\Movimiento;
 use App\Models\Ubicacion;
@@ -118,7 +119,8 @@ class MovimientoController extends Controller
             ]);
         }
 
-        DB::transaction(function () use ($request, $tipo, $op, $colaboradorDestino, $ubicacionDestino, $activos) {
+        $mov = null;
+        DB::transaction(function () use ($request, $tipo, $op, $colaboradorDestino, $ubicacionDestino, $activos, &$mov) {
             $mov = Movimiento::create([
                 'codigo_movimiento'         => 'TMP',
                 'tipo'                      => $tipo,
@@ -177,6 +179,12 @@ class MovimientoController extends Controller
                 ]);
             }
         });
+
+        AuditoriaCambio::registrar('MOVIMIENTO', $mov->id_movimiento, 'EJECUTAR', null, [
+            'codigo' => $mov->codigo_movimiento,
+            'tipo'   => $tipo,
+            'activos' => $activos->pluck('codigo_interno')->all(),
+        ], $request->motivo);
 
         return response()->json([
             'success' => true,
@@ -239,6 +247,12 @@ class MovimientoController extends Controller
         });
 
         $ids = $mov->detalles->pluck('id_activo')->all();
+
+        AuditoriaCambio::registrar('MOVIMIENTO', $mov->id_movimiento, 'CERRAR', null, [
+            'codigo'            => $mov->codigo_movimiento,
+            'estado_devolucion' => $request->estado_devolucion,
+            'condicion_retorno' => $request->condicion_retorno,
+        ], $request->observacion_devolucion);
 
         return response()->json([
             'success' => true,

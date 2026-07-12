@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activo;
 use App\Models\ActivoTecnico;
+use App\Models\AuditoriaCambio;
 use App\Models\Colaborador;
 use App\Models\Mantenimiento;
 use Illuminate\Http\Request;
@@ -128,6 +129,10 @@ class MantenimientoController extends Controller
             'estado'              => 'SOLICITADO',
         ]);
 
+        AuditoriaCambio::registrar('MANTENIMIENTO', $mant->id_mantenimiento, 'CREAR', null, [
+            'codigo' => $mant->codigo, 'id_activo' => $mant->id_activo, 'tipo' => $mant->tipo_mantenimiento,
+        ]);
+
         return $this->respuesta($mant, "Mantenimiento {$mant->codigo} registrado correctamente.");
     }
 
@@ -180,6 +185,10 @@ class MantenimientoController extends Controller
                 $request->estado === 'DERIVADO_PROVEEDOR' ? 'EN_PROVEEDOR' : 'EN_MANTENIMIENTO'
             );
         });
+
+        AuditoriaCambio::registrar('MANTENIMIENTO', $mant->id_mantenimiento, 'ACTUALIZAR', null, [
+            'codigo' => $mant->codigo, 'estado' => $request->estado, 'proveedor' => $mant->proveedor,
+        ]);
 
         return $this->respuesta($mant, "Mantenimiento {$mant->codigo} actualizado a {$this->legible($request->estado)}.");
     }
@@ -239,6 +248,10 @@ class MantenimientoController extends Controller
             }
         });
 
+        AuditoriaCambio::registrar('MANTENIMIENTO', $mant->id_mantenimiento, 'CERRAR', null, [
+            'codigo' => $mant->codigo, 'resultado' => $request->estado, 'recomienda_baja' => $recomiendaBaja,
+        ]);
+
         return $this->respuesta($mant, "Mantenimiento {$mant->codigo} finalizado: {$this->legible($request->estado)}.");
     }
 
@@ -286,6 +299,8 @@ class MantenimientoController extends Controller
                 $this->situarActivo($activo, $activo->id_responsable_actual ? 'EN_USO' : 'DISPONIBLE');
             }
         });
+
+        AuditoriaCambio::registrar('MANTENIMIENTO', $mant->id_mantenimiento, 'CANCELAR', null, ['codigo' => $mant->codigo], $request->motivo);
 
         return $this->respuesta($mant, "Mantenimiento {$mant->codigo} cancelado.");
     }

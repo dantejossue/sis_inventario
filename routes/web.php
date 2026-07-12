@@ -60,6 +60,7 @@ use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\BajaActivoController;
 use App\Http\Controllers\ImportacionSigaController;
 use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\AuditoriaController;
 
 // Main Page Route
 // ==========================================
@@ -195,9 +196,10 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     // Route::get('/importaciones/{id}', [ImportacionSigaController::class, 'show'])->name('importaciones.show');
   });
 
-  // ── Reportes (ADMINISTRADOR + SERVICIOS_GENERALES consultan) ────────
+  // ── Reportes y Auditoría (ADMINISTRADOR + SERVICIOS_GENERALES) ──────
   Route::middleware('role:ADMINISTRADOR,SERVICIOS_GENERALES')->group(function () {
     Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
+    Route::get('/auditoria', [AuditoriaController::class, 'index'])->name('auditoria.index');
   });
 });
 

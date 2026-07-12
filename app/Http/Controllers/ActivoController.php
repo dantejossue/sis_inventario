@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activo;
 use App\Models\ActivoTecnico;
+use App\Models\AuditoriaCambio;
 use App\Models\BajaActivo;
 use App\Models\CategoriaActivo;
 use App\Models\Colaborador;
@@ -321,12 +322,21 @@ class ActivoController extends Controller
 
         $this->guardarFichaTecnica($activo, $modelo, $request);
 
+        AuditoriaCambio::registrar('ACTIVO', $activo->id_activo, 'CREAR', null, [
+            'codigo_interno' => $activo->codigo_interno,
+            'situacion'      => $activo->situacion_actual,
+            'condicion'      => $activo->condicion_actual,
+        ]);
+
         return redirect()->route('activos.index')->with('success', 'Activo registrado correctamente.');
     }
 
     public function update(Request $request, int $id)
     {
         $activo = Activo::findOrFail($id);
+
+        // Snapshot de campos sensibles para la auditoría (ubicación/responsable/condición).
+        $antes = $activo->only(['id_ubicacion_actual', 'id_responsable_actual', 'condicion_actual']);
 
         $request->validate([
             'id_modelo'           => 'required|integer|exists:modelo,id_modelo',
@@ -391,6 +401,11 @@ class ActivoController extends Controller
 
         $this->guardarFichaTecnica($activo, $modelo, $request);
 
+        $despues = $activo->only(['id_ubicacion_actual', 'id_responsable_actual', 'condicion_actual']);
+        if ($antes != $despues) {
+            AuditoriaCambio::registrar('ACTIVO', $activo->id_activo, 'ACTUALIZAR', $antes, $despues);
+        }
+
         return redirect()->route('activos.index')->with('success', 'Activo actualizado correctamente.');
     }
 
@@ -401,6 +416,10 @@ class ActivoController extends Controller
         // Borrado LÓGICO (SoftDeletes): no se elimina el archivo de imagen para
         // poder restaurar el activo íntegro más adelante.
         $activo->delete();
+
+        AuditoriaCambio::registrar('ACTIVO', $activo->id_activo, 'ELIMINAR', [
+            'codigo_interno' => $activo->codigo_interno,
+        ], null);
 
         return response()->json([
             'success' => true,

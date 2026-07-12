@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Activo;
 use App\Models\ActivoTecnico;
+use App\Models\AuditoriaCambio;
 use App\Models\BajaActivo;
 use App\Models\Colaborador;
 use App\Models\Mantenimiento;
@@ -131,6 +132,10 @@ class BajaActivoController extends Controller
             'observaciones'           => $request->observaciones ? trim($request->observaciones) : null,
         ]);
 
+        AuditoriaCambio::registrar('BAJA', $baja->id_baja, 'CREAR', null, [
+            'codigo' => $baja->codigo, 'id_activo' => $baja->id_activo, 'causal' => $baja->causal_baja,
+        ], $request->motivo);
+
         return $this->respuesta($baja, "Baja {$baja->codigo} registrada.");
     }
 
@@ -200,6 +205,10 @@ class BajaActivoController extends Controller
             }
         });
 
+        AuditoriaCambio::registrar('BAJA', $baja->id_baja, $request->resultado === 'RECHAZADA' ? 'CANCELAR' : 'ACTUALIZAR', null, [
+            'codigo' => $baja->codigo, 'resultado' => $request->resultado, 'clasificacion' => $baja->clasificacion_final,
+        ]);
+
         return $this->respuesta($baja, "Baja {$baja->codigo}: evaluación registrada ({$this->legible($request->resultado)}).");
     }
 
@@ -228,6 +237,10 @@ class BajaActivoController extends Controller
             'observaciones'               => $this->anotar($baja->observaciones, $request->observaciones),
         ]);
 
+        AuditoriaCambio::registrar('BAJA', $baja->id_baja, 'ACTUALIZAR', null, [
+            'codigo' => $baja->codigo, 'estado' => 'VALIDADA', 'documento' => $baja->numero_documento_validacion,
+        ]);
+
         return $this->respuesta($baja, "Baja {$baja->codigo} validada. Ya puede ejecutarse.");
     }
 
@@ -250,6 +263,10 @@ class BajaActivoController extends Controller
             $this->situarActivo($activo, 'DADO_DE_BAJA');
             $activo->update(['id_responsable_actual' => null]);
         });
+
+        AuditoriaCambio::registrar('BAJA', $baja->id_baja, 'EJECUTAR', null, [
+            'codigo' => $baja->codigo, 'id_activo' => $baja->id_activo, 'fecha_baja' => $baja->fecha_baja?->toDateString(),
+        ]);
 
         return $this->respuesta($baja, "Baja {$baja->codigo} ejecutada: el activo quedó DADO DE BAJA.");
     }
@@ -276,6 +293,8 @@ class BajaActivoController extends Controller
 
             $this->restaurarActivo($baja);
         });
+
+        AuditoriaCambio::registrar('BAJA', $baja->id_baja, 'CANCELAR', null, ['codigo' => $baja->codigo], $request->motivo);
 
         return $this->respuesta($baja, "Baja {$baja->codigo} rechazada; el activo vuelve a su situación operativa.");
     }
