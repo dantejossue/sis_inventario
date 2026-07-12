@@ -20,6 +20,7 @@
         <thead>
           <tr>
             <th class="fw-bold">#</th>
+            <th class="fw-bold">Ícono</th>
             <th class="fw-bold">Nombre</th>
             <th class="fw-bold">Descripción</th>
             <th class="fw-bold">Modelos</th>
@@ -56,11 +57,22 @@
               <div class="invalid-feedback"></div>
             </div>
 
-            <div class="form-floating form-floating-outline">
+            <div class="form-floating form-floating-outline mb-4">
               <input type="text" class="form-control" id="descripcion_categoria" name="descripcion"
                 placeholder="Descripción breve">
               <label>Descripción</label>
               <div class="invalid-feedback"></div>
+            </div>
+
+            <label class="form-label">Ícono representativo</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bx bx-package icono-preview" id="nuevo-icono-preview"></i></span>
+              <select class="form-select icono-select" id="nuevo-icono-categoria" name="icono"
+                data-preview="nuevo-icono-preview">
+                @foreach ($iconos as $ic)
+                  <option value="{{ $ic }}">{{ $ic }}</option>
+                @endforeach
+              </select>
             </div>
 
           </div>
@@ -102,11 +114,22 @@
               <div class="invalid-feedback"></div>
             </div>
 
-            <div class="form-floating form-floating-outline">
+            <div class="form-floating form-floating-outline mb-4">
               <input type="text" class="form-control" id="edit-descripcion-categoria" name="descripcion"
                 placeholder="Descripción breve">
               <label>Descripción</label>
               <div class="invalid-feedback"></div>
+            </div>
+
+            <label class="form-label">Ícono representativo</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bx bx-package icono-preview" id="edit-icono-preview"></i></span>
+              <select class="form-select icono-select" id="edit-icono-categoria" name="icono"
+                data-preview="edit-icono-preview">
+                @foreach ($iconos as $ic)
+                  <option value="{{ $ic }}">{{ $ic }}</option>
+                @endforeach
+              </select>
             </div>
 
           </div>
@@ -133,6 +156,12 @@
       update:       '/categorias/{id}',
       toggleEstado: '/categorias/{id}/toggle-estado',
     };
+    // Preview en vivo del ícono elegido en los selects de categoría.
+    document.addEventListener('change', function (e) {
+      if (!e.target.classList.contains('icono-select')) return;
+      const prev = document.getElementById(e.target.dataset.preview);
+      if (prev) prev.className = 'bx ' + e.target.value + ' icono-preview';
+    });
   </script>
   @vite([
     'resources/js/vendors/index.js',

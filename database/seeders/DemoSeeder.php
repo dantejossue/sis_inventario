@@ -102,7 +102,9 @@ class DemoSeeder extends Seeder
             'descripcion' => 'Laptop Jefatura OTI', 'condicion_actual' => 'BUENO', 'situacion_actual' => 'EN_USO',
             'id_responsable_actual' => $colabs[0], 'id_ubicacion_actual' => $ubicOti,
             'fecha_adquisicion' => '2024-03-15', 'valor_compra' => 3500, 'proveedor' => 'IMPORTACIONES SAC',
-            'garantia_inicio' => '2024-03-15', 'garantia_fin' => now()->addMonths(8)->toDateString()]);
+            'garantia_inicio' => '2024-03-15', 'garantia_fin' => now()->addMonths(8)->toDateString(),
+            'codigo_siga' => '74080001', 'numero_pecosa' => 'PECOSA-2024-018', 'numero_orden_compra' => 'OC-2024-102',
+            'fecha_alta_siga' => '2024-03-20', 'estado_siga' => 'REGISTRADO']);
         ActivoTecnico::create(['id_activo' => $a1->id_activo, 'procesador' => 'Intel Core i5-1135G7',
             'memoria_ram' => '16 GB', 'almacenamiento' => '512 GB', 'tipo_almacenamiento' => 'SSD',
             'sistema_operativo' => 'Windows 11 Pro', 'nombre_equipo' => 'OTI-LAP01', 'estado_operativo' => 'OPERATIVO']);

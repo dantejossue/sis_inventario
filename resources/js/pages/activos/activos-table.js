@@ -78,9 +78,13 @@ $(function () {
       {
         data: 'modelo_nombre',
         render: (d, t, row) =>
-          `<span class="fw-semibold d-block">${d}</span>` +
+          `<div class="d-flex align-items-center gap-2">` +
+          `<span class="avatar avatar-sm flex-shrink-0"><span class="avatar-initial rounded bg-label-primary">` +
+          `<i class="bx ${row.categoria_icono || 'bx-package'}"></i></span></span>` +
+          `<div><span class="fw-semibold d-block">${d}</span>` +
           `<span class="badge bg-label-secondary me-1" style="margin-bottom:0.25rem">${row.marca_nombre}</span>` +
-          (row.categoria_nombre !== '—' ? `<span class="badge bg-label-primary">${row.categoria_nombre}</span>` : '')
+          (row.categoria_nombre !== '—' ? `<span class="badge bg-label-primary">${row.categoria_nombre}</span>` : '') +
+          `</div></div>`
       },
       {
         data: 'sede_nombre',
@@ -262,4 +266,36 @@ $(function () {
       .remove()
       .draw(false);
   };
+
+  // ── Filtros de la tabla (categoría / sede / situación / condición) ────────────
+  $.fn.dataTable.ext.search.push((settings, _data, dataIndex) => {
+    if (settings.nTable.id !== 'miTablaActivos') return true;
+    const row = window.tablaActivos.row(dataIndex).data();
+    const cat = $('#filtro-categoria').val();
+    if (cat && row.categoria_nombre !== cat) return false;
+    const sede = $('#filtro-sede').val();
+    if (sede && row.sede_nombre !== sede) return false;
+    const sit = $('#filtro-situacion').val();
+    if (sit && row.situacion_actual !== sit) return false;
+    const con = $('#filtro-condicion').val();
+    if (con && row.condicion_actual !== con) return false;
+    return true;
+  });
+
+  $('#filtro-categoria, #filtro-sede, #filtro-situacion, #filtro-condicion').on('change', () => window.tablaActivos.draw());
+  $('#filtro-texto').on('input', function () {
+    window.tablaActivos.search(this.value).draw();
+  });
+  $('#filtro-reset').on('click', function () {
+    $('#filtro-categoria, #filtro-sede, #filtro-situacion, #filtro-condicion, #filtro-texto').val('');
+    window.tablaActivos.search('').draw();
+  });
+
+  // KPI cards: clic filtra por situación.
+  $(document).on('click', '.kpi-filtro', function () {
+    const sit = $(this).data('situacion');
+    $('#filtro-situacion').val(sit === 'todas' ? '' : sit);
+    window.tablaActivos.draw();
+    document.getElementById('miTablaActivos')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 });

@@ -28,11 +28,12 @@
               <input type="text"
                 class="form-control text-uppercase @error('codigo_patrimonial') is-invalid @enderror"
                 id="codigo_patrimonial" name="codigo_patrimonial"
-                value="{{ old('codigo_patrimonial', $activo?->codigo_patrimonial) }}" placeholder="Ej: PAT-0001">
-              <label>Código Patrimonial <span class="text-danger">*</span></label>
+                value="{{ old('codigo_patrimonial', $activo?->codigo_patrimonial) }}" placeholder="Ej: 740800001234">
+              <label>Código Patrimonial</label>
               @error('codigo_patrimonial')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
+              <small class="text-muted">Opcional; único si se registra (dato referencial SIGA/Patrimonio).</small>
             </div>
           </div>
 
@@ -60,6 +61,8 @@
                 <option value="">Seleccionar modelo...</option>
                 @foreach ($modelos as $m)
                   <option value="{{ $m['id_modelo'] }}" data-ficha="{{ $m['requiere_ficha'] ? 1 : 0 }}"
+                    data-marca="{{ $m['marca_nombre'] }}" data-modelo="{{ $m['nombre'] }}"
+                    data-categoria="{{ $m['categoria_nombre'] }}" data-icono="{{ $m['categoria_icono'] }}"
                     {{ old('id_modelo', $activo?->id_modelo) == $m['id_modelo'] ? 'selected' : '' }}>
                     {{ $m['marca_nombre'] }} — {{ $m['nombre'] }}
                     @if ($m['categoria_nombre'])
@@ -273,18 +276,6 @@
         </div>
         <small class="text-muted">Lugar físico donde se encuentra el equipo.</small>
       </div> --}}
-          <div class="col-md-6">
-            <div class="form-floating form-floating-outline">
-              <input type="date" class="form-control @error('fecha_ingreso') is-invalid @enderror"
-                id="fecha_ingreso" name="fecha_ingreso" {{-- value="{{ old('fecha_ingreso', $activo?->fecha_ingreso) }}" --}}>
-              <label>Fecha de Ingreso</label>
-              @error('fecha_ingreso')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
-          </div>
-
-
         </div>
       </div>
     </div>
@@ -441,15 +432,11 @@
 
           <div class="col-md-4">
             <div class="form-floating form-floating-outline">
-              <select class="form-select @error('conciliacion_siga') is-invalid @enderror" id="conciliacion_siga"
-                name="conciliacion_siga">
-                <option>Pendiente</option>
-                <option>Conciliado</option>
-                <option>Con diferencias</option>
-                <option>No aplica</option>
-              </select>
-              <label>Conciliación SIGA <span class="text-danger">*</span></label>
-              @error('conciliacion_siga')
+              <input type="text" class="form-control text-uppercase @error('codigo_siga') is-invalid @enderror"
+                id="codigo_siga" name="codigo_siga" value="{{ old('codigo_siga', $activo?->codigo_siga) }}"
+                placeholder="Ej: 74080001">
+              <label>Código SIGA</label>
+              @error('codigo_siga')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
@@ -457,10 +444,52 @@
 
           <div class="col-md-4">
             <div class="form-floating form-floating-outline">
-              <input type="text" class="form-control @error('cuenta') is-invalid @enderror" id="cuenta"
-                name="cuenta" placeholder="">
-              <label>Cuenta contable / clase</label>
-              @error('cuenta')
+              <input type="text" class="form-control text-uppercase @error('numero_pecosa') is-invalid @enderror"
+                id="numero_pecosa" name="numero_pecosa" value="{{ old('numero_pecosa', $activo?->numero_pecosa) }}"
+                placeholder="Ej: PECOSA-2025-001">
+              <label>N° PECOSA</label>
+              @error('numero_pecosa')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-floating form-floating-outline">
+              <input type="text" class="form-control text-uppercase @error('numero_orden_compra') is-invalid @enderror"
+                id="numero_orden_compra" name="numero_orden_compra"
+                value="{{ old('numero_orden_compra', $activo?->numero_orden_compra) }}" placeholder="Ej: OC-2025-045">
+              <label>N° Orden de Compra</label>
+              @error('numero_orden_compra')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-floating form-floating-outline">
+              <select class="form-select @error('estado_siga') is-invalid @enderror" id="estado_siga"
+                name="estado_siga">
+                @php $es = old('estado_siga', $activo?->estado_siga ?? 'NO_APLICA'); @endphp
+                <option value="NO_APLICA" {{ $es === 'NO_APLICA' ? 'selected' : '' }}>No aplica</option>
+                <option value="PENDIENTE_ACTUALIZACION" {{ $es === 'PENDIENTE_ACTUALIZACION' ? 'selected' : '' }}>Pendiente de actualización</option>
+                <option value="REGISTRADO" {{ $es === 'REGISTRADO' ? 'selected' : '' }}>Registrado</option>
+                <option value="OBSERVADO" {{ $es === 'OBSERVADO' ? 'selected' : '' }}>Observado</option>
+              </select>
+              <label>Estado SIGA (referencial)</label>
+              @error('estado_siga')
+                <div class="invalid-feedback">{{ $message }}</div>
+              @enderror
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="form-floating form-floating-outline">
+              <input type="date" class="form-control @error('fecha_alta_siga') is-invalid @enderror"
+                id="fecha_alta_siga" name="fecha_alta_siga"
+                value="{{ old('fecha_alta_siga', optional($activo?->fecha_alta_siga)->format('Y-m-d')) }}">
+              <label>Fecha de Alta SIGA</label>
+              @error('fecha_alta_siga')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
@@ -470,7 +499,7 @@
             <div class="form-floating form-floating-outline">
               <input type="date" class="form-control @error('fecha_adquisicion') is-invalid @enderror"
                 id="fecha_adquisicion" name="fecha_adquisicion"
-                value="{{ old('fecha_adquisicion', $activo?->fecha_adquisicion) }}">
+                value="{{ old('fecha_adquisicion', optional($activo?->fecha_adquisicion)->format('Y-m-d')) }}">
               <label>Fecha de Adquisición</label>
               @error('fecha_adquisicion')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -490,7 +519,7 @@
             </div>
           </div>
 
-          <div class="col-md-4">
+          <div class="col-md-8">
             <div class="form-floating form-floating-outline">
               <input type="text" class="form-control text-uppercase @error('proveedor') is-invalid @enderror"
                 id="proveedor" name="proveedor" value="{{ old('proveedor', $activo?->proveedor) }}"
@@ -502,22 +531,11 @@
             </div>
           </div>
 
-          <div class="col-md-4">
-            <div class="form-floating form-floating-outline">
-              <input type="date" class="form-control @error('fecha_alta') is-invalid @enderror" id="fecha_alta"
-                name="fecha_alta" value="{{ old('fecha_alta', $activo?->fecha_alta) }}">
-              <label>Fecha Alta</label>
-              @error('fecha_alta')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
-            </div>
-          </div>
-
           <div class="col-md-6">
             <div class="form-floating form-floating-outline">
               <input type="date" class="form-control @error('garantia_inicio') is-invalid @enderror"
                 id="garantia_inicio" name="garantia_inicio"
-                value="{{ old('garantia_inicio', $activo?->garantia_inicio) }}">
+                value="{{ old('garantia_inicio', optional($activo?->garantia_inicio)->format('Y-m-d')) }}">
               <label>Garantía — Inicio</label>
               @error('garantia_inicio')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -528,7 +546,8 @@
           <div class="col-md-6">
             <div class="form-floating form-floating-outline">
               <input type="date" class="form-control @error('garantia_fin') is-invalid @enderror"
-                id="garantia_fin" name="garantia_fin" value="{{ old('garantia_fin', $activo?->garantia_fin) }}">
+                id="garantia_fin" name="garantia_fin"
+                value="{{ old('garantia_fin', optional($activo?->garantia_fin)->format('Y-m-d')) }}">
               <label>Garantía — Fin</label>
               @error('garantia_fin')
                 <div class="invalid-feedback">{{ $message }}</div>
@@ -597,13 +616,13 @@
                 </h6>
 
                 <small class="text-muted">
-                  Puedes adjuntar PDF, imágenes, documentos de Office y archivos comprimidos ZIP o RAR.
+                  Puedes adjuntar PDF, imágenes y documentos de Office (máx. 5 MB c/u).
                 </small>
               </div>
             </label>
 
             <input type="file" id="documentos_activo" name="documentos[]" class="d-none" multiple
-              accept=".pdf,.jpg,.jpeg,.png,.webp,.xls,.xlsx,.doc,.docx,.zip,.rar" />
+              accept=".pdf,.jpg,.jpeg,.png,.webp,.xls,.xlsx,.doc,.docx" />
 
             <div id="listaDocumentos" class="mt-3"></div>
           </div>
@@ -634,7 +653,7 @@
 
         <div class="d-flex flex-column align-items-center">
           <div class="p-4 rounded-5 bg-label-primary d-flex align-items-center">
-            <i class="bx bx-box fs-4"></i>
+            <i class="bx bx-box fs-4" id="previewIconoActivo"></i>
           </div>
 
           <h5 id="previewNombreActivo" class="mb-1">

@@ -13,6 +13,9 @@ $(function () {
     limpiarErrores();
     $('#edit-nombre-categoria').val(b.data('nombre'));
     $('#edit-descripcion-categoria').val(b.data('descripcion'));
+    const icono = b.data('icono') || 'bx-package';
+    $('#edit-icono-categoria').val(icono);
+    document.getElementById('edit-icono-preview').className = 'bx ' + icono + ' icono-preview';
 
     const url = window.routes.update.replace('{id}', b.data('id'));
     form.attr('action', url);
@@ -50,6 +53,7 @@ $(function () {
           const data          = row.data();
           data.nombre         = res.data.nombre;
           data.descripcion    = res.data.descripcion;
+          data.icono          = res.data.icono;
           data.modelos_count  = res.data.modelos_count;
           row.data(data).draw(false);
         }

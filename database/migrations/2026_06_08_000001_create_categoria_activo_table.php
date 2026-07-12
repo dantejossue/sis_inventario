@@ -14,6 +14,10 @@ return new class extends Migration
             $table->string('nombre', 150)->unique();
             $table->string('descripcion', 255)->nullable();
 
+            // Ícono representativo (clase Boxicons) que identifica visualmente el
+            // tipo de activo en cards, listados y ficha.
+            $table->string('icono', 50)->nullable();
+
             // Marca qué categorías despliegan la ficha técnica (activo_tecnico):
             // equipos de cómputo/red sí; periféricos y eléctricos no.
             $table->boolean('requiere_ficha_tecnica')->default(true);
@@ -23,25 +27,26 @@ return new class extends Migration
             $table->dateTime('actualizado_en')->nullable()->useCurrentOnUpdate();
         });
 
-        // Seed: [nombre, requiere_ficha_tecnica]
+        // Seed: [nombre, requiere_ficha_tecnica, icono]
         $categorias = [
-            ['LAPTOP', true],
-            ['CPU', true],
-            ['SERVIDOR', true],
-            ['SWITCH', true],
-            ['ROUTER', true],
-            ['ACCESS POINT', true],
-            ['MONITOR', false],
-            ['IMPRESORA', false],
-            ['PROYECTOR', false],
-            ['UPS', false],
-            ['ESTABILIZADOR', false],
+            ['LAPTOP', true, 'bx-laptop'],
+            ['CPU', true, 'bx-desktop'],
+            ['SERVIDOR', true, 'bx-server'],
+            ['SWITCH', true, 'bx-network-chart'],
+            ['ROUTER', true, 'bx-wifi'],
+            ['ACCESS POINT', true, 'bx-broadcast'],
+            ['MONITOR', false, 'bx-tv'],
+            ['IMPRESORA', false, 'bx-printer'],
+            ['PROYECTOR', false, 'bx-video-recording'],
+            ['UPS', false, 'bx-plug'],
+            ['ESTABILIZADOR', false, 'bx-plug'],
         ];
 
         $now = now();
         DB::table('categoria_activo')->insert(array_map(fn($c) => [
             'nombre'                 => $c[0],
             'requiere_ficha_tecnica' => $c[1],
+            'icono'                  => $c[2],
             'estado'                 => 'ACTIVO',
             'creado_en'              => $now,
         ], $categorias));

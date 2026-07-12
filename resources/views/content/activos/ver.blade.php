@@ -446,6 +446,11 @@
                       <span>N.º PECOSA / Orden compra</span>
                       <strong>{{ $activo->numero_pecosa ?: '—' }} / {{ $activo->numero_orden_compra ?: '—' }}</strong>
                     </div>
+
+                    <div class="data-list-item">
+                      <span>Fecha de alta SIGA</span>
+                      <strong>{{ $fmtFecha($activo->fecha_alta_siga) ?: '—' }}</strong>
+                    </div>
                   </div>
                 </div>
               </div>

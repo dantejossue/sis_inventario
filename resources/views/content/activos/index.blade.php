@@ -37,98 +37,46 @@
     </div>
   @endif
 
-  <!-- KPIs rápidos -->
+  @php
+    $acts = collect($activos);
+    $kTotal = $acts->count();
+    $kDisponible = $acts->where('situacion_actual', 'DISPONIBLE')->count();
+    $kEnUso = $acts->where('situacion_actual', 'EN_USO')->count();
+    $kPrestamo = $acts->where('situacion_actual', 'EN_PRESTAMO')->count();
+    $kMantenimiento = $acts->where('situacion_actual', 'EN_MANTENIMIENTO')->count();
+    $kObservado = $acts->where('situacion_actual', 'OBSERVADO')->count();
+    $kBaja = $acts->where('situacion_actual', 'DADO_DE_BAJA')->count();
+    $kpiCards = [
+        ['Total activos', $kTotal, 'primary', 'bx-devices', $kDisponible . ' disponibles', 'text-success', 'todas'],
+        ['En uso', $kEnUso, 'success', 'bx-user-check', 'Asignados a responsable', 'text-muted', 'EN_USO'],
+        ['En préstamo', $kPrestamo, 'info', 'bx-time-five', $kMantenimiento . ' en mantenimiento', 'text-muted', 'EN_PRESTAMO'],
+        ['Observados', $kObservado, 'warning', 'bx-error-circle', $kBaja . ' dados de baja', 'text-danger', 'OBSERVADO'],
+    ];
+  @endphp
+
+  <!-- KPIs rápidos (clic para filtrar por situación) -->
   <div class="row g-4">
-
-    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card rounded-5 kpi-card">
-        <div class="card-body">
-          <div class="d-flex align-items-start justify-content-between">
-            <div>
-              <span class="fw-semibold d-block mb-1">Total activos</span>
-              <h3 class="card-title mb-2">1,248</h3>
-              <small class="text-success fw-semibold">
-                <i class="bx bx-check-circle"></i>
-                1,117 validados
-              </small>
-            </div>
-
-            <div class="avatar">
-              <span class="avatar-initial rounded bg-label-primary">
-                <i class="bx bx-laptop fs-3"></i>
-              </span>
+    @foreach ($kpiCards as [$titulo, $valor, $color, $icono, $sub, $subClass, $filtro])
+      <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+        <div class="card rounded-5 kpi-card kpi-filtro" role="button" data-situacion="{{ $filtro }}"
+          title="Filtrar por {{ $titulo }}">
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between">
+              <div>
+                <span class="fw-semibold d-block mb-1">{{ $titulo }}</span>
+                <h3 class="card-title mb-2">{{ $valor }}</h3>
+                <small class="{{ $subClass }} fw-semibold">{{ $sub }}</small>
+              </div>
+              <div class="avatar">
+                <span class="avatar-initial rounded bg-label-{{ $color }}">
+                  <i class="bx {{ $icono }} fs-3"></i>
+                </span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card rounded-5 kpi-card">
-        <div class="card-body">
-          <div class="d-flex align-items-start justify-content-between">
-            <div>
-              <span class="fw-semibold d-block mb-1">En uso</span>
-              <h3 class="card-title mb-2">842</h3>
-              <small class="text-muted fw-semibold">
-                Asignados a usuarios
-              </small>
-            </div>
-
-            <div class="avatar">
-              <span class="avatar-initial rounded bg-label-success">
-                <i class="bx bx-user-check fs-3"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card rounded-5 kpi-card">
-        <div class="card-body">
-          <div class="d-flex align-items-start justify-content-between">
-            <div>
-              <span class="fw-semibold d-block mb-1">Observados</span>
-              <h3 class="card-title mb-2">38</h3>
-              <small class="text-warning fw-semibold">
-                Requieren revisión
-              </small>
-            </div>
-
-            <div class="avatar">
-              <span class="avatar-initial rounded bg-label-warning">
-                <i class="bx bx-error-circle fs-3"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card rounded-5 kpi-card">
-        <div class="card-body">
-          <div class="d-flex align-items-start justify-content-between">
-            <div>
-              <span class="fw-semibold d-block mb-1">Sin etiqueta</span>
-              <h3 class="card-title mb-2">21</h3>
-              <small class="text-danger fw-semibold">
-                Pendiente QR / barras
-              </small>
-            </div>
-
-            <div class="avatar">
-              <span class="avatar-initial rounded bg-label-danger">
-                <i class="bx bx-barcode fs-3"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    @endforeach
   </div>
 
   <!-- Filtros -->
@@ -141,87 +89,61 @@
     </div>
 
     <div class="card-body">
+      @php
+        $catsFiltro = $acts->pluck('categoria_nombre')->filter(fn($c) => $c && $c !== '—')->unique()->sort()->values();
+        $sedesFiltro = $acts->pluck('sede_nombre')->filter(fn($s) => $s && $s !== '—')->unique()->sort()->values();
+      @endphp
       <div class="row g-3">
 
-        <div class="col-lg-3 col-md-6">
-          <label class="form-label">Código / Serie</label>
-          <input type="text" class="form-control" placeholder="Patrimonial, interno o serie" />
+        <div class="col-lg-4 col-md-6">
+          <label class="form-label">Código, serie o responsable</label>
+          <input type="text" class="form-control" id="filtro-texto" placeholder="Buscar en la tabla…" />
         </div>
 
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-2 col-md-6">
           <label class="form-label">Categoría</label>
-          <select class="form-select">
-            <option selected>Todas</option>
-            <option>Laptop</option>
-            <option>CPU</option>
-            <option>Monitor</option>
-            <option>Impresora</option>
-            <option>Switch</option>
-            <option>Access Point</option>
+          <select class="form-select" id="filtro-categoria">
+            <option value="">Todas</option>
+            @foreach ($catsFiltro as $c)
+              <option value="{{ $c }}">{{ $c }}</option>
+            @endforeach
           </select>
         </div>
 
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-2 col-md-6">
           <label class="form-label">Sede</label>
-          <select class="form-select">
-            <option selected>Todas las sedes</option>
-            <option>Sede Central</option>
-            <option>Campus Académico</option>
-            <option>Filial Administrativa</option>
+          <select class="form-select" id="filtro-sede">
+            <option value="">Todas</option>
+            @foreach ($sedesFiltro as $s)
+              <option value="{{ $s }}">{{ $s }}</option>
+            @endforeach
           </select>
         </div>
 
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-2 col-md-6">
           <label class="form-label">Situación</label>
-          <select class="form-select">
-            <option selected>Todas</option>
-            <option>Disponible</option>
-            <option>En uso</option>
-            <option>En préstamo</option>
-            <option>En mantenimiento</option>
-            <option>En proveedor</option>
-            <option>Observado</option>
-            <option>Dado de baja</option>
+          <select class="form-select" id="filtro-situacion">
+            <option value="">Todas</option>
+            @foreach (\App\Models\Activo::SITUACION_LABELS as $code => $label)
+              <option value="{{ $code }}">{{ $label }}</option>
+            @endforeach
           </select>
         </div>
 
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-2 col-md-6">
           <label class="form-label">Condición</label>
-          <select class="form-select">
-            <option selected>Todas</option>
-            <option>Bueno</option>
-            <option>Regular</option>
-            <option>Malo</option>
-            <option>RAEE</option>
+          <select class="form-select" id="filtro-condicion">
+            <option value="">Todas</option>
+            @foreach (\App\Models\Activo::CONDICION_LABELS as $code => $label)
+              <option value="{{ $code }}">{{ $label }}</option>
+            @endforeach
           </select>
         </div>
 
-        <div class="col-lg-3 col-md-6">
-          <label class="form-label">Responsable</label>
-          <input type="text" class="form-control" placeholder="Nombre del responsable" />
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-          <label class="form-label">Estado SIGA</label>
-          <select class="form-select">
-            <option selected>Todos</option>
-            <option>Validado</option>
-            <option>Pendiente validación</option>
-            <option>Observado</option>
-          </select>
-        </div>
-
-        <div class="col-lg-3 col-md-6 d-flex align-items-end">
-          <div class="d-flex gap-2 w-100">
-            <button class="btn btn-primary w-100">
-              <i class="bx bx-search me-1"></i>
-              Buscar
-            </button>
-
-            <button class="btn btn-outline-secondary">
-              <i class="bx bx-reset"></i>
-            </button>
-          </div>
+        <div class="col-lg-2 col-md-6 d-flex align-items-end">
+          <button class="btn btn-outline-secondary w-100" id="filtro-reset">
+            <i class="bx bx-reset me-1"></i> Limpiar
+          </button>
         </div>
 
       </div>

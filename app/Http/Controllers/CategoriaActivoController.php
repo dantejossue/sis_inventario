@@ -4,14 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\CategoriaActivo;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class CategoriaActivoController extends Controller
 {
     public function index()
     {
         $categorias = CategoriaActivo::withCount('modelos')->get();
+        $iconos = CategoriaActivo::ICONOS;
 
-        return view('content.catalogos.categorias.index', compact('categorias'));
+        return view('content.catalogos.categorias.index', compact('categorias', 'iconos'));
     }
 
     public function store(Request $request)
@@ -19,6 +21,7 @@ class CategoriaActivoController extends Controller
         $request->validate([
             'nombre'      => 'required|string|max:150|unique:categoria_activo,nombre',
             'descripcion' => 'nullable|string|max:255',
+            'icono'       => ['nullable', 'string', 'max:50', Rule::in(CategoriaActivo::ICONOS)],
         ], [
             'nombre.required' => 'El nombre de la categoría es obligatorio.',
             'nombre.unique'   => 'Ya existe una categoría con ese nombre.',
@@ -27,6 +30,7 @@ class CategoriaActivoController extends Controller
         $categoria = CategoriaActivo::create([
             'nombre'      => strtoupper(trim($request->nombre)),
             'descripcion' => $request->descripcion ? trim($request->descripcion) : null,
+            'icono'       => $request->icono ?: 'bx-package',
             'estado'      => 'ACTIVO',
         ]);
 
@@ -46,6 +50,7 @@ class CategoriaActivoController extends Controller
         $request->validate([
             'nombre'      => "required|string|max:150|unique:categoria_activo,nombre,{$id},id_categoria",
             'descripcion' => 'nullable|string|max:255',
+            'icono'       => ['nullable', 'string', 'max:50', Rule::in(CategoriaActivo::ICONOS)],
         ], [
             'nombre.required' => 'El nombre de la categoría es obligatorio.',
             'nombre.unique'   => 'Ya existe una categoría con ese nombre.',
@@ -54,6 +59,7 @@ class CategoriaActivoController extends Controller
         $categoria->update([
             'nombre'      => strtoupper(trim($request->nombre)),
             'descripcion' => $request->descripcion ? trim($request->descripcion) : null,
+            'icono'       => $request->icono ?: $categoria->icono,
         ]);
 
         $categoria->loadCount('modelos');

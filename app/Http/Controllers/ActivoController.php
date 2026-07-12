@@ -9,6 +9,7 @@ use App\Models\BajaActivo;
 use App\Models\CategoriaActivo;
 use App\Models\Colaborador;
 use App\Models\DetalleMovimientoActivo;
+use App\Models\DocumentoAdjunto;
 use App\Models\Mantenimiento;
 use App\Models\Modelo;
 use App\Models\Ubicacion;
@@ -55,6 +56,7 @@ class ActivoController extends Controller
                     'nombre'           => $m->nombre,
                     'marca_nombre'     => $m->marca->nombre,
                     'categoria_nombre' => $m->categoriaActivo?->nombre ?? null,
+                    'categoria_icono'  => $m->categoriaActivo?->icono ?: 'bx-package',
                     'id_categoria'     => $m->id_categoria,
                     'requiere_ficha'   => (bool) ($m->categoriaActivo?->requiere_ficha_tecnica),
                 ]),
@@ -258,7 +260,7 @@ class ActivoController extends Controller
             'id_modelo'           => 'required|integer|exists:modelo,id_modelo',
             'condicion_actual'    => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
             'codigo_interno'      => 'required|string|max:50|unique:activo,codigo_interno',
-            'codigo_patrimonial'  => 'required|string|max:100|unique:activo,codigo_patrimonial',
+            'codigo_patrimonial'  => 'nullable|string|max:100|unique:activo,codigo_patrimonial',
             'numero_serie'        => 'nullable|string|max:150|unique:activo,numero_serie',
             'descripcion'         => 'nullable|string|max:255',
             'imagen'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -270,13 +272,12 @@ class ActivoController extends Controller
             'observaciones'       => 'nullable|string',
             'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
             'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
-        ] + $this->reglasTecnicas(), [
+        ] + $this->reglasTecnicas() + $this->reglasPatrimoniales(), [
             'id_modelo.required'          => 'Debes seleccionar un modelo.',
             'condicion_actual.required'   => 'La condición es obligatoria.',
             'condicion_actual.in'         => 'La condición seleccionada no es válida.',
             'codigo_interno.required'     => 'El código interno es obligatorio.',
             'codigo_interno.unique'       => 'Ya existe un activo con ese código interno.',
-            'codigo_patrimonial.required' => 'El código patrimonial es obligatorio.',
             'codigo_patrimonial.unique'   => 'Ya existe un activo con ese código patrimonial.',
             'numero_serie.unique'         => 'Ese número de serie ya está registrado.',
             'imagen.image'                => 'El archivo debe ser una imagen.',
@@ -298,7 +299,7 @@ class ActivoController extends Controller
             'id_responsable_actual' => $request->id_responsable_actual ?: null,
             'id_ubicacion_actual'   => $request->id_ubicacion_actual ?: null,
             'codigo_interno'        => strtoupper(trim($request->codigo_interno)),
-            'codigo_patrimonial'    => strtoupper(trim($request->codigo_patrimonial)),
+            'codigo_patrimonial'    => $request->codigo_patrimonial ? strtoupper(trim($request->codigo_patrimonial)) : null,
             'numero_serie'          => $request->numero_serie ? trim($request->numero_serie) : null,
             'descripcion'           => $request->descripcion ? trim($request->descripcion) : null,
             'imagen'                => $request->hasFile('imagen')
@@ -312,9 +313,10 @@ class ActivoController extends Controller
             'observaciones'         => $request->observaciones ? trim($request->observaciones) : null,
             'qr_token'              => (string) Str::uuid(),
             'creado_por'            => Auth::id(),
-        ]);
+        ] + $this->datosPatrimoniales($request));
 
         $this->guardarFichaTecnica($activo, $modelo, $request);
+        $this->guardarDocumentos($activo, $request);
 
         AuditoriaCambio::registrar('ACTIVO', $activo->id_activo, 'CREAR', null, [
             'codigo_interno' => $activo->codigo_interno,
@@ -336,7 +338,7 @@ class ActivoController extends Controller
             'id_modelo'           => 'required|integer|exists:modelo,id_modelo',
             'condicion_actual'    => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
             'codigo_interno'      => "required|string|max:50|unique:activo,codigo_interno,{$id},id_activo",
-            'codigo_patrimonial'  => "required|string|max:100|unique:activo,codigo_patrimonial,{$id},id_activo",
+            'codigo_patrimonial'  => "nullable|string|max:100|unique:activo,codigo_patrimonial,{$id},id_activo",
             'numero_serie'        => "nullable|string|max:150|unique:activo,numero_serie,{$id},id_activo",
             'descripcion'         => 'nullable|string|max:255',
             'imagen'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:2048',
@@ -348,13 +350,12 @@ class ActivoController extends Controller
             'observaciones'       => 'nullable|string',
             'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
             'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
-        ] + $this->reglasTecnicas(), [
+        ] + $this->reglasTecnicas() + $this->reglasPatrimoniales(), [
             'id_modelo.required'          => 'Debes seleccionar un modelo.',
             'condicion_actual.required'   => 'La condición es obligatoria.',
             'condicion_actual.in'         => 'La condición seleccionada no es válida.',
             'codigo_interno.required'     => 'El código interno es obligatorio.',
             'codigo_interno.unique'       => 'Ya existe un activo con ese código interno.',
-            'codigo_patrimonial.required' => 'El código patrimonial es obligatorio.',
             'codigo_patrimonial.unique'   => 'Ya existe un activo con ese código patrimonial.',
             'numero_serie.unique'         => 'Ese número de serie ya está registrado.',
             'imagen.image'                => 'El archivo debe ser una imagen.',
@@ -380,7 +381,7 @@ class ActivoController extends Controller
             'id_responsable_actual' => $request->id_responsable_actual ?: null,
             'id_ubicacion_actual'   => $request->id_ubicacion_actual ?: null,
             'codigo_interno'        => strtoupper(trim($request->codigo_interno)),
-            'codigo_patrimonial'    => strtoupper(trim($request->codigo_patrimonial)),
+            'codigo_patrimonial'    => $request->codigo_patrimonial ? strtoupper(trim($request->codigo_patrimonial)) : null,
             'numero_serie'          => $request->numero_serie ? trim($request->numero_serie) : null,
             'descripcion'           => $request->descripcion ? trim($request->descripcion) : null,
             'imagen'                => $imagen,
@@ -391,9 +392,10 @@ class ActivoController extends Controller
             'garantia_fin'          => $request->garantia_fin ?: null,
             'observaciones'         => $request->observaciones ? trim($request->observaciones) : null,
             'actualizado_por'       => Auth::id(),
-        ]);
+        ] + $this->datosPatrimoniales($request));
 
         $this->guardarFichaTecnica($activo, $modelo, $request);
+        $this->guardarDocumentos($activo, $request);
 
         $despues = $activo->only(['id_ubicacion_actual', 'id_responsable_actual', 'condicion_actual']);
         if ($antes != $despues) {
@@ -503,6 +505,69 @@ class ActivoController extends Controller
         ActivoTecnico::updateOrCreate(['id_activo' => $activo->id_activo], $datos);
     }
 
+    // ──────────────────────────────────────────────────────────────────
+    //  Datos patrimoniales referenciales (brief §11) + documentos
+    // ──────────────────────────────────────────────────────────────────
+
+    /** Reglas de los datos patrimoniales referenciales y documentos adjuntos. */
+    private function reglasPatrimoniales(): array
+    {
+        return [
+            'codigo_siga'         => 'nullable|string|max:60',
+            'numero_pecosa'       => 'nullable|string|max:60',
+            'numero_orden_compra' => 'nullable|string|max:80',
+            'fecha_alta_siga'     => 'nullable|date',
+            'estado_siga'         => 'nullable|in:NO_APLICA,PENDIENTE_ACTUALIZACION,REGISTRADO,OBSERVADO',
+            'documentos'          => 'nullable|array',
+            'documentos.*'        => 'file|mimes:pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx|max:5120',
+            'tipo_documento'      => 'nullable|string|max:100',
+        ];
+    }
+
+    /** Normaliza los campos patrimoniales referenciales para create/update. */
+    private function datosPatrimoniales(Request $request): array
+    {
+        return [
+            'codigo_siga'         => $request->codigo_siga ? strtoupper(trim($request->codigo_siga)) : null,
+            'numero_pecosa'       => $request->numero_pecosa ? strtoupper(trim($request->numero_pecosa)) : null,
+            'numero_orden_compra' => $request->numero_orden_compra ? strtoupper(trim($request->numero_orden_compra)) : null,
+            'fecha_alta_siga'     => $request->fecha_alta_siga ?: null,
+            'estado_siga'         => $request->estado_siga ?: 'NO_APLICA',
+        ];
+    }
+
+    /**
+     * Guarda los documentos/evidencias adjuntados en el propio formulario del
+     * activo (disco privado 'local', descarga autenticada), como el módulo de
+     * documentos transversal.
+     */
+    private function guardarDocumentos(Activo $activo, Request $request): void
+    {
+        if (! $request->hasFile('documentos')) {
+            return;
+        }
+
+        $tipo = $request->tipo_documento ? trim($request->tipo_documento) : 'OTRO';
+
+        foreach ($request->file('documentos') as $file) {
+            if (! $file || ! $file->isValid()) {
+                continue;
+            }
+            $ruta = $file->store('documentos/activo', 'local');
+
+            DocumentoAdjunto::create([
+                'entidad_tipo'    => 'ACTIVO',
+                'entidad_id'      => $activo->id_activo,
+                'tipo_documento'  => $tipo,
+                'archivo'         => $ruta,
+                'nombre_original' => $file->getClientOriginalName(),
+                'extension'       => strtolower($file->getClientOriginalExtension()),
+                'tamano_kb'       => (int) round($file->getSize() / 1024),
+                'subido_por'      => Auth::id(),
+            ]);
+        }
+    }
+
     /**
      * Resuelve un QR escaneado: ubica el activo por su token y abre su ficha.
      * La ruta vive dentro del grupo autenticado, así que solo usuarios
@@ -586,21 +651,27 @@ class ActivoController extends Controller
             'id_responsable_actual' => $a->id_responsable_actual,
             'codigo_interno'        => $a->codigo_interno,
             'codigo_patrimonial'    => $a->codigo_patrimonial,
+            'codigo_siga'           => $a->codigo_siga,
+            'numero_pecosa'         => $a->numero_pecosa,
+            'numero_orden_compra'   => $a->numero_orden_compra,
+            'fecha_alta_siga'       => $a->fecha_alta_siga?->format('Y-m-d'),
+            'estado_siga'           => $a->estado_siga,
             'numero_serie'          => $a->numero_serie,
             'descripcion'           => $a->descripcion,
             'imagen'                => $a->imagen,
             'imagen_url'            => $a->imagen ? asset('storage/' . $a->imagen) : null,
             'qr_token'              => $a->qr_token,
             'qr_url'                => $a->qr_token ? route('activos.qr', $a->qr_token) : null,
-            'fecha_adquisicion'     => $a->fecha_adquisicion,
+            'fecha_adquisicion'     => optional($a->fecha_adquisicion)->format('Y-m-d'),
             'valor_compra'          => $a->valor_compra,
             'proveedor'             => $a->proveedor,
-            'garantia_inicio'       => $a->garantia_inicio,
-            'garantia_fin'          => $a->garantia_fin,
+            'garantia_inicio'       => optional($a->garantia_inicio)->format('Y-m-d'),
+            'garantia_fin'          => optional($a->garantia_fin)->format('Y-m-d'),
             'observaciones'         => $a->observaciones,
             'modelo_nombre'         => $a->modelo?->nombre ?? '—',
             'marca_nombre'          => $a->modelo?->marca?->nombre ?? '—',
             'categoria_nombre'      => $a->modelo?->categoriaActivo?->nombre ?? '—',
+            'categoria_icono'       => $a->modelo?->categoriaActivo?->icono ?: 'bx-package',
             'condicion_nombre'      => $a->condicionLabel(),
             'situacion_nombre'      => $a->situacionLabel(),
             'sede_nombre'           => $ubic?->sede?->nombre_sede ?? '—',

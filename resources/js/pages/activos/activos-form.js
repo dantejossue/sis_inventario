@@ -21,6 +21,67 @@ $(function () {
 
   $modelo.on('change', toggleFichaTecnica);
   toggleFichaTecnica(); // estado inicial (modo editar / validación fallida)
+
+  // ── Resumen del activo en vivo ────────────────────────────────────────────
+  const setText = (id, val) => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  };
+
+  function actualizarResumen() {
+    const opt = $modelo.find('option:selected');
+    const marca = opt.data('marca') || '';
+    const modelo = opt.data('modelo') || '';
+    const categoria = opt.data('categoria') || '—';
+    const icono = opt.data('icono') || 'bx-box';
+
+    const codigo = ($('#codigo_interno').val() || '').trim().toUpperCase() || '—';
+    const condSel = document.querySelector('#condicion_actual option:checked');
+    const condicion = condSel && condSel.value ? condSel.textContent.trim() : '—';
+    const respSel = document.querySelector('#id_responsable_actual option:checked');
+    const responsable = respSel && respSel.value ? respSel.textContent.trim() : 'Sin responsable';
+    const situacion = respSel && respSel.value ? 'En uso' : 'Disponible';
+    const nombre = (marca || modelo) ? `${marca} ${modelo}`.trim() : 'Nuevo activo';
+
+    setText('previewNombreActivo', nombre);
+    setText('previewCodigoActivo', codigo);
+    setText('previewCategoria', categoria);
+    setText('previewCondicion', condicion);
+    setText('previewSituacion', situacion);
+    setText('resCodigoActivo', codigo);
+    setText('resMarcaActivo', marca || '—');
+    setText('resModeloActivo', modelo || '—');
+    setText('resResponsableActivo', responsable);
+
+    const ico = document.getElementById('previewIconoActivo');
+    if (ico) ico.className = 'bx ' + icono + ' fs-4';
+  }
+
+  $('#id_modelo, #condicion_actual, #id_responsable_actual').on('change', actualizarResumen);
+  $('#codigo_interno').on('input', actualizarResumen);
+  actualizarResumen();
+
+  // ── Lista de documentos seleccionados ─────────────────────────────────────
+  const inputDocs = document.getElementById('documentos_activo');
+  const listaDocs = document.getElementById('listaDocumentos');
+  if (inputDocs && listaDocs) {
+    inputDocs.addEventListener('change', function () {
+      const files = Array.from(this.files || []);
+      if (!files.length) {
+        listaDocs.innerHTML = '';
+        return;
+      }
+      listaDocs.innerHTML = files
+        .map(
+          f =>
+            `<div class="d-flex align-items-center justify-content-between border rounded p-2 mb-2">
+               <span class="text-truncate"><i class="bx bx-file me-1"></i>${f.name}</span>
+               <small class="text-muted ms-2">${(f.size / 1024).toFixed(0)} KB</small>
+             </div>`
+        )
+        .join('');
+    });
+  }
 });
 
 // ───────────────────────────────────────────────────────────────────────────

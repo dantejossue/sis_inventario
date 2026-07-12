@@ -14,6 +14,12 @@ $(function () {
         render: (_d, _t, _r, meta) => `<strong>${meta.row + 1}</strong>`
       },
       {
+        data: 'icono',
+        orderable: false,
+        render: ic =>
+          `<span class="avatar avatar-sm"><span class="avatar-initial rounded bg-label-primary"><i class="bx ${ic || 'bx-package'}"></i></span></span>`
+      },
+      {
         data: 'nombre',
         render: n => `<span class="fw-semibold">${n}</span>`
       },
@@ -57,6 +63,7 @@ $(function () {
                 data-id="${row.id_categoria}"
                 data-nombre="${row.nombre}"
                 data-descripcion="${row.descripcion ?? ''}"
+                data-icono="${row.icono ?? ''}"
                 data-bs-toggle="tooltip" title="Editar categoría">
                 <i class="bx bx-edit-alt"></i>
               </button>

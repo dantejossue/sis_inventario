@@ -19,7 +19,7 @@ return new class extends Migration
 
             // ── Identificación ────────────────────────────────────────
             $table->string('codigo_interno', 50)->nullable()->unique('uk_activo_codigo_interno');
-            $table->string('codigo_patrimonial', 100)->unique('uk_activo_codigo_patrimonial');
+            $table->string('codigo_patrimonial', 100)->nullable()->unique('uk_activo_codigo_patrimonial');
             $table->string('codigo_siga', 60)->nullable();
             $table->string('numero_pecosa', 60)->nullable();
             $table->string('numero_orden_compra', 80)->nullable();
