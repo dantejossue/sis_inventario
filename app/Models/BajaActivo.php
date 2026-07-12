@@ -12,33 +12,40 @@ class BajaActivo extends Model
     // La BD gestiona creado_en / actualizado_en
     public $timestamps = false;
 
-    /** Estados en los que la propuesta de baja sigue en curso. */
-    public const ESTADOS_ABIERTOS = ['SOLICITADA', 'EN_EVALUACION', 'RECOMENDADA', 'APROBADA'];
+    /** Estados en los que la baja sigue en curso (previos a EJECUTADA/RECHAZADA). */
+    public const ESTADOS_ABIERTOS = ['REGISTRADA', 'EN_EVALUACION', 'RECOMENDADA', 'VALIDADA'];
 
     public const CAUSALES = [
-        'DANO', 'OBSOLESCENCIA_TECNICA', 'RAEE', 'MANTENIMIENTO_ONEROSO', 'SIN_REPARACION',
-        'SANEAMIENTO_FALTANTE', 'SUSTRACCION', 'GARANTIA', 'OTRO',
+        'DANO', 'OBSOLESCENCIA_TECNICA', 'MANTENIMIENTO_ONEROSO', 'SIN_REPARACION',
+        'RAEE', 'SUSTRACCION', 'OTRO',
+    ];
+
+    public const CLASIFICACIONES = [
+        'RAEE', 'CHATARRA', 'OBSOLETO', 'SIN_REPARACION', 'NO_DETERMINADO', 'OTRO',
     ];
 
     protected $fillable = [
         'id_activo', 'id_mantenimiento_origen',
-        'solicitado_por', 'evaluado_por', 'aprobado_por',
-        'causal_baja', 'motivo', 'diagnostico_tecnico',
-        'estado', 'estado_siga',
-        'fecha_solicitud', 'fecha_evaluacion', 'fecha_aprobacion', 'fecha_baja',
+        'registrado_por', 'evaluado_por', 'validado_por',
+        'causal_baja', 'clasificacion_final',
+        'motivo', 'diagnostico_tecnico',
+        'numero_informe_tecnico', 'numero_documento_validacion', 'valor_referencial',
+        'estado',
+        'fecha_registro', 'fecha_evaluacion', 'fecha_validacion', 'fecha_baja',
         'observaciones',
     ];
 
     protected $casts = [
-        'fecha_solicitud'  => 'date',
+        'fecha_registro'   => 'date',
         'fecha_evaluacion' => 'date',
-        'fecha_aprobacion' => 'date',
+        'fecha_validacion' => 'date',
         'fecha_baja'       => 'date',
+        'valor_referencial' => 'decimal:2',
         'creado_en'        => 'datetime',
         'actualizado_en'   => 'datetime',
     ];
 
-    /** Folio legible derivado del id (no hay columna de código en el TO BE). */
+    /** Folio legible derivado del id (no hay columna de código en el esquema). */
     public function getCodigoAttribute(): string
     {
         return 'BAJA-' . str_pad((string) $this->id_baja, 6, '0', STR_PAD_LEFT);
@@ -54,22 +61,25 @@ class BajaActivo extends Model
         return $this->belongsTo(Mantenimiento::class, 'id_mantenimiento_origen', 'id_mantenimiento');
     }
 
-    public function solicitadoPor()
+    /** Usuario OTI que registró la baja. */
+    public function registradoPor()
     {
-        return $this->belongsTo(Colaborador::class, 'solicitado_por', 'id_colaborador');
+        return $this->belongsTo(User::class, 'registrado_por', 'id_usuario');
     }
 
+    /** Colaborador OTI que evaluó técnicamente. */
     public function evaluadoPor()
     {
         return $this->belongsTo(Colaborador::class, 'evaluado_por', 'id_colaborador');
     }
 
-    public function aprobadoPor()
+    /** Colaborador OTI que validó internamente la recomendación. */
+    public function validadoPor()
     {
-        return $this->belongsTo(User::class, 'aprobado_por', 'id_usuario');
+        return $this->belongsTo(Colaborador::class, 'validado_por', 'id_colaborador');
     }
 
-    /** Expediente(s) de trámite documentario vinculados a esta baja. */
+    /** Referencias de trámite documentario vinculadas a esta baja. */
     public function tramites()
     {
         return $this->hasMany(TramiteReferencia::class, 'entidad_id', 'id_baja')

@@ -13,7 +13,7 @@
       </h4>
 
       <p class="text-muted mb-0">
-        Propuestas de baja, evaluación técnica, expediente, aprobación y ejecución patrimonial.
+        Recomendación técnica de baja OTI: registro, evaluación, recomendación, validación y ejecución.
       </p>
     </div>
 
@@ -82,7 +82,7 @@
               <h3 class="mb-2" id="kpi-ejecutadas">0</h3>
               <small class="text-success fw-semibold">
                 <i class="bx bx-check-circle"></i>
-                <span id="kpi-ejecutadas-detalle">0 pendientes SIGA</span>
+                <span id="kpi-ejecutadas-detalle">activos dados de baja</span>
               </small>
             </div>
 
@@ -146,8 +146,8 @@
                 <i class="bx bx-error-circle"></i>
               </div>
               <div>
-                <h6>Propuesta</h6>
-                <small>Motivo y sustento</small>
+                <h6>Registro</h6>
+                <small>Motivo y causal</small>
               </div>
             </div>
 
@@ -167,11 +167,11 @@
 
             <div class="disposal-flow-step">
               <div class="disposal-flow-icon bg-label-primary">
-                <i class="bx bx-file"></i>
+                <i class="bx bx-check-shield"></i>
               </div>
               <div>
-                <h6>Expediente</h6>
-                <small>Trámite documentario</small>
+                <h6>Recomendación</h6>
+                <small>Clasificación final</small>
               </div>
             </div>
 
@@ -182,8 +182,8 @@
                 <i class="bx bx-check"></i>
               </div>
               <div>
-                <h6>Aprobación y baja</h6>
-                <small>Ejecución + SIGA</small>
+                <h6>Validación y baja</h6>
+                <small>Validación OTI + ejecución</small>
               </div>
             </div>
 
@@ -210,7 +210,7 @@
 
             <div class="col-md-3 col-6 mb-3">
               <h4 class="mb-1" id="stat-faltantes">0</h4>
-              <small class="text-muted">Pérdida / faltante</small>
+              <small class="text-muted">Sustracción</small>
             </div>
 
           </div>
@@ -242,55 +242,43 @@
     <div class="card-header">
       <h5 class="mb-0">Filtros de búsqueda</h5>
       <small class="text-muted">
-        Filtra por causal, estado del proceso, estado SIGA o fecha de solicitud.
+        Filtra por causal, estado del proceso o fecha de registro.
       </small>
     </div>
 
     <div class="card-body">
       <div class="row g-3">
 
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-4 col-md-6">
           <label class="form-label" for="filtro-causal">Causal</label>
           <select class="form-select" id="filtro-causal">
             <option value="">Todas</option>
             <option value="DANO">Daño</option>
             <option value="OBSOLESCENCIA_TECNICA">Obsolescencia técnica</option>
-            <option value="RAEE">RAEE</option>
             <option value="MANTENIMIENTO_ONEROSO">Mantenimiento oneroso</option>
             <option value="SIN_REPARACION">Sin reparación</option>
-            <option value="SANEAMIENTO_FALTANTE">Faltante (saneamiento)</option>
+            <option value="RAEE">RAEE</option>
             <option value="SUSTRACCION">Sustracción</option>
-            <option value="GARANTIA">Garantía</option>
             <option value="OTRO">Otro</option>
           </select>
         </div>
 
-        <div class="col-lg-3 col-md-6">
+        <div class="col-lg-4 col-md-6">
           <label class="form-label" for="filtro-estado">Estado</label>
           <select class="form-select" id="filtro-estado">
             <option value="">Todos</option>
             <option value="ABIERTAS">— En curso —</option>
-            <option value="SOLICITADA">Solicitada</option>
+            <option value="REGISTRADA">Registrada</option>
             <option value="EN_EVALUACION">En evaluación</option>
             <option value="RECOMENDADA">Recomendada</option>
-            <option value="APROBADA">Aprobada</option>
+            <option value="VALIDADA">Validada</option>
             <option value="EJECUTADA">Ejecutada</option>
             <option value="RECHAZADA">Rechazada</option>
           </select>
         </div>
 
         <div class="col-lg-2 col-md-6">
-          <label class="form-label" for="filtro-siga">Estado SIGA</label>
-          <select class="form-select" id="filtro-siga">
-            <option value="">Todos</option>
-            <option value="PENDIENTE_ACTUALIZACION">Pendiente</option>
-            <option value="REGISTRADO">Registrado</option>
-            <option value="OBSERVADO">Observado</option>
-          </select>
-        </div>
-
-        <div class="col-lg-2 col-md-6">
-          <label class="form-label" for="filtro-fecha">Solicitadas desde</label>
+          <label class="form-label" for="filtro-fecha">Registradas desde</label>
           <input type="date" class="form-control" id="filtro-fecha" />
         </div>
 
@@ -323,9 +311,8 @@
             <th class="fw-bold">Causal</th>
             <th class="fw-bold">Origen</th>
             <th class="fw-bold">Informe técnico</th>
-            <th class="fw-bold">Expediente</th>
+            <th class="fw-bold">Clasificación</th>
             <th class="fw-bold">Estado</th>
-            <th class="fw-bold">SIGA</th>
             <th class="fw-bold">Fecha</th>
             <th class="fw-bold text-end">Acciones</th>
           </tr>
@@ -348,7 +335,7 @@
               Nueva propuesta de baja
             </h5>
             <small class="text-muted">
-              El activo quedará PENDIENTE DE BAJA hasta que la propuesta se apruebe y ejecute (o se rechace).
+              El activo queda OBSERVADO al recomendarse la baja; solo pasa a DADO DE BAJA al ejecutarse (o se rechaza).
             </small>
           </div>
 
@@ -384,12 +371,10 @@
                       <option value="">Seleccione…</option>
                       <option value="DANO">Daño</option>
                       <option value="OBSOLESCENCIA_TECNICA">Obsolescencia técnica</option>
-                      <option value="RAEE">RAEE</option>
                       <option value="MANTENIMIENTO_ONEROSO">Mantenimiento oneroso</option>
                       <option value="SIN_REPARACION">Sin reparación</option>
-                      <option value="SANEAMIENTO_FALTANTE">Faltante (saneamiento)</option>
+                      <option value="RAEE">RAEE</option>
                       <option value="SUSTRACCION">Sustracción</option>
-                      <option value="GARANTIA">Garantía</option>
                       <option value="OTRO">Otro</option>
                     </select>
                   </div>
@@ -405,20 +390,8 @@
                   </div>
 
                   <div class="col-md-6">
-                    <label class="form-label" for="baja-solicitante">Solicitado por (opcional)</label>
-                    <select class="form-select" id="baja-solicitante" name="solicitado_por">
-                      <option value="">Sin solicitante específico</option>
-                      @foreach ($colaboradores as $c)
-                        <option value="{{ $c->id_colaborador }}">
-                          {{ $c->per_apepat }} {{ $c->per_apemat }}, {{ $c->per_nombre }}{{ $c->cargo ? ' — ' . $c->cargo : '' }}
-                        </option>
-                      @endforeach
-                    </select>
-                  </div>
-
-                  <div class="col-md-4">
-                    <label class="form-label" for="baja-fecha">Fecha de solicitud</label>
-                    <input type="date" class="form-control" id="baja-fecha" name="fecha_solicitud"
+                    <label class="form-label" for="baja-fecha">Fecha de registro</label>
+                    <input type="date" class="form-control" id="baja-fecha" name="fecha_registro"
                       value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required />
                   </div>
 
@@ -474,14 +447,14 @@
 
                     <div class="data-list-item">
                       <span>Estado inicial</span>
-                      <span class="badge bg-label-warning">Solicitada</span>
+                      <span class="badge bg-label-warning">Registrada</span>
                     </div>
                   </div>
 
                   <div class="alert alert-warning mt-3 mb-0">
                     <i class="bx bx-info-circle me-1"></i>
                     Ningún activo pasa a DADO DE BAJA sin evaluación técnica,
-                    expediente y aprobación previa.
+                    recomendación y validación interna OTI.
                   </div>
                 </div>
               </div>
@@ -520,7 +493,7 @@
               Detalle de la baja <span id="det-codigo"></span>
             </h5>
             <small class="text-muted">
-              Sustento, evaluación técnica, expediente, aprobación y documentos.
+              Sustento, evaluación técnica, recomendación, validación y documentos.
             </small>
           </div>
 
@@ -665,8 +638,8 @@
                   </div>
 
                   <div class="data-list-item">
-                    <span>Estado SIGA</span>
-                    <span class="badge" id="det-siga"></span>
+                    <span>Clasificación</span>
+                    <strong id="det-clasificacion"></strong>
                   </div>
 
                   <div class="data-list-item">
@@ -675,12 +648,12 @@
                   </div>
 
                   <div class="data-list-item">
-                    <span>Expediente</span>
-                    <strong id="det-expediente"></strong>
+                    <span>Informe técnico</span>
+                    <strong id="det-informe"></strong>
                   </div>
 
                   <div class="data-list-item">
-                    <span>Solicitado por</span>
+                    <span>Registrado por</span>
                     <strong id="det-solicitante"></strong>
                   </div>
 
@@ -690,7 +663,7 @@
                   </div>
 
                   <div class="data-list-item">
-                    <span>Aprobado por</span>
+                    <span>Validado por</span>
                     <strong id="det-aprobador"></strong>
                   </div>
                 </div>
@@ -704,7 +677,7 @@
 
                 <div class="data-list">
                   <div class="data-list-item">
-                    <span>Solicitud</span>
+                    <span>Registro</span>
                     <strong id="det-fecha-solicitud"></strong>
                   </div>
 
@@ -714,7 +687,7 @@
                   </div>
 
                   <div class="data-list-item">
-                    <span>Aprobación</span>
+                    <span>Validación</span>
                     <strong id="det-fecha-aprobacion"></strong>
                   </div>
 
@@ -803,6 +776,34 @@
                   maxlength="2000" placeholder="Obligatorio para recomendar la baja..."></textarea>
               </div>
 
+              {{-- Datos exigidos al RECOMENDAR --}}
+              <div class="col-12 d-none" id="eval-recomendar-fields">
+                <div class="row g-3">
+                  <div class="col-md-4">
+                    <label class="form-label" for="eval-clasificacion">Clasificación final</label>
+                    <select class="form-select" id="eval-clasificacion" name="clasificacion_final">
+                      <option value="">Seleccione…</option>
+                      <option value="RAEE">RAEE</option>
+                      <option value="CHATARRA">Chatarra</option>
+                      <option value="OBSOLETO">Obsoleto</option>
+                      <option value="SIN_REPARACION">Sin reparación</option>
+                      <option value="NO_DETERMINADO">No determinado</option>
+                      <option value="OTRO">Otro</option>
+                    </select>
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label" for="eval-informe">N° informe técnico</label>
+                    <input type="text" class="form-control" id="eval-informe" name="numero_informe_tecnico"
+                      maxlength="100" placeholder="Ej. INF-OTI-2026-014" />
+                  </div>
+                  <div class="col-md-4">
+                    <label class="form-label" for="eval-valor">Valor referencial (S/)</label>
+                    <input type="number" step="0.01" min="0" class="form-control" id="eval-valor"
+                      name="valor_referencial" placeholder="0.00" />
+                  </div>
+                </div>
+              </div>
+
               <div class="col-md-12">
                 <label class="form-label" for="eval-observaciones">Observaciones</label>
                 <textarea class="form-control" id="eval-observaciones" name="observaciones" rows="2" maxlength="1000"
@@ -812,7 +813,7 @@
               <div class="col-12">
                 <div class="alert alert-danger mb-0 d-none" id="eval-alerta-rechazo">
                   <i class="bx bx-error-circle me-1"></i>
-                  Al rechazar, el activo volverá a su situación operativa (EN USO o EN ALMACÉN).
+                  Al rechazar, el activo volverá a su situación operativa (EN USO o DISPONIBLE).
                 </div>
               </div>
 
@@ -838,82 +839,6 @@
   <!-- / Modal evaluación técnica -->
 
 
-  <!-- Modal expediente -->
-  <div class="modal fade" id="modalExpediente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
-
-        <div class="modal-header">
-          <div>
-            <h5 class="modal-title">
-              <i class="bx bx-file me-1"></i>
-              Expediente de baja <span id="exp-codigo"></span>
-            </h5>
-            <small class="text-muted">
-              Vincula el expediente del trámite documentario que sustenta la baja.
-            </small>
-          </div>
-
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
-
-        <form id="form-expediente">
-          <div class="modal-body">
-
-            <div class="row g-3">
-
-              <div class="col-md-6">
-                <label class="form-label" for="exp-numero">Número de expediente</label>
-                <input type="text" class="form-control" id="exp-numero" name="numero_expediente" required
-                  maxlength="100" placeholder="Ej. EXP-2026-000331" />
-              </div>
-
-              <div class="col-md-6">
-                <label class="form-label" for="exp-tipo">Tipo de documento</label>
-                <select class="form-select" id="exp-tipo" name="tipo_documento">
-                  <option value="Expediente de baja">Expediente de baja</option>
-                  <option value="Informe técnico">Informe técnico</option>
-                  <option value="Resolución">Resolución</option>
-                  <option value="Oficio">Oficio</option>
-                  <option value="Otro">Otro</option>
-                </select>
-              </div>
-
-              <div class="col-md-12">
-                <label class="form-label" for="exp-asunto">Asunto</label>
-                <input type="text" class="form-control" id="exp-asunto" name="asunto" maxlength="255"
-                  placeholder="Asunto del expediente (opcional)" />
-              </div>
-
-              <div class="col-12">
-                <div class="alert alert-primary mb-0">
-                  <i class="bx bx-info-circle me-1"></i>
-                  El expediente se gestiona en el sistema de trámite documentario;
-                  aquí solo se registra la referencia. Es requisito para aprobar la baja.
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-
-          <div class="modal-footer">
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
-              Cancelar
-            </button>
-
-            <button type="submit" class="btn btn-primary">
-              <i class="bx bx-save me-1"></i>
-              Vincular expediente
-            </button>
-          </div>
-        </form>
-
-      </div>
-    </div>
-  </div>
-  <!-- / Modal expediente -->
-
 @endsection
 
 @section('page-script')
@@ -923,11 +848,9 @@
     window.routesBajas = {
       store: @json(route('bajas.store')),
       evaluar: @json(url('/bajas')) + '/{id}/evaluar',
-      expediente: @json(url('/bajas')) + '/{id}/expediente',
-      aprobar: @json(url('/bajas')) + '/{id}/aprobar',
+      validar: @json(url('/bajas')) + '/{id}/validar',
       ejecutar: @json(url('/bajas')) + '/{id}/ejecutar',
-      rechazar: @json(url('/bajas')) + '/{id}/rechazar',
-      siga: @json(url('/bajas')) + '/{id}/siga'
+      rechazar: @json(url('/bajas')) + '/{id}/rechazar'
     };
   </script>
   @vite(['resources/js/vendors/index.js', 'resources/js/pages/bajas/bajas.js'])

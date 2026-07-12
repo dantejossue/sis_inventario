@@ -3,89 +3,74 @@ import Swal from 'sweetalert2';
 import dtDefaults from '../../plugins/datatables-defaults';
 
 /**
- * Módulo de bajas (F6): tabla, KPIs, filtros y flujo
- * Propuesta → Evaluación → Expediente → Aprobación → Ejecución (+ marca SIGA).
+ * Bajas técnicas OTI (F-C):
+ * Registro → Evaluación → Recomendación → Validación → Ejecución.
  */
 
 const causalBadge = {
   DANO: 'bg-label-danger',
   OBSOLESCENCIA_TECNICA: 'bg-label-warning',
-  RAEE: 'bg-label-danger',
   MANTENIMIENTO_ONEROSO: 'bg-label-warning',
   SIN_REPARACION: 'bg-label-danger',
-  SANEAMIENTO_FALTANTE: 'bg-label-secondary',
+  RAEE: 'bg-label-dark',
   SUSTRACCION: 'bg-label-dark',
-  GARANTIA: 'bg-label-primary',
   OTRO: 'bg-label-secondary'
 };
 
 const causalTexto = {
   DANO: 'Daño',
   OBSOLESCENCIA_TECNICA: 'Obsolescencia',
-  RAEE: 'RAEE',
   MANTENIMIENTO_ONEROSO: 'Mant. oneroso',
   SIN_REPARACION: 'Sin reparación',
-  SANEAMIENTO_FALTANTE: 'Faltante',
+  RAEE: 'RAEE',
   SUSTRACCION: 'Sustracción',
-  GARANTIA: 'Garantía',
+  OTRO: 'Otro'
+};
+
+const clasifTexto = {
+  RAEE: 'RAEE',
+  CHATARRA: 'Chatarra',
+  OBSOLETO: 'Obsoleto',
+  SIN_REPARACION: 'Sin reparación',
+  NO_DETERMINADO: 'No determinado',
   OTRO: 'Otro'
 };
 
 const estadoBadge = {
-  SOLICITADA: 'bg-label-warning',
+  REGISTRADA: 'bg-label-warning',
   EN_EVALUACION: 'bg-label-info',
   RECOMENDADA: 'bg-label-primary',
-  APROBADA: 'bg-label-success',
+  VALIDADA: 'bg-label-success',
   EJECUTADA: 'bg-success',
   RECHAZADA: 'bg-label-danger'
 };
 
 const estadoTexto = {
-  SOLICITADA: 'Solicitada',
+  REGISTRADA: 'Registrada',
   EN_EVALUACION: 'En evaluación',
   RECOMENDADA: 'Recomendada',
-  APROBADA: 'Aprobada',
+  VALIDADA: 'Validada',
   EJECUTADA: 'Ejecutada',
   RECHAZADA: 'Rechazada'
 };
 
-const sigaBadge = {
-  NO_APLICA: 'bg-label-secondary',
-  PENDIENTE_ACTUALIZACION: 'bg-label-warning',
-  REGISTRADO: 'bg-label-success',
-  OBSERVADO: 'bg-label-danger'
-};
-
-const sigaTexto = {
-  NO_APLICA: 'No aplica',
-  PENDIENTE_ACTUALIZACION: 'Pendiente',
-  REGISTRADO: 'Registrado',
-  OBSERVADO: 'Observado'
-};
-
-const ABIERTAS = ['SOLICITADA', 'EN_EVALUACION', 'RECOMENDADA', 'APROBADA'];
+const ABIERTAS = ['REGISTRADA', 'EN_EVALUACION', 'RECOMENDADA', 'VALIDADA'];
 
 const dash = '<span class="text-muted">—</span>';
 const fmtFecha = f => (f ? f.split('-').reverse().join('/') : null);
 const fmtMonto = v =>
   v !== null && v !== undefined && v !== '' ? `S/ ${Number(v).toLocaleString('es-PE', { minimumFractionDigits: 2 })}` : null;
 const csrf = () => $('meta[name="csrf-token"]').attr('content');
-
 const buscar = id => window.bajas.find(b => b.id_baja === id);
 
 $(function () {
-  // ═══════════════════════════════════════════
-  // TABLA
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════ TABLA
   window.tablaBajas = $('#miTablaBajas').DataTable({
     ...dtDefaults,
     data: window.bajas,
     order: [[0, 'desc']],
     columns: [
-      {
-        data: 'codigo',
-        render: d => `<span class="fw-semibold">${d}</span>`
-      },
+      { data: 'codigo', render: d => `<span class="fw-semibold">${d}</span>` },
       {
         data: 'activo_codigo',
         render: (d, t, row) =>
@@ -93,14 +78,8 @@ $(function () {
           `<small class="text-muted d-block">${row.activo_modelo || '—'}</small>` +
           (row.activo_patrimonial ? `<small class="text-muted">Patrim.: ${row.activo_patrimonial}</small>` : '')
       },
-      {
-        data: 'causal',
-        render: d => `<span class="badge ${causalBadge[d] ?? 'bg-label-secondary'}">${causalTexto[d] ?? d}</span>`
-      },
-      {
-        data: 'origen',
-        render: d => d || dash
-      },
+      { data: 'causal', render: d => `<span class="badge ${causalBadge[d] ?? 'bg-label-secondary'}">${causalTexto[d] ?? d}</span>` },
+      { data: 'origen', render: d => d || dash },
       {
         data: 'diagnostico',
         orderable: false,
@@ -110,25 +89,12 @@ $(function () {
             : '<span class="badge bg-label-warning">Pendiente</span>'
       },
       {
-        data: 'expediente',
-        render: d =>
-          d
-            ? `<span class="badge bg-label-success">${d}</span>`
-            : '<span class="badge bg-label-secondary">Sin expediente</span>'
+        data: 'clasificacion',
+        render: d => (d ? `<span class="badge bg-label-dark">${clasifTexto[d] ?? d}</span>` : dash)
       },
+      { data: 'estado', render: d => `<span class="badge ${estadoBadge[d] ?? 'bg-label-secondary'}">${estadoTexto[d] ?? d}</span>` },
       {
-        data: 'estado',
-        render: d => `<span class="badge ${estadoBadge[d] ?? 'bg-label-secondary'}">${estadoTexto[d] ?? d}</span>`
-      },
-      {
-        data: 'estado_siga',
-        render: (d, t, row) =>
-          row.estado === 'EJECUTADA' || d !== 'NO_APLICA'
-            ? `<span class="badge ${sigaBadge[d] ?? 'bg-label-secondary'}">${sigaTexto[d] ?? d}</span>`
-            : dash
-      },
-      {
-        data: 'fecha_solicitud',
+        data: 'fecha_registro',
         render: (d, t, row) => {
           if (t === 'sort' || t === 'type') return d ?? '';
           return `<span class="d-block">${fmtFecha(d) ?? '—'}</span>` +
@@ -148,7 +114,7 @@ $(function () {
               </a>
             </li>`;
 
-          if (['SOLICITADA', 'EN_EVALUACION'].includes(row.estado)) {
+          if (['REGISTRADA', 'EN_EVALUACION'].includes(row.estado)) {
             items += `
             <li>
               <a class="dropdown-item btn-evaluar-baja d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_baja}">
@@ -157,25 +123,16 @@ $(function () {
             </li>`;
           }
 
-          if (ABIERTAS.includes(row.estado) && !row.expediente) {
-            items += `
-            <li>
-              <a class="dropdown-item btn-expediente-baja d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_baja}">
-                <i class="bx bx-file me-1"></i> Vincular expediente
-              </a>
-            </li>`;
-          }
-
           if (row.estado === 'RECOMENDADA') {
             items += `
             <li>
-              <a class="dropdown-item btn-aprobar-baja d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_baja}">
-                <i class="bx bx-check me-1"></i> Aprobar baja
+              <a class="dropdown-item btn-validar-baja d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_baja}">
+                <i class="bx bx-check-shield me-1"></i> Validar baja
               </a>
             </li>`;
           }
 
-          if (row.estado === 'APROBADA') {
+          if (row.estado === 'VALIDADA') {
             items += `
             <li>
               <a class="dropdown-item btn-ejecutar-baja d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_baja}">
@@ -190,15 +147,6 @@ $(function () {
             <li>
               <a class="dropdown-item text-danger btn-rechazar-baja d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_baja}">
                 <i class="bx bx-x-circle me-1"></i> Rechazar
-              </a>
-            </li>`;
-          }
-
-          if (row.estado === 'EJECUTADA' && row.estado_siga === 'PENDIENTE_ACTUALIZACION') {
-            items += `
-            <li>
-              <a class="dropdown-item btn-siga-baja d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_baja}">
-                <i class="bx bx-link me-1"></i> Marcar en SIGA
               </a>
             </li>`;
           }
@@ -221,24 +169,18 @@ $(function () {
     }
   });
 
-  // ═══════════════════════════════════════════
-  // KPIs Y ALERTAS
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════ KPIs Y ALERTAS
   function refrescarIndicadores() {
     const data = window.bajas;
     const abiertas = data.filter(b => ABIERTAS.includes(b.estado));
     const ejecutadas = data.filter(b => b.estado === 'EJECUTADA');
-    const pendientesSiga = ejecutadas.filter(b => b.estado_siga === 'PENDIENTE_ACTUALIZACION');
 
     $('#kpi-abiertas').text(abiertas.length);
     $('#kpi-abiertas-detalle').text(
-      `${data.filter(b => ['SOLICITADA', 'EN_EVALUACION'].includes(b.estado)).length} por evaluar`
+      `${data.filter(b => ['REGISTRADA', 'EN_EVALUACION'].includes(b.estado)).length} por evaluar`
     );
-
     $('#kpi-raee').text(data.filter(b => b.causal === 'RAEE').length);
-
     $('#kpi-ejecutadas').text(ejecutadas.length);
-    $('#kpi-ejecutadas-detalle').text(`${pendientesSiga.length} pendientes SIGA`);
 
     const valor = abiertas.reduce((acc, b) => acc + (Number(b.valor_compra) || 0), 0);
     $('#kpi-valor').text(fmtMonto(valor) ?? 'S/ 0.00');
@@ -246,23 +188,20 @@ $(function () {
     $('#stat-obsoletos').text(data.filter(b => b.causal === 'OBSOLESCENCIA_TECNICA').length);
     $('#stat-irreparables').text(data.filter(b => ['DANO', 'SIN_REPARACION'].includes(b.causal)).length);
     $('#stat-raee').text(data.filter(b => b.causal === 'RAEE').length);
-    $('#stat-faltantes').text(data.filter(b => ['SANEAMIENTO_FALTANTE', 'SUSTRACCION'].includes(b.causal)).length);
+    $('#stat-faltantes').text(data.filter(b => b.causal === 'SUSTRACCION').length);
 
     const alertas = [];
     const sinInforme = abiertas.filter(b => !b.diagnostico);
     if (sinInforme.length) {
       alertas.push(['bg-label-danger', 'bx-error', `${sinInforme.length} sin informe técnico`, 'Requieren sustento de OTI para recomendarse.']);
     }
-    const sinExpediente = abiertas.filter(b => !b.expediente);
-    if (sinExpediente.length) {
-      alertas.push(['bg-label-warning', 'bx-file', `${sinExpediente.length} sin expediente`, 'Necesario antes de la aprobación.']);
+    const porValidar = data.filter(b => b.estado === 'RECOMENDADA');
+    if (porValidar.length) {
+      alertas.push(['bg-label-primary', 'bx-check-shield', `${porValidar.length} por validar`, 'Recomendadas técnicamente, esperando validación OTI.']);
     }
-    const porEjecutar = data.filter(b => b.estado === 'APROBADA');
+    const porEjecutar = data.filter(b => b.estado === 'VALIDADA');
     if (porEjecutar.length) {
-      alertas.push(['bg-label-primary', 'bx-check-shield', `${porEjecutar.length} aprobada(s) por ejecutar`, 'Listas para la baja definitiva.']);
-    }
-    if (pendientesSiga.length) {
-      alertas.push(['bg-label-info', 'bx-link', `${pendientesSiga.length} por actualizar en SIGA`, 'Patrimonio debe registrar la baja oficial.']);
+      alertas.push(['bg-label-success', 'bx-check-circle', `${porEjecutar.length} validada(s) por ejecutar`, 'Listas para la baja definitiva.']);
     }
 
     $('#alertas-bajas').html(
@@ -285,9 +224,7 @@ $(function () {
 
   refrescarIndicadores();
 
-  // ═══════════════════════════════════════════
-  // FILTROS
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════ FILTROS
   $.fn.dataTable.ext.search.push((settings, data, dataIndex) => {
     if (settings.nTable.id !== 'miTablaBajas') return true;
     const row = window.tablaBajas.row(dataIndex).data();
@@ -302,37 +239,29 @@ $(function () {
       return false;
     }
 
-    const siga = $('#filtro-siga').val();
-    if (siga && row.estado_siga !== siga) return false;
-
     const desde = $('#filtro-fecha').val();
-    if (desde && (!row.fecha_solicitud || row.fecha_solicitud < desde)) return false;
+    if (desde && (!row.fecha_registro || row.fecha_registro < desde)) return false;
 
     return true;
   });
 
-  $('#filtro-causal, #filtro-estado, #filtro-siga, #filtro-fecha').on('change', () => window.tablaBajas.draw());
+  $('#filtro-causal, #filtro-estado, #filtro-fecha').on('change', () => window.tablaBajas.draw());
   $('#filtro-reset').on('click', () => {
-    $('#filtro-causal, #filtro-estado, #filtro-siga').val('');
+    $('#filtro-causal, #filtro-estado').val('');
     $('#filtro-fecha').val('');
     window.tablaBajas.search('').draw();
   });
 
-  // ═══════════════════════════════════════════
-  // AJAX + refresco
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════ AJAX + refresco
   function aplicarRespuesta(res, modalId) {
     const idx = window.bajas.findIndex(b => b.id_baja === res.data.id_baja);
-    if (idx >= 0) {
-      window.bajas[idx] = res.data;
-    } else {
-      window.bajas.unshift(res.data);
-    }
+    if (idx >= 0) window.bajas[idx] = res.data;
+    else window.bajas.unshift(res.data);
+
     window.tablaBajas.clear().rows.add(window.bajas).draw(false);
     refrescarIndicadores();
 
     if (modalId) bootstrap.Modal.getOrCreateInstance(document.getElementById(modalId)).hide();
-
     Swal.fire({ icon: 'success', title: 'Listo', text: res.message, timer: 2400, showConfirmButton: false });
   }
 
@@ -359,15 +288,12 @@ $(function () {
     });
   }
 
-  // ═══════════════════════════════════════════
-  // NUEVA PROPUESTA
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════ NUEVA BAJA
   $('#baja-activo').on('change', function () {
     const opt = $(this).find('option:selected');
     $('#resumen-activo').text(opt.text().split('—')[0].trim() || 'No seleccionado');
     $('#resumen-valor').text(fmtMonto(opt.data('valor')) ?? '—');
 
-    // Mantenimientos que recomendaron baja para este activo
     const mants = (window.mantsBaja ?? {})[$(this).val()] ?? [];
     $('#baja-mantenimiento').html(
       '<option value="">Sin mantenimiento vinculado</option>' +
@@ -385,25 +311,18 @@ $(function () {
     const form = this;
     const usado = $('#baja-activo').val();
 
-    enviar(
-      window.routesBajas.store,
-      'POST',
-      $(form).serialize(),
-      'modalNuevaBaja',
-      'No se pudo registrar la propuesta de baja.',
+    enviar(window.routesBajas.store, 'POST', $(form).serialize(), 'modalNuevaBaja',
+      'No se pudo registrar la baja.',
       () => {
         if (usado) $(`#baja-activo option[value="${usado}"]`).remove();
         form.reset();
         $('#resumen-activo').text('No seleccionado');
         $('#resumen-causal').text('No seleccionada');
         $('#resumen-valor').text('—');
-      }
-    );
+      });
   });
 
-  // ═══════════════════════════════════════════
-  // DETALLE
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════ DETALLE
   function extensionIcono(ext) {
     if (ext === 'pdf') return ['bxs-file-pdf', 'bg-label-danger'];
     if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) return ['bx-image', 'bg-label-primary'];
@@ -418,13 +337,13 @@ $(function () {
     $('#det-codigo').text(b.codigo);
     $('#det-causal').attr('class', `badge mb-2 ${causalBadge[b.causal] ?? 'bg-label-secondary'}`).text(causalTexto[b.causal] ?? b.causal);
     $('#det-titulo').text(b.motivo ? b.motivo.split('\n')[0].slice(0, 80) : b.codigo);
-    $('#det-subtitulo').text(`Solicitada el ${fmtFecha(b.fecha_solicitud) ?? '—'} · Origen: ${b.origen}`);
+    $('#det-subtitulo').text(`Registrada el ${fmtFecha(b.fecha_registro) ?? '—'} · Origen: ${b.origen}`);
     $('#det-estado-texto').text(estadoTexto[b.estado] ?? b.estado);
 
     $('#det-activo-modelo').text(b.activo_modelo || b.activo_codigo || '—');
     $('#det-activo-codigo').text(`Código interno: ${b.activo_codigo ?? '—'}`);
     $('#det-activo-patrimonial').text(`Código patrimonial: ${b.activo_patrimonial ?? '—'}`);
-    $('#det-activo-valor').text(`Valor referencial: ${fmtMonto(b.valor_compra) ?? '—'}`);
+    $('#det-activo-valor').text(`Valor referencial: ${fmtMonto(b.valor_referencial ?? b.valor_compra) ?? '—'}`);
     $('#det-activo-url').attr('href', b.activo_url ?? '#');
 
     $('#det-motivo').text(b.motivo || '—');
@@ -432,16 +351,16 @@ $(function () {
     $('#det-observaciones').text(b.observaciones || '—');
 
     $('#det-estado').attr('class', `badge ${estadoBadge[b.estado] ?? 'bg-label-secondary'}`).text(estadoTexto[b.estado] ?? b.estado);
-    $('#det-siga').attr('class', `badge ${sigaBadge[b.estado_siga] ?? 'bg-label-secondary'}`).text(sigaTexto[b.estado_siga] ?? b.estado_siga);
+    $('#det-clasificacion').text(b.clasificacion ? clasifTexto[b.clasificacion] ?? b.clasificacion : '—');
     $('#det-origen').text(b.origen);
-    $('#det-expediente').text(b.expediente || 'Sin expediente');
-    $('#det-solicitante').text(b.solicitado_por || '—');
+    $('#det-informe').text(b.informe_tecnico || '—');
+    $('#det-solicitante').text(b.registrado_por || '—');
     $('#det-evaluador').text(b.evaluado_por || 'Pendiente');
-    $('#det-aprobador').text(b.aprobado_por || 'Pendiente');
+    $('#det-aprobador').text(b.validado_por || 'Pendiente');
 
-    $('#det-fecha-solicitud').text(fmtFecha(b.fecha_solicitud) ?? '—');
+    $('#det-fecha-solicitud').text(fmtFecha(b.fecha_registro) ?? '—');
     $('#det-fecha-evaluacion').text(fmtFecha(b.fecha_evaluacion) ?? 'Pendiente');
-    $('#det-fecha-aprobacion').text(fmtFecha(b.fecha_aprobacion) ?? 'Pendiente');
+    $('#det-fecha-aprobacion').text(fmtFecha(b.fecha_validacion) ?? 'Pendiente');
     $('#det-fecha-baja').text(fmtFecha(b.fecha_baja) ?? 'Pendiente');
 
     const docs = b.documentos ?? [];
@@ -470,25 +389,18 @@ $(function () {
     );
     $('#doc-entidad-id').val(b.id_baja);
 
-    // Acciones contextuales
     const acciones = [];
-    if (['SOLICITADA', 'EN_EVALUACION'].includes(b.estado)) {
+    if (['REGISTRADA', 'EN_EVALUACION'].includes(b.estado)) {
       acciones.push(`<button class="btn btn-primary btn-evaluar-baja" data-id="${b.id_baja}" data-bs-dismiss="modal"><i class="bx bx-search-alt me-1"></i> Evaluación técnica</button>`);
     }
-    if (ABIERTAS.includes(b.estado) && !b.expediente) {
-      acciones.push(`<button class="btn btn-outline-primary btn-expediente-baja" data-id="${b.id_baja}" data-bs-dismiss="modal"><i class="bx bx-file me-1"></i> Vincular expediente</button>`);
-    }
     if (b.estado === 'RECOMENDADA') {
-      acciones.push(`<button class="btn btn-outline-success btn-aprobar-baja" data-id="${b.id_baja}" data-bs-dismiss="modal"><i class="bx bx-check me-1"></i> Aprobar baja</button>`);
+      acciones.push(`<button class="btn btn-outline-success btn-validar-baja" data-id="${b.id_baja}" data-bs-dismiss="modal"><i class="bx bx-check-shield me-1"></i> Validar baja</button>`);
     }
-    if (b.estado === 'APROBADA') {
+    if (b.estado === 'VALIDADA') {
       acciones.push(`<button class="btn btn-success btn-ejecutar-baja" data-id="${b.id_baja}" data-bs-dismiss="modal"><i class="bx bx-check-circle me-1"></i> Ejecutar baja</button>`);
     }
     if (ABIERTAS.includes(b.estado)) {
       acciones.push(`<button class="btn btn-outline-danger btn-rechazar-baja" data-id="${b.id_baja}" data-bs-dismiss="modal"><i class="bx bx-x-circle me-1"></i> Rechazar</button>`);
-    }
-    if (b.estado === 'EJECUTADA' && b.estado_siga === 'PENDIENTE_ACTUALIZACION') {
-      acciones.push(`<button class="btn btn-outline-primary btn-siga-baja" data-id="${b.id_baja}" data-bs-dismiss="modal"><i class="bx bx-link me-1"></i> Marcar en SIGA</button>`);
     }
     if (!acciones.length) {
       acciones.push('<p class="text-muted mb-0">Proceso finalizado: sin acciones disponibles.</p>');
@@ -498,9 +410,7 @@ $(function () {
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalleBaja')).show();
   });
 
-  // ═══════════════════════════════════════════
-  // EVALUACIÓN
-  // ═══════════════════════════════════════════
+  // ═══════════════════════════════════════════ EVALUACIÓN
   let idEvaluar = null;
 
   $(document).on('click', '.btn-evaluar-baja', function () {
@@ -509,83 +419,48 @@ $(function () {
     idEvaluar = b.id_baja;
 
     $('#eval-codigo').text(b.codigo);
-    $('#eval-resultado').val('RECOMENDADA').trigger('change');
+    $('#eval-resultado').val('EN_EVALUACION').trigger('change');
     $('#eval-diagnostico').val(b.diagnostico ?? '');
+    $('#eval-clasificacion').val(b.clasificacion ?? '');
+    $('#eval-informe').val(b.informe_tecnico ?? '');
+    $('#eval-valor').val(b.valor_referencial ?? '');
     $('#eval-observaciones').val('');
 
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalEvaluar')).show();
   });
 
   $('#eval-resultado').on('change', function () {
-    $('#eval-alerta-rechazo').toggleClass('d-none', $(this).val() !== 'RECHAZADA');
+    const v = $(this).val();
+    $('#eval-recomendar-fields').toggleClass('d-none', v !== 'RECOMENDADA');
+    $('#eval-alerta-rechazo').toggleClass('d-none', v !== 'RECHAZADA');
   });
 
   $('#form-evaluar').on('submit', function (e) {
     e.preventDefault();
-    enviar(
-      window.routesBajas.evaluar.replace('{id}', idEvaluar),
-      'PUT',
-      $(this).serialize(),
-      'modalEvaluar',
-      'No se pudo registrar la evaluación.'
-    );
+    enviar(window.routesBajas.evaluar.replace('{id}', idEvaluar), 'PUT', $(this).serialize(), 'modalEvaluar',
+      'No se pudo registrar la evaluación.');
   });
 
-  // ═══════════════════════════════════════════
-  // EXPEDIENTE
-  // ═══════════════════════════════════════════
-  let idExpediente = null;
-
-  $(document).on('click', '.btn-expediente-baja', function () {
-    const b = buscar(parseInt($(this).data('id')));
-    if (!b) return;
-    idExpediente = b.id_baja;
-
-    $('#exp-codigo').text(b.codigo);
-    $('#exp-numero').val('');
-    $('#exp-asunto').val(`Baja de activo ${b.activo_codigo ?? ''} (${b.codigo})`.trim());
-
-    bootstrap.Modal.getOrCreateInstance(document.getElementById('modalExpediente')).show();
-  });
-
-  $('#form-expediente').on('submit', function (e) {
-    e.preventDefault();
-    enviar(
-      window.routesBajas.expediente.replace('{id}', idExpediente),
-      'PUT',
-      $(this).serialize(),
-      'modalExpediente',
-      'No se pudo vincular el expediente.'
-    );
-  });
-
-  // ═══════════════════════════════════════════
-  // APROBAR / EJECUTAR / RECHAZAR / SIGA
-  // ═══════════════════════════════════════════
-  $(document).on('click', '.btn-aprobar-baja', function () {
+  // ═══════════════════════════════════════════ VALIDAR / EJECUTAR / RECHAZAR
+  $(document).on('click', '.btn-validar-baja', function () {
     const b = buscar(parseInt($(this).data('id')));
     if (!b) return;
 
     Swal.fire({
       icon: 'question',
-      title: `¿Aprobar ${b.codigo}?`,
-      html: `Expediente: <strong>${b.expediente ?? 'SIN EXPEDIENTE'}</strong>.<br>La baja quedará lista para ejecutarse.`,
-      input: 'textarea',
-      inputLabel: 'Observación de aprobación (opcional)',
+      title: `Validar baja ${b.codigo}`,
+      html: `Clasificación: <strong>${clasifTexto[b.clasificacion] ?? '—'}</strong>.<br>Registra el documento de validación interna (opcional).`,
+      input: 'text',
+      inputPlaceholder: 'N° documento de validación',
       showCancelButton: true,
-      confirmButtonText: 'Aprobar',
+      confirmButtonText: 'Validar',
       cancelButtonText: 'Volver',
       customClass: { confirmButton: 'btn btn-success me-2', cancelButton: 'btn btn-outline-secondary' },
       buttonsStyling: false
     }).then(r => {
       if (!r.isConfirmed) return;
-      enviar(
-        window.routesBajas.aprobar.replace('{id}', b.id_baja),
-        'PUT',
-        { observaciones: r.value || '' },
-        null,
-        'No se pudo aprobar la baja.'
-      );
+      enviar(window.routesBajas.validar.replace('{id}', b.id_baja), 'PUT',
+        { numero_documento_validacion: r.value || '' }, null, 'No se pudo validar la baja.');
     });
   });
 
@@ -616,51 +491,19 @@ $(function () {
     Swal.fire({
       icon: 'warning',
       title: `¿Rechazar ${b.codigo}?`,
-      text: 'El activo volverá a su situación operativa (EN USO o EN ALMACÉN).',
+      text: 'El activo volverá a su situación operativa (EN USO o DISPONIBLE).',
       input: 'textarea',
       inputLabel: 'Motivo del rechazo',
       inputValidator: v => (!v || !v.trim() ? 'Indica el motivo del rechazo.' : undefined),
       showCancelButton: true,
-      confirmButtonText: 'Rechazar propuesta',
+      confirmButtonText: 'Rechazar baja',
       cancelButtonText: 'Volver',
       customClass: { confirmButton: 'btn btn-danger me-2', cancelButton: 'btn btn-outline-secondary' },
       buttonsStyling: false
     }).then(r => {
       if (!r.isConfirmed) return;
-      enviar(
-        window.routesBajas.rechazar.replace('{id}', b.id_baja),
-        'PUT',
-        { motivo: r.value },
-        null,
-        'No se pudo rechazar la baja.'
-      );
-    });
-  });
-
-  $(document).on('click', '.btn-siga-baja', function () {
-    const b = buscar(parseInt($(this).data('id')));
-    if (!b) return;
-
-    Swal.fire({
-      icon: 'question',
-      title: `Marcar ${b.codigo} en SIGA`,
-      input: 'select',
-      inputOptions: { REGISTRADO: 'Registrado en SIGA', OBSERVADO: 'Observado por Patrimonio' },
-      inputValue: 'REGISTRADO',
-      showCancelButton: true,
-      confirmButtonText: 'Guardar',
-      cancelButtonText: 'Volver',
-      customClass: { confirmButton: 'btn btn-primary me-2', cancelButton: 'btn btn-outline-secondary' },
-      buttonsStyling: false
-    }).then(r => {
-      if (!r.isConfirmed) return;
-      enviar(
-        window.routesBajas.siga.replace('{id}', b.id_baja),
-        'PUT',
-        { estado_siga: r.value },
-        null,
-        'No se pudo actualizar el estado SIGA.'
-      );
+      enviar(window.routesBajas.rechazar.replace('{id}', b.id_baja), 'PUT', { motivo: r.value }, null,
+        'No se pudo rechazar la baja.');
     });
   });
 });

@@ -176,15 +176,13 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     Route::put('/mantenimientos/{id}/cerrar', [MantenimientoController::class, 'cerrar'])->name('mantenimientos.cerrar');
     Route::put('/mantenimientos/{id}/cancelar', [MantenimientoController::class, 'cancelar'])->name('mantenimientos.cancelar');
 
-    // Bajas de activos (propuesta → evaluación → expediente → aprobación → ejecución)
+    // Bajas técnicas OTI (registrar → evaluar → recomendar → validar → ejecutar)
     Route::get('/bajas', [BajaActivoController::class, 'index'])->name('bajas.index');
     Route::post('/bajas', [BajaActivoController::class, 'store'])->name('bajas.store');
     Route::put('/bajas/{id}/evaluar', [BajaActivoController::class, 'evaluar'])->name('bajas.evaluar');
-    Route::put('/bajas/{id}/expediente', [BajaActivoController::class, 'expediente'])->name('bajas.expediente');
-    Route::put('/bajas/{id}/aprobar', [BajaActivoController::class, 'aprobar'])->name('bajas.aprobar');
+    Route::put('/bajas/{id}/validar', [BajaActivoController::class, 'validar'])->name('bajas.validar');
     Route::put('/bajas/{id}/ejecutar', [BajaActivoController::class, 'ejecutar'])->name('bajas.ejecutar');
     Route::put('/bajas/{id}/rechazar', [BajaActivoController::class, 'rechazar'])->name('bajas.rechazar');
-    Route::put('/bajas/{id}/siga', [BajaActivoController::class, 'marcarSiga'])->name('bajas.siga');
 
     // Importación SIGA (padrón patrimonial → base operativa)
     Route::get('/importaciones', [ImportacionSigaController::class, 'index'])->name('importaciones.index');
