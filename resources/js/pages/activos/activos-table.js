@@ -19,24 +19,36 @@ $(function () {
     OBSOLETO: 'Obsoleto'
   };
 
-  // Etiqueta (badge suave) de color según la situación del activo
+  // Etiqueta (badge suave) de color según la situación del activo (brief OTI)
   const situacionBadge = {
+    DISPONIBLE: 'bg-label-success',
     EN_USO: 'bg-label-primary',
-    EN_ALMACEN: 'bg-label-success',
+    EN_PRESTAMO: 'bg-label-info',
     EN_MANTENIMIENTO: 'bg-label-warning',
-    EN_DESPLAZAMIENTO: 'bg-label-info',
-    PENDIENTE_BAJA: 'bg-label-secondary',
-    DADO_DE_BAJA: 'bg-label-danger'
+    EN_PROVEEDOR: 'bg-label-warning',
+    OBSERVADO: 'bg-label-danger',
+    DADO_DE_BAJA: 'bg-label-secondary'
+  };
+
+  const situacionMinus = {
+    DISPONIBLE: 'Disponible',
+    EN_USO: 'En uso',
+    EN_PRESTAMO: 'En préstamo',
+    EN_MANTENIMIENTO: 'En mantenimiento',
+    EN_PROVEEDOR: 'En proveedor',
+    OBSERVADO: 'Observado',
+    DADO_DE_BAJA: 'Dado de baja'
   };
 
   // Clase de color que pinta la fila completa según la situación del activo
   const situacionRowClass = {
+    DISPONIBLE: 'table-success',
     EN_USO: 'table-primary',
-    EN_ALMACEN: 'table-success',
+    EN_PRESTAMO: 'table-info',
     EN_MANTENIMIENTO: 'table-warning',
-    EN_DESPLAZAMIENTO: 'table-info',
-    PENDIENTE_BAJA: 'table-secondary',
-    DADO_DE_BAJA: 'table-danger'
+    EN_PROVEEDOR: 'table-warning',
+    OBSERVADO: 'table-danger',
+    DADO_DE_BAJA: 'table-secondary'
   };
 
   window.tablaActivos = $('#miTablaActivos').DataTable({
@@ -95,22 +107,16 @@ $(function () {
           d ? `<span class="fw-semibold">${d}</span>` : '<span class="text-muted fst-italic">Sin asignar</span>'
       },
       {
-        data: 'condicion_nombre',
+        data: 'condicion_actual',
         render: d =>
-          `<span class="badge fw-bold ${condicionBadge[d] ?? 'bg-secondary'}">${condicionMinus[d]} ` ?? ` ${d}</span>`
+          `<span class="badge fw-bold ${condicionBadge[d] ?? 'bg-secondary'}">${condicionMinus[d] ?? d}</span>`
       },
       {
-        data: 'situacion_nombre',
+        data: 'situacion_actual',
         render: d => {
-          if (!d || d === '—') return '<span class="text-muted">—</span>';
-
+          if (!d) return '<span class="text-muted">—</span>';
           const cls = situacionBadge[d] ?? 'bg-label-secondary';
-
-          const texto = d
-            .replace(/_/g, ' ')
-            .toLowerCase()
-            .replace(/^./, c => c.toUpperCase());
-
+          const texto = situacionMinus[d] ?? d;
           return `<span class="badge ${cls} fw-bold">${texto}</span>`;
         }
       },

@@ -4,7 +4,7 @@ import $ from 'jquery';
 // (ambas vistas usan el mismo partial form-fields, con los mismos IDs).
 // La ubicación ya NO usa Select2: se elige mediante el árbol modal.
 $(function () {
-  $('#id_modelo, #id_condicion_actual, #id_responsable_actual').select2({
+  $('#id_modelo, #condicion_actual, #id_responsable_actual').select2({
     width: '100%',
     placeholder: 'Seleccionar...'
   });

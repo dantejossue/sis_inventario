@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Activo;
 use App\Models\DetalleMovimientoActivo;
-use App\Models\EstadoActivo;
 use App\Models\Movimiento;
 use App\Models\Ubicacion;
 use Illuminate\Http\Request;
@@ -16,44 +15,31 @@ use Illuminate\Validation\ValidationException;
 class MovimientoController extends Controller
 {
     /**
-     * Máquina de estados (obs #1). La clave es la OPERACIÓN que expone la UI
-     * (vocabulario estable para el front). Cada operación define:
-     *   - mov:         el tipo persistido en movimientos.tipo (enum TO BE).
-     *   - situacion:   código de situación resultante del activo (null = no cambia).
-     *   - origen:      situaciones ACTUALES del activo admitidas como origen.
+     * Movimientos internos OTI (brief §13). Solo 3 tipos. La devolución NO es un
+     * tipo: se registra sobre el propio PRESTAMO (ver devolver()). Cada tipo define:
+     *   - situacion:   situación resultante del activo (null = se decide en el flujo).
+     *   - origen:      situaciones ACTUALES admitidas como origen.
      *   - colaborador/ubicacion/devolucion: qué campos exige la operación.
      *
-     * Situaciones del modelo: EN_USO, EN_ALMACEN, EN_MANTENIMIENTO,
-     * EN_DESPLAZAMIENTO, PENDIENTE_BAJA, DADO_DE_BAJA (terminal).
+     * Situaciones: DISPONIBLE, EN_USO, EN_PRESTAMO, EN_MANTENIMIENTO,
+     * EN_PROVEEDOR, OBSERVADO, DADO_DE_BAJA (terminal, no se mueve).
      */
     private const OPERACIONES = [
-        'ASIGNAR' => [
-            'mov' => 'ASIGNACION', 'situacion' => 'EN_USO',
-            'colaborador' => true, 'ubicacion' => false, 'devolucion' => false,
-            'origen' => ['EN_ALMACEN'],
+        'PRESTAMO' => [
+            'situacion' => 'EN_PRESTAMO',
+            'origen'    => ['DISPONIBLE', 'EN_USO'],
+            'colaborador' => true, 'ubicacion' => false, 'devolucion' => true,
         ],
         'TRANSFERENCIA' => [
-            'mov' => 'TRANSFERENCIA', 'situacion' => 'EN_USO',
+            'situacion' => 'EN_USO',
+            'origen'    => ['DISPONIBLE', 'EN_USO'],
             'colaborador' => true, 'ubicacion' => false, 'devolucion' => false,
-            'origen' => ['EN_USO'],
         ],
-        'PRESTAMO' => [
-            'mov' => 'PRESTAMO_TEMPORAL', 'situacion' => 'EN_DESPLAZAMIENTO',
-            'colaborador' => true, 'ubicacion' => false, 'devolucion' => true,
-            'origen' => ['EN_ALMACEN'],
-        ],
-        'DEVOLUCION' => [
-            'mov' => 'DEVOLUCION_INTERNA', 'situacion' => 'EN_ALMACEN',
+        'REGULARIZACION' => [
+            'situacion' => null, // se toma del input o se conserva
+            'origen'    => ['DISPONIBLE', 'EN_USO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO', 'EN_PROVEEDOR', 'OBSERVADO'],
             'colaborador' => false, 'ubicacion' => false, 'devolucion' => false,
-            'origen' => ['EN_DESPLAZAMIENTO'],
         ],
-        'REUBICACION' => [
-            'mov' => 'DESPLAZAMIENTO_INTERNO', 'situacion' => null,
-            'colaborador' => false, 'ubicacion' => true, 'devolucion' => false,
-            'origen' => ['EN_ALMACEN', 'EN_USO', 'EN_DESPLAZAMIENTO', 'EN_MANTENIMIENTO'],
-        ],
-        // La BAJA ya no es un movimiento rápido: se gestiona en el módulo de
-        // Bajas (BajaActivoController) con evaluación, expediente y aprobación.
     ];
 
     public function index()
@@ -75,48 +61,56 @@ class MovimientoController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'tipo'                        => ['required', Rule::in(array_keys(self::OPERACIONES))],
-            'activo_ids'                  => 'required|array|min:1',
-            'activo_ids.*'                => 'integer|exists:activo,id_activo',
-            'id_colaborador_destino'      => 'nullable|integer|exists:colaboradores,id_colaborador',
-            'id_ubicacion_destino'        => 'nullable|integer|exists:ubicaciones,id_ubicacion',
-            'fecha_devolucion_programada' => 'nullable|date|after_or_equal:today',
-            'motivo'                      => 'nullable|string|max:500',
-            'observaciones'               => 'nullable|string|max:500',
+            'tipo'                      => ['required', Rule::in(array_keys(self::OPERACIONES))],
+            'activo_ids'                => 'required|array|min:1',
+            'activo_ids.*'              => 'integer|exists:activo,id_activo',
+            'id_colaborador_destino'    => 'nullable|integer|exists:colaboradores,id_colaborador',
+            'id_ubicacion_destino'      => 'nullable|integer|exists:ubicaciones,id_ubicacion',
+            'fecha_devolucion_estimada' => 'nullable|date|after_or_equal:today',
+            'condicion_actual'          => ['nullable', 'in:' . implode(',', Activo::CONDICIONES)],
+            'situacion_actual'          => ['nullable', 'in:' . implode(',', Activo::SITUACIONES)],
+            'motivo'                    => 'nullable|string|max:500',
+            'observaciones'             => 'nullable|string|max:500',
         ], [
-            'tipo.required'        => 'Debes seleccionar un tipo de movimiento.',
-            'activo_ids.required'  => 'Debes seleccionar al menos un activo.',
+            'tipo.required'       => 'Debes seleccionar un tipo de movimiento.',
+            'activo_ids.required' => 'Debes seleccionar al menos un activo.',
         ]);
 
         $tipo = $request->tipo;
         $op   = self::OPERACIONES[$tipo];
 
-        // Validaciones condicionales según la operación
-        if ($op['colaborador'] && !$request->id_colaborador_destino) {
+        // ── Validaciones condicionales según el tipo ──────────────────
+        if ($op['colaborador'] && ! $request->id_colaborador_destino) {
             throw ValidationException::withMessages(['id_colaborador_destino' => 'Debes seleccionar el colaborador destino.']);
         }
-        if ($op['ubicacion'] && !$request->id_ubicacion_destino) {
-            throw ValidationException::withMessages(['id_ubicacion_destino' => 'Debes seleccionar la ubicación destino.']);
+        if ($op['devolucion'] && ! $request->fecha_devolucion_estimada) {
+            throw ValidationException::withMessages(['fecha_devolucion_estimada' => 'Indica la fecha estimada de devolución.']);
         }
-        if ($op['devolucion'] && !$request->fecha_devolucion_programada) {
-            throw ValidationException::withMessages(['fecha_devolucion_programada' => 'Indica la fecha de devolución programada.']);
+        if ($tipo === 'REGULARIZACION') {
+            if (! $request->motivo) {
+                throw ValidationException::withMessages(['motivo' => 'La regularización exige un motivo.']);
+            }
+            $cambios = array_filter([
+                $request->id_colaborador_destino, $request->id_ubicacion_destino,
+                $request->condicion_actual, $request->situacion_actual,
+            ]);
+            if (empty($cambios)) {
+                throw ValidationException::withMessages(['motivo' => 'Indica al menos un dato a regularizar (responsable, ubicación, condición o situación).']);
+            }
         }
 
         $colaboradorDestino = $request->id_colaborador_destino ?: null;
         $ubicacionDestino   = $request->id_ubicacion_destino ?: null;
 
-        $activos = Activo::with('situacion:id_estado_activo,codigo')
-            ->whereIn('id_activo', $request->activo_ids)
-            ->get();
+        $activos = Activo::whereIn('id_activo', $request->activo_ids)->get();
 
-        // Regla de negocio: el movimiento solo procede si la situación ACTUAL de
-        // cada activo lo admite (máquina de estados). Se valida todo el lote para
-        // que ninguno avance si alguno es inválido.
-        $invalidos = $activos->filter(fn($a) => !in_array($a->situacion?->codigo, $op['origen'], true));
+        // El movimiento solo procede si la situación ACTUAL de cada activo lo
+        // admite. Se valida todo el lote (o todos avanzan, o ninguno).
+        $invalidos = $activos->filter(fn($a) => ! in_array($a->situacion_actual, $op['origen'], true));
 
         if ($invalidos->isNotEmpty()) {
             $detalle = $invalidos
-                ->map(fn($a) => $a->codigo_interno . ' (' . str_replace('_', ' ', $a->situacion?->codigo ?? 'SIN SITUACIÓN') . ')')
+                ->map(fn($a) => $a->codigo_interno . ' (' . (Activo::SITUACION_LABELS[$a->situacion_actual] ?? $a->situacion_actual) . ')')
                 ->implode(', ');
 
             throw ValidationException::withMessages([
@@ -125,40 +119,39 @@ class MovimientoController extends Controller
         }
 
         DB::transaction(function () use ($request, $tipo, $op, $colaboradorDestino, $ubicacionDestino, $activos) {
-            // La fecha de devolución programada ya no es columna de cabecera (TO BE);
-            // si aplica, se anota en las observaciones del movimiento.
-            $observaciones = $request->observaciones ?: null;
-            if ($op['devolucion'] && $request->fecha_devolucion_programada) {
-                $nota = 'Devolución programada: ' . $request->fecha_devolucion_programada;
-                $observaciones = $observaciones ? $observaciones . ' | ' . $nota : $nota;
-            }
-
             $mov = Movimiento::create([
-                'codigo_movimiento' => 'TMP',
-                'tipo'              => $op['mov'],
-                'estado'            => 'EJECUTADO', // la app ejecuta el efecto al registrar
-                'motivo'            => $request->motivo ?: null,
-                'observaciones'     => $observaciones,
-                'registrado_por'    => Auth::id(),
-                'fecha_registro'    => now(),
-                'fecha_movimiento'  => now(),
-                'requiere_tramite'  => false,
+                'codigo_movimiento'         => 'TMP',
+                'tipo'                      => $tipo,
+                'estado'                    => 'EJECUTADO', // se ejecuta el efecto al registrar
+                'fecha_registro'            => now(),
+                'fecha_movimiento'          => now(),
+                'fecha_devolucion_estimada' => $op['devolucion'] ? $request->fecha_devolucion_estimada : null,
+                'estado_devolucion'         => $op['devolucion'] ? 'PENDIENTE_DEVOLUCION' : 'NO_APLICA',
+                'motivo'                    => $request->motivo ?: null,
+                'observaciones'             => $request->observaciones ?: null,
+                'registrado_por'            => Auth::id(),
+                'ejecutado_por'             => Auth::id(),
+                'fecha_ejecucion'           => now(),
+                'requiere_tramite'          => false,
             ]);
 
             $mov->update(['codigo_movimiento' => 'MOV-' . str_pad((string) $mov->id_movimiento, 6, '0', STR_PAD_LEFT)]);
 
-            $situacionId = $op['situacion'] ? $this->situacionId($op['situacion']) : null;
-
             foreach ($activos as $activo) {
-                // Responsable y ubicación RESULTANTES del activo tras la operación.
+                $situacionAnterior = $activo->situacion_actual;
+
+                // Responsable / ubicación / situación / condición resultantes.
                 $respDestino = match ($tipo) {
-                    'ASIGNAR', 'TRANSFERENCIA', 'PRESTAMO' => $colaboradorDestino,
-                    'DEVOLUCION', 'BAJA'                   => null,
-                    'REUBICACION'                          => $activo->id_responsable_actual,
+                    'PRESTAMO', 'TRANSFERENCIA' => $colaboradorDestino,
+                    'REGULARIZACION'            => $colaboradorDestino ?: $activo->id_responsable_actual,
                 };
-                $ubicDestino = ($ubicacionDestino && $tipo !== 'BAJA')
-                    ? $ubicacionDestino
-                    : $activo->id_ubicacion_actual;
+                $ubicDestino = $ubicacionDestino ?: $activo->id_ubicacion_actual;
+
+                $situacionResultante = $op['situacion']
+                    ?? ($request->situacion_actual ?: $situacionAnterior); // REGULARIZACION
+                $condicionResultante = $tipo === 'REGULARIZACION' && $request->condicion_actual
+                    ? $request->condicion_actual
+                    : $activo->condicion_actual;
 
                 DetalleMovimientoActivo::create([
                     'id_movimiento'          => $mov->id_movimiento,
@@ -167,40 +160,90 @@ class MovimientoController extends Controller
                     'id_responsable_destino' => $respDestino,
                     'id_ubicacion_origen'    => $activo->id_ubicacion_actual,
                     'id_ubicacion_destino'   => $ubicDestino,
-                    'condicion_salida_id'    => $activo->id_condicion_actual,
-                    'condicion_entrada_id'   => $activo->id_condicion_actual,
-                    'estado_revision'        => 'CONFORME',
+                    'condicion_salida'       => $activo->condicion_actual,
+                    'situacion_anterior'     => $situacionAnterior,
+                    'situacion_resultante'   => $situacionResultante,
+                    // El préstamo queda pendiente hasta su devolución.
+                    'resultado'              => $op['devolucion'] ? 'PENDIENTE' : 'APLICADO',
+                    'observacion_salida'     => $request->observaciones ?: null,
                 ]);
 
-                // Efectos sobre el activo
-                $updates = [
+                $activo->update([
                     'id_responsable_actual' => $respDestino,
                     'id_ubicacion_actual'   => $ubicDestino,
-                ];
-                if ($situacionId) {
-                    $updates['id_situacion_actual'] = $situacionId;
-                }
-
-                $activo->update($updates);
+                    'situacion_actual'      => $situacionResultante,
+                    'condicion_actual'      => $condicionResultante,
+                    'actualizado_por'       => Auth::id(),
+                ]);
             }
         });
 
-        // Re-formatear los activos afectados para refrescar la tabla en cliente.
-        $ubicacionesPorId = Ubicacion::get(['id_ubicacion', 'id_ubicacion_padre', 'nombre'])
-            ->keyBy('id_ubicacion');
+        return response()->json([
+            'success' => true,
+            'message' => "Movimiento {$tipo} registrado para " . count($request->activo_ids) . ' activo' . (count($request->activo_ids) !== 1 ? 's' : '') . '.',
+            'data'    => $this->activosRefrescados($request->activo_ids),
+        ]);
+    }
 
-        $data = Activo::with('modelo.marca', 'modelo.categoriaActivo', 'condicion', 'situacion', 'ubicacion.sede', 'responsable')
-            ->whereIn('id_activo', $request->activo_ids)
-            ->get()
-            ->map(fn($a) => ActivoController::formatActivo($a, $ubicacionesPorId))
-            ->values();
+    /**
+     * Registra la devolución de un PRESTAMO. La devolución no es un movimiento
+     * nuevo: cierra el préstamo existente y decide la situación de retorno.
+     */
+    public function devolver(Request $request, int $id)
+    {
+        $request->validate([
+            'condicion_retorno'      => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
+            'estado_devolucion'      => ['required', 'in:DEVUELTO,DEVUELTO_OBSERVADO'],
+            'observacion_devolucion' => 'nullable|string|max:500',
+        ], [
+            'condicion_retorno.required' => 'Indica en qué condición retorna el activo.',
+            'estado_devolucion.required' => 'Indica si la devolución es conforme u observada.',
+        ]);
 
-        $n = count($request->activo_ids);
+        $mov = Movimiento::with('detalles')->findOrFail($id);
+
+        if ($mov->tipo !== 'PRESTAMO' || $mov->estado_devolucion !== 'PENDIENTE_DEVOLUCION') {
+            throw ValidationException::withMessages(['id' => 'Este movimiento no es un préstamo pendiente de devolución.']);
+        }
+
+        $observado = $request->estado_devolucion === 'DEVUELTO_OBSERVADO';
+
+        DB::transaction(function () use ($request, $mov, $observado) {
+            $mov->update([
+                'fecha_devolucion_real'  => now()->toDateString(),
+                'estado_devolucion'      => $request->estado_devolucion,
+                'observacion_devolucion' => $request->observacion_devolucion ?: null,
+            ]);
+
+            foreach ($mov->detalles as $det) {
+                // Vuelve bien → DISPONIBLE; vuelve mal → OBSERVADO.
+                $situacionRetorno = $observado ? 'OBSERVADO' : 'DISPONIBLE';
+
+                $det->update([
+                    'condicion_retorno'    => $request->condicion_retorno,
+                    'resultado'            => $observado ? 'DEVUELTO_OBSERVADO' : 'DEVUELTO',
+                    'situacion_resultante' => $situacionRetorno,
+                    'observacion_retorno'  => $request->observacion_devolucion ?: null,
+                ]);
+
+                if ($activo = Activo::find($det->id_activo)) {
+                    $activo->update([
+                        // El préstamo era temporal: el activo vuelve a manos de OTI.
+                        'id_responsable_actual' => $det->id_responsable_origen,
+                        'situacion_actual'      => $situacionRetorno,
+                        'condicion_actual'      => $request->condicion_retorno,
+                        'actualizado_por'       => Auth::id(),
+                    ]);
+                }
+            }
+        });
+
+        $ids = $mov->detalles->pluck('id_activo')->all();
 
         return response()->json([
             'success' => true,
-            'message' => "Movimiento {$tipo} registrado para {$n} activo" . ($n !== 1 ? 's' : '') . '.',
-            'data'    => $data,
+            'message' => 'Devolución del préstamo ' . $mov->codigo_movimiento . ' registrada.',
+            'data'    => $this->activosRefrescados($ids),
         ]);
     }
 
@@ -208,22 +251,27 @@ class MovimientoController extends Controller
     // Helpers
     // ──────────────────────────────────────────────────────────────────
 
-    private function situacionId(string $codigo): int
+    /** Reformatea los activos afectados para refrescar la tabla en cliente. */
+    private function activosRefrescados(array $ids)
     {
-        return (int) EstadoActivo::where('tipo', 'SITUACION')
-            ->where('codigo', $codigo)
-            ->value('id_estado_activo');
+        $ubicacionesPorId = Ubicacion::get(['id_ubicacion', 'id_ubicacion_padre', 'nombre'])
+            ->keyBy('id_ubicacion');
+
+        return Activo::with('modelo.marca', 'modelo.categoriaActivo', 'ubicacion.sede', 'responsable', 'categoria', 'activoTecnico')
+            ->whereIn('id_activo', $ids)
+            ->get()
+            ->map(fn($a) => ActivoController::formatActivo($a, $ubicacionesPorId))
+            ->values();
     }
 
     /** Mensaje legible que explica por qué una operación fue rechazada. */
     private function motivoRegla(string $tipo): string
     {
         return match ($tipo) {
-            'ASIGNAR', 'PRESTAMO' => 'Solo se permite con activos en almacén.',
-            'TRANSFERENCIA'       => 'Solo se permite con activos que estén EN USO.',
-            'DEVOLUCION'          => 'Solo se permite con activos que estén EN DESPLAZAMIENTO (prestados).',
-            'REUBICACION'         => 'No se permite con activos dados de baja.',
-            default               => '',
+            'PRESTAMO'       => 'Solo se presta un activo DISPONIBLE o EN USO (no en mantenimiento, proveedor, prestado ni dado de baja).',
+            'TRANSFERENCIA'  => 'Solo se transfiere un activo DISPONIBLE o EN USO.',
+            'REGULARIZACION' => 'No se puede regularizar un activo dado de baja.',
+            default          => '',
         };
     }
 
@@ -241,18 +289,22 @@ class MovimientoController extends Controller
         };
 
         return [
-            'id_movimiento'       => $m->id_movimiento,
-            'codigo'              => $m->codigo_movimiento,
-            'tipo'                => $m->tipo,
-            'estado'              => $m->estado,
-            'fecha'               => $m->fecha_movimiento?->format('Y-m-d H:i'),
-            'activos'             => $m->detalles->map(fn($d) => $d->activo?->codigo_interno)->filter()->values(),
-            'colaborador_origen'  => $agg($m->detalles->map(fn($d) => $nombre($d->responsableOrigen))),
-            'colaborador_destino' => $agg($m->detalles->map(fn($d) => $nombre($d->responsableDestino))),
-            'ubicacion_origen'    => $agg($m->detalles->map(fn($d) => $d->ubicacionOrigen?->nombre)),
-            'ubicacion_destino'   => $agg($m->detalles->map(fn($d) => $d->ubicacionDestino?->nombre)),
-            'motivo'              => $m->motivo,
-            'registrado_por'      => $m->registradoPor?->nombre_usuario,
+            'id_movimiento'             => $m->id_movimiento,
+            'codigo'                    => $m->codigo_movimiento,
+            'tipo'                      => $m->tipo,
+            'estado'                    => $m->estado,
+            'estado_devolucion'         => $m->estado_devolucion,
+            'fecha'                     => $m->fecha_movimiento?->format('Y-m-d H:i'),
+            'fecha_devolucion_estimada' => $m->fecha_devolucion_estimada?->format('Y-m-d'),
+            'fecha_devolucion_real'     => $m->fecha_devolucion_real?->format('Y-m-d'),
+            'es_prestamo_pendiente'     => $m->tipo === 'PRESTAMO' && $m->estado_devolucion === 'PENDIENTE_DEVOLUCION',
+            'activos'                   => $m->detalles->map(fn($d) => $d->activo?->codigo_interno)->filter()->values(),
+            'colaborador_origen'        => $agg($m->detalles->map(fn($d) => $nombre($d->responsableOrigen))),
+            'colaborador_destino'       => $agg($m->detalles->map(fn($d) => $nombre($d->responsableDestino))),
+            'ubicacion_origen'          => $agg($m->detalles->map(fn($d) => $d->ubicacionOrigen?->nombre)),
+            'ubicacion_destino'         => $agg($m->detalles->map(fn($d) => $d->ubicacionDestino?->nombre)),
+            'motivo'                    => $m->motivo,
+            'registrado_por'            => $m->registradoPor?->nombre_usuario,
         ];
     }
 }

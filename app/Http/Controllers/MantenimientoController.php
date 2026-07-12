@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Activo;
 use App\Models\ActivoTecnico;
 use App\Models\Colaborador;
-use App\Models\EstadoActivo;
 use App\Models\Mantenimiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -41,7 +40,7 @@ class MantenimientoController extends Controller
     public function index()
     {
         $mantenimientos = Mantenimiento::with([
-                'activo.modelo.marca', 'activo.categoria', 'activo.responsable', 'activo.situacion',
+                'activo.modelo.marca', 'activo.categoria', 'activo.responsable',
                 'solicitadoPor', 'tecnicoResponsable', 'registradoPor.colaborador',
                 'documentos.subidoPor.colaborador',
             ])
@@ -55,16 +54,16 @@ class MantenimientoController extends Controller
         $conMantAbierto = Mantenimiento::whereIn('estado', Mantenimiento::ESTADOS_ABIERTOS)
             ->pluck('id_activo');
 
-        $activos = Activo::with('modelo.marca', 'situacion:id_estado_activo,codigo,nombre')
+        $activos = Activo::with('modelo.marca')
             ->whereNotIn('id_activo', $conMantAbierto)
-            ->whereDoesntHave('situacion', fn($q) => $q->where('codigo', 'DADO_DE_BAJA'))
+            ->where('situacion_actual', '!=', 'DADO_DE_BAJA')
             ->orderBy('codigo_interno')
             ->get()
             ->map(fn($a) => [
                 'id_activo'      => $a->id_activo,
                 'codigo_interno' => $a->codigo_interno,
                 'modelo'         => trim(($a->modelo?->marca?->nombre ?? '') . ' ' . ($a->modelo?->nombre ?? '')),
-                'situacion'      => $a->situacion?->nombre,
+                'situacion'      => $a->situacionLabel(),
             ])
             ->values();
 
@@ -96,9 +95,9 @@ class MantenimientoController extends Controller
             'fecha_reporte.required'      => 'Indica la fecha de reporte.',
         ]);
 
-        $activo = Activo::with('situacion:id_estado_activo,codigo')->findOrFail($request->id_activo);
+        $activo = Activo::findOrFail($request->id_activo);
 
-        if ($activo->situacion?->codigo === 'DADO_DE_BAJA') {
+        if ($activo->situacion_actual === 'DADO_DE_BAJA') {
             throw ValidationException::withMessages([
                 'id_activo' => 'No se puede registrar mantenimiento sobre un activo dado de baja.',
             ]);
@@ -139,7 +138,7 @@ class MantenimientoController extends Controller
      */
     public function avanzar(Request $request, int $id)
     {
-        $mant = Mantenimiento::with('activo.situacion')->findOrFail($id);
+        $mant = Mantenimiento::with('activo')->findOrFail($id);
 
         $permitidos = self::AVANCES[$mant->estado] ?? [];
         if (empty($permitidos)) {
@@ -175,7 +174,11 @@ class MantenimientoController extends Controller
                 'fecha_inicio'        => $mant->fecha_inicio ?: now()->toDateString(),
             ]);
 
-            $this->situarActivo($mant->activo, 'EN_MANTENIMIENTO');
+            // Derivar a proveedor deja el activo EN_PROVEEDOR; el resto EN_MANTENIMIENTO.
+            $this->situarActivo(
+                $mant->activo,
+                $request->estado === 'DERIVADO_PROVEEDOR' ? 'EN_PROVEEDOR' : 'EN_MANTENIMIENTO'
+            );
         });
 
         return $this->respuesta($mant, "Mantenimiento {$mant->codigo} actualizado a {$this->legible($request->estado)}.");
@@ -188,7 +191,7 @@ class MantenimientoController extends Controller
      */
     public function finalizar(Request $request, int $id)
     {
-        $mant = Mantenimiento::with('activo.situacion')->findOrFail($id);
+        $mant = Mantenimiento::with('activo')->findOrFail($id);
 
         if (! in_array($mant->estado, Mantenimiento::ESTADOS_ABIERTOS, true)) {
             throw ValidationException::withMessages([
@@ -228,9 +231,11 @@ class MantenimientoController extends Controller
 
             $activo = $mant->activo;
             if ($recomiendaBaja) {
-                $this->situarActivo($activo, 'PENDIENTE_BAJA');
+                // Brief §16: al recomendar baja el activo queda OBSERVADO y condición MALO.
+                $this->situarActivo($activo, 'OBSERVADO');
+                $activo->update(['condicion_actual' => 'MALO']);
             } else {
-                $this->situarActivo($activo, $activo->id_responsable_actual ? 'EN_USO' : 'EN_ALMACEN', $request->estado);
+                $this->situarActivo($activo, $activo->id_responsable_actual ? 'EN_USO' : 'DISPONIBLE', $request->estado);
             }
         });
 
@@ -256,7 +261,7 @@ class MantenimientoController extends Controller
     /** Cancela un mantenimiento abierto y restaura la situación del activo. */
     public function cancelar(Request $request, int $id)
     {
-        $mant = Mantenimiento::with('activo.situacion')->findOrFail($id);
+        $mant = Mantenimiento::with('activo')->findOrFail($id);
 
         if (! in_array($mant->estado, Mantenimiento::ESTADOS_ABIERTOS, true)) {
             throw ValidationException::withMessages([
@@ -275,10 +280,10 @@ class MantenimientoController extends Controller
                 'resultado' => 'CANCELADO: ' . trim($request->motivo),
             ]);
 
-            // Si el activo quedó EN_MANTENIMIENTO por este proceso, se restaura.
+            // Si el activo quedó EN_MANTENIMIENTO/EN_PROVEEDOR por este proceso, se restaura.
             $activo = $mant->activo;
-            if ($activo->situacion?->codigo === 'EN_MANTENIMIENTO') {
-                $this->situarActivo($activo, $activo->id_responsable_actual ? 'EN_USO' : 'EN_ALMACEN');
+            if (in_array($activo->situacion_actual, ['EN_MANTENIMIENTO', 'EN_PROVEEDOR'], true)) {
+                $this->situarActivo($activo, $activo->id_responsable_actual ? 'EN_USO' : 'DISPONIBLE');
             }
         });
 
@@ -294,21 +299,15 @@ class MantenimientoController extends Controller
      * su ficha técnica (si tiene). $resultado ajusta el estado_operativo al
      * finalizar (SIN_REPARACION → INOPERATIVO).
      */
-    private function situarActivo(Activo $activo, string $codigoSituacion, ?string $resultado = null): void
+    private function situarActivo(Activo $activo, string $situacion, ?string $resultado = null): void
     {
-        $id = EstadoActivo::where('tipo', 'SITUACION')
-            ->where('codigo', $codigoSituacion)
-            ->value('id_estado_activo');
-
-        if ($id) {
-            $activo->update(['id_situacion_actual' => $id]);
-        }
+        $activo->update(['situacion_actual' => $situacion]);
 
         $estadoOperativo = match (true) {
-            $codigoSituacion === 'EN_MANTENIMIENTO' => 'EN_MANTENIMIENTO',
-            $codigoSituacion === 'PENDIENTE_BAJA'   => 'PENDIENTE_BAJA',
-            $resultado === 'SIN_REPARACION'         => 'INOPERATIVO',
-            default                                 => 'OPERATIVO',
+            in_array($situacion, ['EN_MANTENIMIENTO', 'EN_PROVEEDOR'], true) => 'EN_MANTENIMIENTO',
+            $situacion === 'OBSERVADO'      => 'PENDIENTE_BAJA',
+            $resultado === 'SIN_REPARACION' => 'INOPERATIVO',
+            default                         => 'OPERATIVO',
         };
 
         ActivoTecnico::where('id_activo', $activo->id_activo)
@@ -324,7 +323,7 @@ class MantenimientoController extends Controller
     private function respuesta(Mantenimiento $mant, string $mensaje)
     {
         $mant->refresh()->load([
-            'activo.modelo.marca', 'activo.categoria', 'activo.responsable', 'activo.situacion',
+            'activo.modelo.marca', 'activo.categoria', 'activo.responsable',
             'solicitadoPor', 'tecnicoResponsable', 'registradoPor.colaborador',
             'documentos.subidoPor.colaborador',
         ]);
@@ -350,7 +349,7 @@ class MantenimientoController extends Controller
             'activo_modelo'       => trim(($a?->modelo?->marca?->nombre ?? '') . ' ' . ($a?->modelo?->nombre ?? '')),
             'activo_categoria'    => $a?->categoria?->nombre,
             'activo_responsable'  => $a?->responsable?->nombre_completo,
-            'activo_situacion'    => $a?->situacion?->nombre,
+            'activo_situacion'    => $a ? $a->situacionLabel() : null,
             'activo_url'          => $a ? route('activos.ver', $a->id_activo) : null,
             'tipo'                => $m->tipo_mantenimiento,
             'origen'              => $m->origen_reporte,

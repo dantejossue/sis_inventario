@@ -13,11 +13,12 @@
       'CHATARRA' => 'secondary',
   ];
   $badgeSituacion = [
+      'DISPONIBLE' => 'primary',
       'EN_USO' => 'info',
-      'EN_ALMACEN' => 'primary',
+      'EN_PRESTAMO' => 'warning',
       'EN_MANTENIMIENTO' => 'warning',
-      'EN_DESPLAZAMIENTO' => 'warning',
-      'PENDIENTE_BAJA' => 'danger',
+      'EN_PROVEEDOR' => 'warning',
+      'OBSERVADO' => 'danger',
       'DADO_DE_BAJA' => 'secondary',
   ];
   $badgeValidacion = [
@@ -26,13 +27,10 @@
       'OBSERVADO' => ['danger', 'Observado'],
   ];
   $badgeEstadoMov = [
-      'REGISTRADO' => 'primary',
-      'PENDIENTE_TRAMITE' => 'warning',
-      'EN_TRAMITE' => 'warning',
-      'AUTORIZADO' => 'info',
+      'BORRADOR' => 'secondary',
       'EJECUTADO' => 'success',
-      'RECHAZADO' => 'danger',
-      'CANCELADO' => 'secondary',
+      'OBSERVADO' => 'warning',
+      'CANCELADO' => 'danger',
   ];
   $badgeEstadoSiga = [
       'NO_APLICA' => 'secondary',
@@ -75,8 +73,12 @@
   $titulo =
       trim(($categoria ? $tipoLegible($categoria->nombre) . ' ' : '') . $marcaModelo) ?:
       'Activo #' . $activo->id_activo;
-  $condicion = $activo->condicion;
-  $situacion = $activo->situacion;
+  $condicion = $activo->condicion_actual
+      ? (object) ['codigo' => $activo->condicion_actual, 'nombre' => \App\Models\Activo::CONDICION_LABELS[$activo->condicion_actual] ?? $activo->condicion_actual]
+      : null;
+  $situacion = $activo->situacion_actual
+      ? (object) ['codigo' => $activo->situacion_actual, 'nombre' => \App\Models\Activo::SITUACION_LABELS[$activo->situacion_actual] ?? $activo->situacion_actual]
+      : null;
   $responsable = $activo->responsable;
   $dependencia = $responsable?->sedeDependencia?->dependencia?->nombre_dependencia;
   $sedeResp = $responsable?->sedeDependencia?->sede?->nombre_sede;

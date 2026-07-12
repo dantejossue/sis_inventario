@@ -8,7 +8,6 @@ use App\Models\BajaActivo;
 use App\Models\CategoriaActivo;
 use App\Models\Colaborador;
 use App\Models\DetalleMovimientoActivo;
-use App\Models\EstadoActivo;
 use App\Models\Mantenimiento;
 use App\Models\Modelo;
 use App\Models\Ubicacion;
@@ -24,7 +23,7 @@ class ActivoController extends Controller
         $ubicacionesPorId = Ubicacion::get(['id_ubicacion', 'id_ubicacion_padre', 'nombre'])
             ->keyBy('id_ubicacion');
 
-        $activos = Activo::with('modelo.marca', 'modelo.categoriaActivo', 'condicion', 'situacion', 'ubicacion.sede', 'responsable', 'categoria', 'activoTecnico')
+        $activos = Activo::with('modelo.marca', 'modelo.categoriaActivo', 'ubicacion.sede', 'responsable', 'categoria', 'activoTecnico')
             ->get()
             ->map(fn($a) => static::formatActivo($a, $ubicacionesPorId))
             ->values();
@@ -58,12 +57,10 @@ class ActivoController extends Controller
                     'id_categoria'     => $m->id_categoria,
                     'requiere_ficha'   => (bool) ($m->categoriaActivo?->requiere_ficha_tecnica),
                 ]),
-            'condiciones' => EstadoActivo::where('tipo', 'CONDICION')
-                ->where('estado', 'ACTIVO')
-                ->get(['id_estado_activo', 'nombre']),
-            'situaciones' => EstadoActivo::where('tipo', 'SITUACION')
-                ->where('estado', 'ACTIVO')
-                ->get(['id_estado_activo', 'nombre']),
+            // Condición/situación son ENUM directos (brief OTI): se ofrecen como
+            // pares código→etiqueta, no como catálogo en BD.
+            'condiciones' => Activo::CONDICION_LABELS,
+            'situaciones' => Activo::SITUACION_LABELS,
             'colaboradores' => Colaborador::where('estado', 'ACTIVO')
                 ->orderBy('per_apepat')
                 ->get(),
@@ -112,7 +109,6 @@ class ActivoController extends Controller
     {
         $activo = Activo::with([
             'modelo.marca', 'modelo.categoriaActivo', 'categoria',
-            'condicion', 'situacion',
             'responsable.sedeDependencia.dependencia', 'responsable.sedeDependencia.sede',
             'ubicacion.sede', 'activoTecnico',
             'patrimonialSiga', 'importacionSiga',
@@ -265,7 +261,7 @@ class ActivoController extends Controller
     {
         $request->validate([
             'id_modelo'           => 'required|integer|exists:modelo,id_modelo',
-            'id_condicion_actual' => 'required|integer|exists:estado_activo,id_estado_activo',
+            'condicion_actual'    => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
             'codigo_interno'      => 'required|string|max:50|unique:activo,codigo_interno',
             'codigo_patrimonial'  => 'required|string|max:100|unique:activo,codigo_patrimonial',
             'numero_serie'        => 'nullable|string|max:150|unique:activo,numero_serie',
@@ -280,29 +276,30 @@ class ActivoController extends Controller
             'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
             'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
         ] + $this->reglasTecnicas(), [
-            'id_modelo.required'           => 'Debes seleccionar un modelo.',
-            'id_condicion_actual.required' => 'La condición es obligatoria.',
-            'codigo_interno.required'      => 'El código interno es obligatorio.',
-            'codigo_interno.unique'        => 'Ya existe un activo con ese código interno.',
-            'codigo_patrimonial.required'  => 'El código patrimonial es obligatorio.',
-            'codigo_patrimonial.unique'    => 'Ya existe un activo con ese código patrimonial.',
-            'numero_serie.unique'          => 'Ese número de serie ya está registrado.',
-            'imagen.image'                 => 'El archivo debe ser una imagen.',
-            'imagen.max'                   => 'La imagen no puede superar los 2 MB.',
-            'garantia_fin.after_or_equal'  => 'La fecha de fin de garantía debe ser igual o posterior al inicio.',
+            'id_modelo.required'          => 'Debes seleccionar un modelo.',
+            'condicion_actual.required'   => 'La condición es obligatoria.',
+            'condicion_actual.in'         => 'La condición seleccionada no es válida.',
+            'codigo_interno.required'     => 'El código interno es obligatorio.',
+            'codigo_interno.unique'       => 'Ya existe un activo con ese código interno.',
+            'codigo_patrimonial.required' => 'El código patrimonial es obligatorio.',
+            'codigo_patrimonial.unique'   => 'Ya existe un activo con ese código patrimonial.',
+            'numero_serie.unique'         => 'Ese número de serie ya está registrado.',
+            'imagen.image'                => 'El archivo debe ser una imagen.',
+            'imagen.max'                  => 'La imagen no puede superar los 2 MB.',
+            'garantia_fin.after_or_equal' => 'La fecha de fin de garantía debe ser igual o posterior al inicio.',
         ]);
 
         $modelo = Modelo::findOrFail($request->id_modelo);
 
-        // La situación es derivada del ciclo de vida: si nace con colaborador
-        // queda EN_USO; si no, EN_ALMACEN (listo para asignar luego).
-        $situacionInicial = $request->id_responsable_actual ? 'EN_USO' : 'EN_ALMACEN';
+        // La situación es derivada del ciclo de vida: si nace con responsable
+        // queda EN_USO; si no, DISPONIBLE (listo para prestar/transferir luego).
+        $situacionInicial = $request->id_responsable_actual ? 'EN_USO' : 'DISPONIBLE';
 
         $activo = Activo::create([
             'id_modelo'             => $request->id_modelo,
             'id_categoria'          => $modelo->id_categoria,
-            'id_condicion_actual'   => $request->id_condicion_actual,
-            'id_situacion_actual'   => $this->situacionId($situacionInicial),
+            'condicion_actual'      => $request->condicion_actual,
+            'situacion_actual'      => $situacionInicial,
             'id_responsable_actual' => $request->id_responsable_actual ?: null,
             'id_ubicacion_actual'   => $request->id_ubicacion_actual ?: null,
             'codigo_interno'        => strtoupper(trim($request->codigo_interno)),
@@ -333,7 +330,7 @@ class ActivoController extends Controller
 
         $request->validate([
             'id_modelo'           => 'required|integer|exists:modelo,id_modelo',
-            'id_condicion_actual' => 'required|integer|exists:estado_activo,id_estado_activo',
+            'condicion_actual'    => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
             'codigo_interno'      => "required|string|max:50|unique:activo,codigo_interno,{$id},id_activo",
             'codigo_patrimonial'  => "required|string|max:100|unique:activo,codigo_patrimonial,{$id},id_activo",
             'numero_serie'        => "nullable|string|max:150|unique:activo,numero_serie,{$id},id_activo",
@@ -348,16 +345,17 @@ class ActivoController extends Controller
             'id_responsable_actual' => 'nullable|integer|exists:colaboradores,id_colaborador',
             'id_ubicacion_actual'   => ['nullable', 'integer', 'exists:ubicaciones,id_ubicacion', $this->reglaUbicacionHoja()],
         ] + $this->reglasTecnicas(), [
-            'id_modelo.required'           => 'Debes seleccionar un modelo.',
-            'id_condicion_actual.required' => 'La condición es obligatoria.',
-            'codigo_interno.required'      => 'El código interno es obligatorio.',
-            'codigo_interno.unique'        => 'Ya existe un activo con ese código interno.',
-            'codigo_patrimonial.required'  => 'El código patrimonial es obligatorio.',
-            'codigo_patrimonial.unique'    => 'Ya existe un activo con ese código patrimonial.',
-            'numero_serie.unique'          => 'Ese número de serie ya está registrado.',
-            'imagen.image'                 => 'El archivo debe ser una imagen.',
-            'imagen.max'                   => 'La imagen no puede superar los 2 MB.',
-            'garantia_fin.after_or_equal'  => 'La fecha de fin de garantía debe ser igual o posterior al inicio.',
+            'id_modelo.required'          => 'Debes seleccionar un modelo.',
+            'condicion_actual.required'   => 'La condición es obligatoria.',
+            'condicion_actual.in'         => 'La condición seleccionada no es válida.',
+            'codigo_interno.required'     => 'El código interno es obligatorio.',
+            'codigo_interno.unique'       => 'Ya existe un activo con ese código interno.',
+            'codigo_patrimonial.required' => 'El código patrimonial es obligatorio.',
+            'codigo_patrimonial.unique'   => 'Ya existe un activo con ese código patrimonial.',
+            'numero_serie.unique'         => 'Ese número de serie ya está registrado.',
+            'imagen.image'                => 'El archivo debe ser una imagen.',
+            'imagen.max'                  => 'La imagen no puede superar los 2 MB.',
+            'garantia_fin.after_or_equal' => 'La fecha de fin de garantía debe ser igual o posterior al inicio.',
         ]);
 
         $modelo = Modelo::findOrFail($request->id_modelo);
@@ -373,7 +371,7 @@ class ActivoController extends Controller
         $activo->update([
             'id_modelo'             => $request->id_modelo,
             'id_categoria'          => $modelo->id_categoria,
-            'id_condicion_actual'   => $request->id_condicion_actual,
+            'condicion_actual'      => $request->condicion_actual,
             // La situación NO se edita aquí: la gestionan los movimientos.
             'id_responsable_actual' => $request->id_responsable_actual ?: null,
             'id_ubicacion_actual'   => $request->id_ubicacion_actual ?: null,
@@ -453,7 +451,7 @@ class ActivoController extends Controller
             'tec_procesador'             => 'nullable|string|max:150',
             'tec_memoria_ram'            => 'nullable|string|max:60',
             'tec_almacenamiento'         => 'nullable|string|max:100',
-            'tec_tipo_almacenamiento'    => 'nullable|in:HDD,SSD,NVME,EMMC,OTRO',
+            'tec_tipo_almacenamiento'    => 'nullable|in:HDD,SSD,NVME,EMMC,MIXTO,OTRO',
             'tec_sistema_operativo'      => 'nullable|string|max:100',
             'tec_direccion_mac'          => 'nullable|string|max:60',
             'tec_direccion_ip'           => 'nullable|string|max:60',
@@ -490,16 +488,6 @@ class ActivoController extends Controller
         $datos['estado_operativo'] = $datos['estado_operativo'] ?: 'OPERATIVO';
 
         ActivoTecnico::updateOrCreate(['id_activo' => $activo->id_activo], $datos);
-    }
-
-    /**
-     * Resuelve el id de una situación (estado_activo tipo SITUACION) por su código.
-     */
-    private function situacionId(string $codigo): int
-    {
-        return (int) EstadoActivo::where('tipo', 'SITUACION')
-            ->where('codigo', $codigo)
-            ->value('id_estado_activo');
     }
 
     /**
@@ -580,8 +568,8 @@ class ActivoController extends Controller
         return [
             'id_activo'             => $a->id_activo,
             'id_modelo'             => $a->id_modelo,
-            'id_condicion_actual'   => $a->id_condicion_actual,
-            'id_situacion_actual'   => $a->id_situacion_actual,
+            'condicion_actual'      => $a->condicion_actual,
+            'situacion_actual'      => $a->situacion_actual,
             'id_responsable_actual' => $a->id_responsable_actual,
             'codigo_interno'        => $a->codigo_interno,
             'codigo_patrimonial'    => $a->codigo_patrimonial,
@@ -600,8 +588,8 @@ class ActivoController extends Controller
             'modelo_nombre'         => $a->modelo?->nombre ?? '—',
             'marca_nombre'          => $a->modelo?->marca?->nombre ?? '—',
             'categoria_nombre'      => $a->modelo?->categoriaActivo?->nombre ?? '—',
-            'condicion_nombre'      => $a->condicion?->nombre ?? '—',
-            'situacion_nombre'      => $a->situacion?->nombre ?? '—',
+            'condicion_nombre'      => $a->condicionLabel(),
+            'situacion_nombre'      => $a->situacionLabel(),
             'sede_nombre'           => $ubic?->sede?->nombre_sede ?? '—',
             'sede_direccion'        => $ubic?->sede?->ubicacion,
             'id_ubicacion'          => $a->id_ubicacion_actual,

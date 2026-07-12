@@ -8,8 +8,9 @@ return new class extends Migration
 {
     /**
      * Detalle de un movimiento: por cada activo, su origen y destino (responsable
-     * y ubicación) y la condición física al salir/entrar. Un par (movimiento,
-     * activo) es único (obs #2). Condición salida/entrada conservada (obs #4).
+     * y ubicación), la condición física al salir/retornar y la situación antes/
+     * después. Un par (movimiento, activo) es único. Condición y situación son
+     * ENUM directos alineados con la tabla activo (brief OTI).
      */
     public function up(): void
     {
@@ -24,13 +25,26 @@ return new class extends Migration
             $table->integer('id_ubicacion_origen')->nullable();
             $table->integer('id_ubicacion_destino')->nullable();
 
-            $table->unsignedInteger('condicion_salida_id')->nullable();
-            $table->unsignedInteger('condicion_entrada_id')->nullable();
+            $table->enum('condicion_salida', ['NUEVO', 'BUENO', 'REGULAR', 'MALO'])->nullable();
+            $table->enum('condicion_retorno', ['NUEVO', 'BUENO', 'REGULAR', 'MALO'])->nullable();
 
-            $table->enum('estado_revision', ['PENDIENTE', 'CONFORME', 'OBSERVADO'])->default('PENDIENTE');
-            $table->string('observaciones', 255)->nullable();
+            $situaciones = [
+                'DISPONIBLE', 'EN_USO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO',
+                'EN_PROVEEDOR', 'OBSERVADO', 'DADO_DE_BAJA',
+            ];
+            $table->enum('situacion_anterior', $situaciones)->nullable();
+            $table->enum('situacion_resultante', $situaciones)->nullable();
+
+            $table->enum('resultado', [
+                'PENDIENTE', 'APLICADO', 'DEVUELTO', 'DEVUELTO_OBSERVADO', 'OBSERVADO', 'CANCELADO',
+            ])->default('PENDIENTE');
+
+            $table->text('observacion_salida')->nullable();
+            $table->text('observacion_retorno')->nullable();
+            $table->text('observaciones')->nullable();
 
             $table->dateTime('creado_en')->useCurrent();
+            $table->dateTime('actualizado_en')->nullable()->useCurrentOnUpdate();
 
             $table->foreign('id_movimiento')->references('id_movimiento')->on('movimientos')->cascadeOnDelete();
             $table->foreign('id_activo')->references('id_activo')->on('activo')->cascadeOnDelete();
@@ -38,11 +52,10 @@ return new class extends Migration
             $table->foreign('id_responsable_destino')->references('id_colaborador')->on('colaboradores')->nullOnDelete();
             $table->foreign('id_ubicacion_origen')->references('id_ubicacion')->on('ubicaciones')->nullOnDelete();
             $table->foreign('id_ubicacion_destino')->references('id_ubicacion')->on('ubicaciones')->nullOnDelete();
-            $table->foreign('condicion_salida_id')->references('id_estado_activo')->on('estado_activo')->nullOnDelete();
-            $table->foreign('condicion_entrada_id')->references('id_estado_activo')->on('estado_activo')->nullOnDelete();
 
             $table->unique(['id_movimiento', 'id_activo'], 'uk_detalle_movimiento_activo');
             $table->index('id_activo');
+            $table->index('resultado');
         });
     }
 

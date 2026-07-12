@@ -16,15 +16,13 @@ return new class extends Migration
             $table->unsignedInteger('id_categoria')->nullable();
             $table->integer('id_ubicacion_actual')->nullable();
             $table->integer('id_responsable_actual')->nullable();
-            $table->unsignedInteger('id_condicion_actual')->nullable();
-            $table->unsignedInteger('id_situacion_actual')->nullable();
 
             // ── Identificación ────────────────────────────────────────
             $table->string('codigo_interno', 50)->nullable()->unique('uk_activo_codigo_interno');
             $table->string('codigo_patrimonial', 100)->unique('uk_activo_codigo_patrimonial');
             $table->string('codigo_siga', 60)->nullable();
             $table->string('numero_pecosa', 60)->nullable();
-            $table->string('numero_orden_compra', 60)->nullable();
+            $table->string('numero_orden_compra', 80)->nullable();
             $table->date('fecha_alta_siga')->nullable();
             $table->string('numero_serie', 150)->nullable(); // index, ya no único
 
@@ -39,11 +37,20 @@ return new class extends Migration
             $table->text('observaciones')->nullable();
             $table->string('qr_token', 255)->nullable()->unique();
 
+            // ── Condición física y situación operativa (ENUM directo, brief OTI) ──
+            // Reemplazan a las antiguas FK id_condicion_actual / id_situacion_actual.
+            $table->enum('condicion_actual', ['NUEVO', 'BUENO', 'REGULAR', 'MALO'])->default('BUENO');
+            $table->enum('situacion_actual', [
+                'DISPONIBLE', 'EN_USO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO',
+                'EN_PROVEEDOR', 'OBSERVADO', 'DADO_DE_BAJA',
+            ])->default('DISPONIBLE');
+
             // ── Origen y validación ───────────────────────────────────
-            $table->enum('origen_registro', ['IMPORTADO_SIGA', 'EXCEL', 'MANUAL', 'REGULARIZACION'])->default('MANUAL');
-            $table->enum('estado_validacion', ['VALIDADO', 'PENDIENTE_VALIDACION', 'OBSERVADO'])->default('VALIDADO');
-            // Flag "pendiente de actualización en SIGA" a nivel de activo (obs #5).
+            $table->enum('origen_registro', ['MANUAL', 'EXCEL', 'REGULARIZACION', 'IMPORTADO_SIGA'])->default('MANUAL');
+            // Flag "pendiente de actualización en SIGA" a nivel de activo (dato referencial).
             $table->enum('estado_siga', ['NO_APLICA', 'PENDIENTE_ACTUALIZACION', 'REGISTRADO', 'OBSERVADO'])->default('NO_APLICA');
+            // Columnas dormidas: solo las usa el importador SIGA (fuera de alcance inicial).
+            $table->enum('estado_validacion', ['VALIDADO', 'PENDIENTE_VALIDACION', 'OBSERVADO'])->default('VALIDADO');
             $table->integer('id_importacion')->nullable();
 
             // ── Auditoría ─────────────────────────────────────────────
@@ -58,8 +65,6 @@ return new class extends Migration
             $table->foreign('id_categoria')->references('id_categoria')->on('categoria_activo')->nullOnDelete();
             $table->foreign('id_ubicacion_actual', 'fk_activo_ubicacion')->references('id_ubicacion')->on('ubicaciones')->nullOnDelete();
             $table->foreign('id_responsable_actual')->references('id_colaborador')->on('colaboradores')->nullOnDelete();
-            $table->foreign('id_condicion_actual')->references('id_estado_activo')->on('estado_activo')->nullOnDelete();
-            $table->foreign('id_situacion_actual')->references('id_estado_activo')->on('estado_activo')->nullOnDelete();
             $table->foreign('id_importacion')->references('id_importacion')->on('importaciones_siga')->nullOnDelete();
             $table->foreign('creado_por')->references('id_usuario')->on('usuarios')->nullOnDelete();
             $table->foreign('actualizado_por')->references('id_usuario')->on('usuarios')->nullOnDelete();
@@ -67,12 +72,11 @@ return new class extends Migration
             // ── Índices ───────────────────────────────────────────────
             $table->index('id_modelo');
             $table->index('id_categoria');
-            $table->index('id_condicion_actual');
-            $table->index('id_situacion_actual');
+            $table->index('condicion_actual');
+            $table->index('situacion_actual');
             $table->index('id_responsable_actual');
             $table->index('numero_serie');
             $table->index('codigo_siga');
-            $table->index('estado_validacion');
             $table->index('estado_siga');
         });
     }

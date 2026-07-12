@@ -344,11 +344,9 @@
                 <div class="form-floating form-floating-outline">
                   <select class="form-select" id="mover-tipo" name="tipo">
                     <option value="">Seleccionar tipo...</option>
-                    <option value="ASIGNAR">Asignar</option>
-                    <option value="TRANSFERENCIA">Transferencia</option>
                     <option value="PRESTAMO">Préstamo</option>
-                    <option value="DEVOLUCION">Devolución</option>
-                    <option value="REUBICACION">Reubicación</option>
+                    <option value="TRANSFERENCIA">Transferencia</option>
+                    <option value="REGULARIZACION">Regularización</option>
                   </select>
                   <label>Tipo de Movimiento <span class="text-danger">*</span></label>
                   <div class="invalid-feedback"></div>
@@ -395,8 +393,35 @@
 
               <div class="col-md-6 d-none" id="mover-devolucion-wrap">
                 <div class="form-floating form-floating-outline">
-                  <input type="date" class="form-control" id="mover-devolucion" name="fecha_devolucion_programada">
-                  <label>Fecha de devolución <span class="text-danger">*</span></label>
+                  <input type="date" class="form-control" id="mover-devolucion" name="fecha_devolucion_estimada">
+                  <label>Fecha estimada de devolución <span class="text-danger">*</span></label>
+                  <div class="invalid-feedback"></div>
+                </div>
+              </div>
+
+              {{-- Solo REGULARIZACION: corrección de condición / situación --}}
+              <div class="col-md-6 d-none" id="mover-condicion-wrap">
+                <div class="form-floating form-floating-outline">
+                  <select class="form-select" id="mover-condicion" name="condicion_actual">
+                    <option value="">Sin cambio de condición</option>
+                    @foreach (\App\Models\Activo::CONDICION_LABELS as $code => $label)
+                      <option value="{{ $code }}">{{ $label }}</option>
+                    @endforeach
+                  </select>
+                  <label>Condición (regularizar)</label>
+                  <div class="invalid-feedback"></div>
+                </div>
+              </div>
+
+              <div class="col-md-6 d-none" id="mover-situacion-wrap">
+                <div class="form-floating form-floating-outline">
+                  <select class="form-select" id="mover-situacion" name="situacion_actual">
+                    <option value="">Sin cambio de situación</option>
+                    @foreach (\App\Models\Activo::SITUACION_LABELS as $code => $label)
+                      <option value="{{ $code }}">{{ $label }}</option>
+                    @endforeach
+                  </select>
+                  <label>Situación (regularizar)</label>
                   <div class="invalid-feedback"></div>
                 </div>
               </div>

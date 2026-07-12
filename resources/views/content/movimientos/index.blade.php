@@ -12,8 +12,17 @@
       Movimientos de activos
     </span>
   </h4>
-  <p class="text-muted fw-light mb-5">Seguimiento de asignaciones, transferencias, órdenes de salida, movimientos internos
-    y regularizaciones.</p>
+  <p class="text-muted fw-light mb-5">Movimientos internos OTI: préstamos, transferencias y regularizaciones.
+    Los préstamos se cierran registrando su devolución.</p>
+
+  @php
+    $movs = collect($movimientos);
+    $kTotal = $movs->count();
+    $kPrestamos = $movs->where('tipo', 'PRESTAMO')->count();
+    $kPendientes = $movs->where('es_prestamo_pendiente', true)->count();
+    $kTransfer = $movs->where('tipo', 'TRANSFERENCIA')->count();
+    $kRegular = $movs->where('tipo', 'REGULARIZACION')->count();
+  @endphp
 
   <!-- KPIs -->
   <div class="row g-4">
@@ -24,13 +33,9 @@
           <div class="d-flex align-items-start justify-content-between">
             <div>
               <span class="fw-semibold d-block mb-1">Total movimientos</span>
-              <h3 class="mb-2">486</h3>
-              <small class="text-success fw-semibold">
-                <i class="bx bx-up-arrow-alt"></i>
-                28 este mes
-              </small>
+              <h3 class="mb-2">{{ $kTotal }}</h3>
+              <small class="text-muted fw-semibold">Registrados en el sistema</small>
             </div>
-
             <div class="avatar">
               <span class="avatar-initial rounded bg-label-primary">
                 <i class="bx bx-transfer-alt"></i>
@@ -46,16 +51,13 @@
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
-              <span class="fw-semibold d-block mb-1">Formales</span>
-              <h3 class="mb-2">314</h3>
-              <small class="text-warning fw-semibold">
-                Requieren trámite / SIGA
-              </small>
+              <span class="fw-semibold d-block mb-1">Préstamos</span>
+              <h3 class="mb-2">{{ $kPrestamos }}</h3>
+              <small class="text-warning fw-semibold">{{ $kPendientes }} pendiente(s) de devolución</small>
             </div>
-
             <div class="avatar">
               <span class="avatar-initial rounded bg-label-warning">
-                <i class="bx bx-file"></i>
+                <i class="bx bx-time-five"></i>
               </span>
             </div>
           </div>
@@ -68,16 +70,13 @@
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
-              <span class="fw-semibold d-block mb-1">Internos</span>
-              <h3 class="mb-2">172</h3>
-              <small class="text-info fw-semibold">
-                Con evidencia interna
-              </small>
+              <span class="fw-semibold d-block mb-1">Transferencias</span>
+              <h3 class="mb-2">{{ $kTransfer }}</h3>
+              <small class="text-info fw-semibold">Cambios de responsable/ubicación</small>
             </div>
-
             <div class="avatar">
               <span class="avatar-initial rounded bg-label-info">
-                <i class="bx bx-support"></i>
+                <i class="bx bx-git-compare"></i>
               </span>
             </div>
           </div>
@@ -90,16 +89,13 @@
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
-              <span class="fw-semibold d-block mb-1">Pendientes</span>
-              <h3 class="mb-2">14</h3>
-              <small class="text-danger fw-semibold">
-                Aprobación o ejecución
-              </small>
+              <span class="fw-semibold d-block mb-1">Regularizaciones</span>
+              <h3 class="mb-2">{{ $kRegular }}</h3>
+              <small class="text-secondary fw-semibold">Correcciones con sustento</small>
             </div>
-
             <div class="avatar">
-              <span class="avatar-initial rounded bg-label-danger">
-                <i class="bx bx-time-five"></i>
+              <span class="avatar-initial rounded bg-label-secondary">
+                <i class="bx bx-edit"></i>
               </span>
             </div>
           </div>
@@ -115,7 +111,7 @@
     <div class="card-header">
       <h5 class="mb-0">Filtros de búsqueda</h5>
       <small class="text-muted">
-        Filtra por tipo, estado, flujo, SIGA, ticket, responsable o fechas.
+        Filtra por tipo, estado, devolución, responsable o fechas.
       </small>
     </div>
 
@@ -131,23 +127,8 @@
           <label class="form-label">Tipo de movimiento</label>
           <select class="form-select">
             <option selected>Todos</option>
-            <option>Asignación</option>
+            <option>Préstamo</option>
             <option>Transferencia</option>
-            <option>Orden de salida</option>
-            <option>Reingreso</option>
-            <option>Desplazamiento interno</option>
-            <option>Préstamo temporal</option>
-            <option>Devolución interna</option>
-            <option>Regularización</option>
-          </select>
-        </div>
-
-        <div class="col-lg-3 col-md-6">
-          <label class="form-label">Flujo</label>
-          <select class="form-select">
-            <option selected>Todos</option>
-            <option>Formal</option>
-            <option>Interno</option>
             <option>Regularización</option>
           </select>
         </div>
@@ -156,10 +137,7 @@
           <label class="form-label">Estado</label>
           <select class="form-select">
             <option selected>Todos</option>
-            <option>Registrado</option>
-            <option>Pendiente trámite</option>
-            <option>En trámite</option>
-            <option>Autorizado</option>
+            <option>Borrador</option>
             <option>Ejecutado</option>
             <option>Observado</option>
             <option>Cancelado</option>
@@ -167,13 +145,13 @@
         </div>
 
         <div class="col-lg-3 col-md-6">
-          <label class="form-label">Estado SIGA</label>
+          <label class="form-label">Devolución</label>
           <select class="form-select">
-            <option selected>Todos</option>
-            <option>No aplica</option>
-            <option>Pendiente actualización</option>
-            <option>Registrado</option>
-            <option>Observado</option>
+            <option selected>Todas</option>
+            <option>Pendiente</option>
+            <option>Devuelto</option>
+            <option>Devuelto (observado)</option>
+            <option>Vencido</option>
           </select>
         </div>
 
@@ -224,7 +202,7 @@
             <th class="fw-bold">Origen</th>
             <th class="fw-bold">Destino</th>
             <th class="fw-bold">Estado</th>
-            <th class="fw-bold">SIGA</th>
+            <th class="fw-bold">Devolución</th>
             <th class="fw-bold">Realizado por</th>
             <th class="fw-bold">Fecha</th>
             <th class="fw-bold">Acciones</th>
@@ -239,6 +217,9 @@
 @section('page-script')
   <script>
     window.movimientos = @json($movimientos);
+    window.routes = {
+      devolver: '{{ route('movimientos.devolver', ['id' => '__ID__']) }}'
+    };
   </script>
   @vite(['resources/js/vendors/index.js', 'resources/js/pages/movimientos/movimientos-table.js'])
 @endsection

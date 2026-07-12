@@ -163,9 +163,10 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     Route::get('/documentos/{id}/descargar', [DocumentoAdjuntoController::class, 'download'])->name('documentos.download');
     Route::delete('/documentos/{id}', [DocumentoAdjuntoController::class, 'destroy'])->name('documentos.destroy');
 
-    // Gestión de Movimientos (asignar, transferir, prestar, devolver, reubicar, baja)
+    // Gestión de Movimientos internos OTI (préstamo, transferencia, regularización)
     Route::get('/movimientos', [MovimientoController::class, 'index'])->name('movimientos.index');
     Route::post('/movimientos', [MovimientoController::class, 'store'])->name('movimientos.store');
+    Route::put('/movimientos/{id}/devolver', [MovimientoController::class, 'devolver'])->name('movimientos.devolver');
 
     // Mantenimientos (preventivo, correctivo, garantía, revisión técnica)
     Route::get('/mantenimientos', [MantenimientoController::class, 'index'])->name('mantenimientos.index');

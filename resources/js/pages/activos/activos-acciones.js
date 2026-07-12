@@ -5,19 +5,20 @@ import QRCode from 'qrcode';
 
 $(function () {
   const condicionBadge = {
+    NUEVO: 'bg-primary',
     BUENO: 'bg-success',
     REGULAR: 'bg-warning',
-    MALO: 'bg-danger',
-    OBSOLETO: 'bg-secondary'
+    MALO: 'bg-danger'
   };
 
   const situacionBadge = {
+    DISPONIBLE: 'bg-success',
     EN_USO: 'bg-primary',
-    EN_ALMACEN: 'bg-success',
+    EN_PRESTAMO: 'bg-info',
     EN_MANTENIMIENTO: 'bg-warning',
-    EN_DESPLAZAMIENTO: 'bg-info',
-    PENDIENTE_BAJA: 'bg-secondary',
-    DADO_DE_BAJA: 'bg-danger'
+    EN_PROVEEDOR: 'bg-warning',
+    OBSERVADO: 'bg-danger',
+    DADO_DE_BAJA: 'bg-secondary'
   };
 
   const tipoUbicacionBadge = {
@@ -98,11 +99,11 @@ $(function () {
     $('#info-serie').text(activo.numero_serie ?? '—');
     $('#info-responsable').text(activo.responsable_nombre ?? 'Sin asignar');
 
-    const condCls = condicionBadge[activo.condicion_nombre] ?? 'bg-secondary';
+    const condCls = condicionBadge[activo.condicion_actual] ?? 'bg-secondary';
     $('#info-condicion').html(`<span class="badge ${condCls}">${activo.condicion_nombre}</span>`);
 
-    const sitCls = situacionBadge[activo.situacion_nombre] ?? 'bg-secondary';
-    $('#info-situacion').html(`<span class="badge ${sitCls}">${activo.situacion_nombre.replace(/_/g, ' ')}</span>`);
+    const sitCls = situacionBadge[activo.situacion_actual] ?? 'bg-secondary';
+    $('#info-situacion').html(`<span class="badge ${sitCls}">${activo.situacion_nombre}</span>`);
 
     $('#info-fecha-adq').text(activo.fecha_adquisicion ?? '—');
     $('#info-valor').text(activo.valor_compra ? `S/. ${parseFloat(activo.valor_compra).toFixed(2)}` : '—');
@@ -349,52 +350,37 @@ $(function () {
 
   // Qué campos exige/permite cada tipo de movimiento (espejo de MovimientoController).
   // colaborador / ubicacion: 'req' (obligatorio), 'opt' (opcional) o false (oculto).
+  // regulariza: muestra los selects de condición/situación (solo REGULARIZACION).
   const MOV_CONFIG = {
-    ASIGNAR: {
+    PRESTAMO: {
       colaborador: 'req',
-      ubicacion: 'opt',
-      devolucion: false,
-      ayuda: 'Asigna el activo a un colaborador (queda EN USO).'
+      ubicacion: false,
+      devolucion: true,
+      regulariza: false,
+      ayuda: 'Préstamo temporal; requiere fecha estimada de devolución. El activo queda EN PRÉSTAMO.'
     },
     TRANSFERENCIA: {
       colaborador: 'req',
       ubicacion: 'opt',
       devolucion: false,
-      ayuda: 'Cambia el colaborador responsable (y opcionalmente la ubicación).'
+      regulariza: false,
+      ayuda: 'Cambia el responsable (y opcionalmente la ubicación). El activo queda EN USO.'
     },
-    PRESTAMO: {
-      colaborador: 'req',
-      ubicacion: 'opt',
-      devolucion: true,
-      ayuda: 'Préstamo temporal; requiere fecha de devolución programada.'
-    },
-    DEVOLUCION: {
-      colaborador: false,
+    REGULARIZACION: {
+      colaborador: 'opt',
       ubicacion: 'opt',
       devolucion: false,
-      ayuda: 'Devuelve el activo prestado: queda EN ALMACÉN y sin colaborador.'
-    },
-    REUBICACION: {
-      colaborador: false,
-      ubicacion: 'req',
-      devolucion: false,
-      ayuda: 'Solo cambia la ubicación física del activo.'
+      regulariza: true,
+      ayuda: 'Corrige responsable, ubicación, condición o situación con sustento. Exige motivo.'
     }
-    // La BAJA ya no es un movimiento rápido: se gestiona en el módulo de
-    // Bajas (propuesta → evaluación → expediente → aprobación → ejecución).
   };
 
-  // Máquina de estados (espejo de MovimientoController::TRANSICIONES): situación
-  // ACTUAL del activo permitida como origen de cada tipo. Sirve para deshabilitar
-  // en el modal los movimientos que no apliquen a los activos seleccionados.
   // Espejo de MovimientoController::OPERACIONES['origen']: situación ACTUAL
-  // admitida como origen de cada operación.
+  // admitida como origen de cada tipo. Deshabilita en el modal lo que no aplique.
   const MOV_DESDE = {
-    ASIGNAR: ['EN_ALMACEN'],
-    TRANSFERENCIA: ['EN_USO'],
-    PRESTAMO: ['EN_ALMACEN'],
-    DEVOLUCION: ['EN_DESPLAZAMIENTO'],
-    REUBICACION: ['EN_ALMACEN', 'EN_USO', 'EN_DESPLAZAMIENTO', 'EN_MANTENIMIENTO']
+    PRESTAMO: ['DISPONIBLE', 'EN_USO'],
+    TRANSFERENCIA: ['DISPONIBLE', 'EN_USO'],
+    REGULARIZACION: ['DISPONIBLE', 'EN_USO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO', 'EN_PROVEEDOR', 'OBSERVADO']
   };
 
   let idsParaMover = [];
@@ -402,7 +388,7 @@ $(function () {
   // Habilita solo los tipos válidos para TODOS los activos seleccionados.
   // Devuelve true si queda al menos un movimiento posible.
   function actualizarTiposDisponibles(ids) {
-    const situaciones = ids.map(id => window.activos.find(x => x.id_activo === id)?.situacion_nombre).filter(Boolean);
+    const situaciones = ids.map(id => window.activos.find(x => x.id_activo === id)?.situacion_actual).filter(Boolean);
 
     let hayValido = false;
     $('#mover-tipo option').each(function () {
@@ -418,7 +404,7 @@ $(function () {
   }
 
   function ocultarCamposMover() {
-    $('#mover-colaborador-wrap, #mover-ubicacion-wrap, #mover-devolucion-wrap').addClass('d-none');
+    $('#mover-colaborador-wrap, #mover-ubicacion-wrap, #mover-devolucion-wrap, #mover-condicion-wrap, #mover-situacion-wrap').addClass('d-none');
     $('#mover-tipo-ayuda').text('');
   }
 
@@ -445,7 +431,7 @@ $(function () {
 
     if (!hayValido) {
       const situaciones = [
-        ...new Set(ids.map(id => window.activos.find(x => x.id_activo === id)?.situacion_nombre).filter(Boolean))
+        ...new Set(ids.map(id => window.activos.find(x => x.id_activo === id)?.situacion_actual).filter(Boolean))
       ]
         .map(s => s.replace(/_/g, ' '))
         .join(', ');
@@ -496,6 +482,7 @@ $(function () {
     if (cfg.colaborador) $('#mover-colaborador-wrap').removeClass('d-none');
     if (cfg.ubicacion) $('#mover-ubicacion-wrap').removeClass('d-none');
     if (cfg.devolucion) $('#mover-devolucion-wrap').removeClass('d-none');
+    if (cfg.regulariza) $('#mover-condicion-wrap, #mover-situacion-wrap').removeClass('d-none');
   });
 
   function marcarError(sel, msg) {
@@ -513,6 +500,8 @@ $(function () {
     const colabDest = $('#mover-colaborador').val();
     const ubicDest = $('#mover-ubicacion').val();
     const fechaDev = $('#mover-devolucion').val();
+    const condReg = $('#mover-condicion').val();
+    const sitReg = $('#mover-situacion').val();
     const motivo = $('#mover-motivo').val();
 
     if (!tipo) {
@@ -530,8 +519,18 @@ $(function () {
       return;
     }
     if (cfg.devolucion && !fechaDev) {
-      marcarError('#mover-devolucion', 'Indica la fecha de devolución programada.');
+      marcarError('#mover-devolucion', 'Indica la fecha estimada de devolución.');
       return;
+    }
+    if (cfg.regulariza) {
+      if (!motivo) {
+        marcarError('#mover-motivo', 'La regularización exige un motivo.');
+        return;
+      }
+      if (!colabDest && !ubicDest && !condReg && !sitReg) {
+        marcarError('#mover-motivo', 'Indica al menos un dato a regularizar (responsable, ubicación, condición o situación).');
+        return;
+      }
     }
 
     btnMover.prop('disabled', true);
@@ -546,7 +545,9 @@ $(function () {
         tipo: tipo,
         id_colaborador_destino: cfg.colaborador && colabDest ? colabDest : null,
         id_ubicacion_destino: cfg.ubicacion && ubicDest ? ubicDest : null,
-        fecha_devolucion_programada: cfg.devolucion ? fechaDev : null,
+        fecha_devolucion_estimada: cfg.devolucion ? fechaDev : null,
+        condicion_actual: cfg.regulariza && condReg ? condReg : null,
+        situacion_actual: cfg.regulariza && sitReg ? sitReg : null,
         motivo: motivo || null
       },
 

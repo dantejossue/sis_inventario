@@ -1,30 +1,46 @@
 import dtDefaults from '../../plugins/datatables-defaults';
 import { initTooltips } from '../../plugins/bootstrap-tooltips';
+import $ from 'jquery';
+import Swal from 'sweetalert2';
 
-// Tipo persistido (enum TO BE de movimientos.tipo)
+// Tipo de movimiento interno OTI (brief §13)
 const tipoBadge = {
-  ASIGNACION: 'bg-label-primary',
+  PRESTAMO: 'bg-label-warning',
   TRANSFERENCIA: 'bg-label-info',
-  ORDEN_SALIDA: 'bg-label-warning',
-  REINGRESO: 'bg-label-success',
-  DESPLAZAMIENTO_INTERNO: 'bg-label-secondary',
-  PRESTAMO_TEMPORAL: 'bg-label-warning',
-  DEVOLUCION_INTERNA: 'bg-label-success',
-  REGULARIZACION: 'bg-label-danger'
+  REGULARIZACION: 'bg-label-primary'
 };
 
-// Color del estado del flujo del movimiento (REGISTRADO..EJECUTADO)
+const tipoLabel = {
+  PRESTAMO: 'Préstamo',
+  TRANSFERENCIA: 'Transferencia',
+  REGULARIZACION: 'Regularización'
+};
+
+// Estado del movimiento
 const estadoBadge = {
-  REGISTRADO: 'bg-label-secondary',
-  PENDIENTE_TRAMITE: 'bg-label-warning',
-  EN_TRAMITE: 'bg-label-info',
-  AUTORIZADO: 'bg-label-primary',
+  BORRADOR: 'bg-label-secondary',
   EJECUTADO: 'bg-success',
-  RECHAZADO: 'bg-label-danger',
+  OBSERVADO: 'bg-label-warning',
   CANCELADO: 'bg-label-dark'
 };
 
-// Texto vacío seguro
+// Estado de la devolución (solo préstamos)
+const devolucionBadge = {
+  NO_APLICA: 'bg-label-secondary',
+  PENDIENTE_DEVOLUCION: 'bg-label-warning',
+  DEVUELTO: 'bg-label-success',
+  DEVUELTO_OBSERVADO: 'bg-label-danger',
+  VENCIDO: 'bg-label-danger'
+};
+
+const devolucionLabel = {
+  NO_APLICA: '—',
+  PENDIENTE_DEVOLUCION: 'Pendiente',
+  DEVUELTO: 'Devuelto',
+  DEVUELTO_OBSERVADO: 'Devuelto (obs.)',
+  VENCIDO: 'Vencido'
+};
+
 const dash = '<span class="text-muted">—</span>';
 
 $(function () {
@@ -34,7 +50,6 @@ $(function () {
     processing: false,
     ajax: null,
     data: window.movimientos,
-    // order: [[4, 'desc']],
     order: [],
     columns: [
       {
@@ -43,50 +58,17 @@ $(function () {
       },
       {
         data: 'tipo',
-        render: t =>
-          `<span class="badge ${tipoBadge[t] ?? 'bg-label-secondary'}">${(t ?? '').replace(/_/g, ' ')}</span>`
-      },
-      // {
-      //   data: 'activos',
-      //   orderable: false,
-      //   render: arr => {
-      //     if (!arr || !arr.length) return dash;
-      //     const max = 4;
-      //     const chips = arr
-      //       .slice(0, max)
-      //       .map(c => `<span class="badge bg-label-dark me-1">${c}</span>`)
-      //       .join('');
-      //     const resto = arr.length > max ? `<span class="badge bg-label-secondary">+${arr.length - max}</span>` : '';
-      //     return chips + resto;
-      //   }
-      // },
-      // {
-      //   // Origen → destino: muestra colaborador y/o ubicación según corresponda
-      //   data: null,
-      //   orderable: false,
-      //   render: row => {
-      //     const linea = (label, origen, destino) => {
-      //       if (!origen && !destino) return '';
-      //       const o = origen || '—';
-      //       const d = destino || '—';
-      //       return `<div><span class="text-muted">${label}:</span> ${o} <i class="bx bx-right-arrow-alt"></i> <span class="fw-semibold">${d}</span></div>`;
-      //     };
-      //     const colab = linea('Colaborador', row.colaborador_origen, row.colaborador_destino);
-      //     const ubic = linea('Ubicación', row.ubicacion_origen, row.ubicacion_destino);
-      //     return colab + ubic || dash;
-      //   }
-      // },
-      {
-        // Origen → destino: muestra colaborador y/o ubicación según corresponda
-        data: 'ubicacion_origen',
-        orderable: false,
-        render: d => `<span class="fw-semibold">${d}</span>`
+        render: t => `<span class="badge ${tipoBadge[t] ?? 'bg-label-secondary'}">${tipoLabel[t] ?? t}</span>`
       },
       {
-        // Origen → destino: muestra colaborador y/o ubicación según corresponda
-        data: 'ubicacion_destino',
+        data: null,
         orderable: false,
-        render: d => `<span class="fw-semibold">${d}</span>`
+        render: row => row.colaborador_origen || row.ubicacion_origen || dash
+      },
+      {
+        data: null,
+        orderable: false,
+        render: row => row.colaborador_destino || row.ubicacion_destino || dash
       },
       {
         data: 'estado',
@@ -94,32 +76,94 @@ $(function () {
           `<span class="badge ${estadoBadge[e] ?? 'bg-label-secondary'} fw-bold">${(e ?? '').replace(/_/g, ' ')}</span>`
       },
       {
-        data: 'siga',
-        render: e =>
-          `<span class="badge ${estadoBadge[e] ?? 'bg-label-secondary'} fw-bold">${(e ?? '').replace(/_/g, ' ')}</span>`
-      },
-      {
-        data: 'fecha',
-        render: (d, t, row) => {
-          if (!d) return dash;
-          const dev = row.fecha_devolucion
-            ? `<small class="text-muted d-block">Dev. prog.: ${row.fecha_devolucion}</small>`
-            : '';
-          return `<span>${d}</span>${dev}`;
+        // Devolución (reemplaza la antigua columna SIGA, fuera de alcance)
+        data: 'estado_devolucion',
+        render: (e, t, row) => {
+          if (!e || e === 'NO_APLICA') return dash;
+          const cls = devolucionBadge[e] ?? 'bg-label-secondary';
+          const fechas = row.fecha_devolucion_real
+            ? `<small class="text-muted d-block">Devuelto: ${row.fecha_devolucion_real}</small>`
+            : row.fecha_devolucion_estimada
+              ? `<small class="text-muted d-block">Est.: ${row.fecha_devolucion_estimada}</small>`
+              : '';
+          return `<span class="badge ${cls} fw-bold">${devolucionLabel[e] ?? e}</span>${fechas}`;
         }
       },
-
       {
         data: 'registrado_por',
         render: d => d ?? dash
       },
       {
-        data: null,
+        data: 'fecha',
         render: d => d ?? dash
+      },
+      {
+        data: null,
+        orderable: false,
+        render: row =>
+          row.es_prestamo_pendiente
+            ? `<button class="btn btn-sm btn-label-success btn-devolver" data-id="${row.id_movimiento}" data-codigo="${row.codigo}">
+                 <i class="bx bx-undo me-1"></i>Devolver
+               </button>`
+            : dash
       }
     ]
   });
 
   window.tablaMovimientos.on('draw.dt', initTooltips);
   initTooltips();
+
+  // ── Devolución de préstamo ─────────────────────────────────────────
+  $(document).on('click', '.btn-devolver', function () {
+    const id = $(this).data('id');
+    const codigo = $(this).data('codigo');
+
+    Swal.fire({
+      title: `Devolver préstamo ${codigo}`,
+      html: `
+        <div class="text-start">
+          <label class="form-label mt-2">Condición de retorno</label>
+          <select id="swal-condicion" class="form-select">
+            <option value="BUENO">Bueno</option>
+            <option value="NUEVO">Nuevo</option>
+            <option value="REGULAR">Regular</option>
+            <option value="MALO">Malo</option>
+          </select>
+          <label class="form-label mt-3">Resultado</label>
+          <select id="swal-estado" class="form-select">
+            <option value="DEVUELTO">Conforme</option>
+            <option value="DEVUELTO_OBSERVADO">Observado</option>
+          </select>
+          <label class="form-label mt-3">Observación (opcional)</label>
+          <textarea id="swal-obs" class="form-control" rows="2"></textarea>
+        </div>`,
+      showCancelButton: true,
+      confirmButtonText: 'Registrar devolución',
+      cancelButtonText: 'Cancelar',
+      preConfirm: () => ({
+        condicion_retorno: document.getElementById('swal-condicion').value,
+        estado_devolucion: document.getElementById('swal-estado').value,
+        observacion_devolucion: document.getElementById('swal-obs').value
+      })
+    }).then(result => {
+      if (!result.isConfirmed) return;
+
+      $.ajax({
+        url: window.routes.devolver.replace('__ID__', id),
+        type: 'PUT',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        data: result.value,
+        success: res => {
+          Swal.fire({ icon: 'success', title: 'Devolución registrada', text: res.message, timer: 2200, showConfirmButton: false })
+            .then(() => window.location.reload());
+        },
+        error: xhr => {
+          const msg = xhr.responseJSON?.message
+            || Object.values(xhr.responseJSON?.errors ?? {})[0]?.[0]
+            || 'No se pudo registrar la devolución.';
+          Swal.fire({ icon: 'error', title: 'Error', text: msg });
+        }
+      });
+    });
+  });
 });

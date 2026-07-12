@@ -19,9 +19,13 @@ class DetalleMovimientoActivo extends Model
         'id_responsable_destino',
         'id_ubicacion_origen',
         'id_ubicacion_destino',
-        'condicion_salida_id',
-        'condicion_entrada_id',
-        'estado_revision',
+        'condicion_salida',
+        'condicion_retorno',
+        'situacion_anterior',
+        'situacion_resultante',
+        'resultado',
+        'observacion_salida',
+        'observacion_retorno',
         'observaciones',
     ];
 

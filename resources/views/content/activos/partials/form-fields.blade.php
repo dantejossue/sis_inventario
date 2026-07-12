@@ -89,18 +89,18 @@
 
           <div class="col-md-4">
             <div class="form-floating form-floating-outline">
-              <select class="form-select @error('id_condicion_actual') is-invalid @enderror" id="id_condicion_actual"
-                name="id_condicion_actual">
+              <select class="form-select @error('condicion_actual') is-invalid @enderror" id="condicion_actual"
+                name="condicion_actual">
                 <option value="">Seleccionar condición...</option>
-                @foreach ($condiciones as $c)
-                  <option value="{{ $c->id_estado_activo }}"
-                    {{ old('id_condicion_actual', $activo?->id_condicion_actual) == $c->id_estado_activo ? 'selected' : '' }}>
-                    {{ $c->nombre }}
+                @foreach ($condiciones as $code => $label)
+                  <option value="{{ $code }}"
+                    {{ old('condicion_actual', $activo?->condicion_actual ?? 'BUENO') == $code ? 'selected' : '' }}>
+                    {{ $label }}
                   </option>
                 @endforeach
               </select>
               <label>Condición <span class="text-danger">*</span></label>
-              @error('id_condicion_actual')
+              @error('condicion_actual')
                 <div class="invalid-feedback">{{ $message }}</div>
               @enderror
             </div>
@@ -108,21 +108,11 @@
 
           <div class="col-md-4">
             <div class="form-floating form-floating-outline">
-              <select class="form-select @error('id_situacion_actual') is-invalid @enderror" id="id_situacion_actual"
-                name="id_situacion_actual">
-                <option value="">Seleccionar situación</option>
-                <option value="EN_USO">En uso</option>
-                <option value="EN_ALMACEN">En almacén</option>
-                <option value="EN_DESPLAZAMIENTO">En desplazamiento</option>
-                <option value="EN_MANTENIMIENTO">En mantenimiento</option>
-                <option value="PENDEIENTE_DE_BAJA">Pendiente de baja</option>
-                <option value="DADO_DE_BAJA">Dado de baja</option>
-              </select>
-              <label>Situación <span class="text-danger">*</span></label>
-              @error('id_situacion_actual')
-                <div class="invalid-feedback">{{ $message }}</div>
-              @enderror
+              <input type="text" class="form-control" id="situacion_actual_info" readonly
+                value="{{ $activo ? ($situaciones[$activo->situacion_actual] ?? $activo->situacion_actual) : 'Se asigna automáticamente' }}">
+              <label>Situación</label>
             </div>
+            <small class="text-muted">La gestionan los movimientos (préstamo, transferencia, regularización).</small>
           </div>
 
           <div class="col-md-12">
