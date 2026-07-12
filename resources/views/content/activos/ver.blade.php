@@ -21,11 +21,6 @@
       'OBSERVADO' => 'danger',
       'DADO_DE_BAJA' => 'secondary',
   ];
-  $badgeValidacion = [
-      'VALIDADO' => ['success', 'Validado'],
-      'PENDIENTE_VALIDACION' => ['warning', 'Pendiente de validación'],
-      'OBSERVADO' => ['danger', 'Observado'],
-  ];
   $badgeEstadoMov = [
       'BORRADOR' => 'secondary',
       'EJECUTADO' => 'success',
@@ -82,17 +77,12 @@
   $responsable = $activo->responsable;
   $dependencia = $responsable?->sedeDependencia?->dependencia?->nombre_dependencia;
   $sedeResp = $responsable?->sedeDependencia?->sede?->nombre_sede;
-  $siga = $activo->patrimonialSiga;
   $tec = $activo->activoTecnico;
   $documentos = $activo->documentos->sortByDesc('creado_en')->values();
 
   $garantiaFin = $activo->garantia_fin ? Carbon::parse($activo->garantia_fin) : null;
   $garantiaVigente = $garantiaFin ? $garantiaFin->endOfDay()->isFuture() : null;
 
-  [$valColor, $valTexto] = $badgeValidacion[$activo->estado_validacion] ?? [
-      'secondary',
-      $tipoLegible($activo->estado_validacion),
-  ];
   $ultimoMovimiento = $movimientos->first()?->movimiento;
 @endphp
 
@@ -195,7 +185,6 @@
               <span
                 class="badge bg-label-{{ $badgeSituacion[$situacion->codigo] ?? 'secondary' }}">{{ $situacion->nombre }}</span>
             @endif
-            <span class="badge bg-label-{{ $valColor }}">{{ $valTexto }}</span>
           </div>
 
           <div class="asset-code-box mb-4">
@@ -377,13 +366,6 @@
             </button>
           </li>
         @endif
-
-        <li class="nav-item">
-          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-siga" role="tab">
-            <i class="bx bx-upload me-1"></i>
-            SIGA
-          </button>
-        </li>
 
         <li class="nav-item">
           <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-movimientos"
@@ -716,169 +698,6 @@
           <!-- / TAB TÉCNICO -->
         @endif
 
-        <!-- TAB SIGA -->
-        <div class="tab-pane fade" id="tab-siga" role="tabpanel">
-
-          @if ($siga)
-            <div class="alert alert-primary d-flex align-items-start">
-              <i class="bx bx-info-circle fs-4 me-2"></i>
-              <div>
-                <strong>Información patrimonial importada desde SIGA.</strong>
-                <p class="mb-0">
-                  Estos datos sirven como referencia oficial para el control operativo interno.
-                  @if ($activo->importacionSiga)
-                    Archivo: <strong>{{ $activo->importacionSiga->nombre_archivo }}</strong>
-                    ({{ $fmtFecha($activo->importacionSiga->creado_en) }}).
-                  @endif
-                </p>
-              </div>
-            </div>
-
-            <div class="row g-4">
-
-              <div class="col-lg-6">
-                <div class="section-card">
-                  <div class="section-card-header">
-                    <h6 class="mb-0">
-                      <i class="bx bx-file me-1"></i>
-                      Datos patrimoniales
-                    </h6>
-                  </div>
-
-                  <div class="section-card-body">
-                    <div class="data-list">
-                      <div class="data-list-item">
-                        <span>SBN</span>
-                        <strong>{{ $siga->sbn ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Descripción SIGA</span>
-                        <strong>{{ $siga->descripcion_siga ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Centro de costos</span>
-                        <strong>{{ $siga->centro_costos ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Unidad ejecutora</span>
-                        <strong>{{ $siga->unidad_ejecutora ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Cuenta contable</span>
-                        <strong>{{ $siga->cuenta_contable ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Estado conservación SIGA</span>
-                        <strong>{{ $siga->estado_conservacion_siga ?: '—' }}</strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-lg-6">
-                <div class="section-card">
-                  <div class="section-card-header">
-                    <h6 class="mb-0">
-                      <i class="bx bx-money me-1"></i>
-                      Datos de adquisición
-                    </h6>
-                  </div>
-
-                  <div class="section-card-body">
-                    <div class="data-list">
-                      <div class="data-list-item">
-                        <span>Proveedor SIGA</span>
-                        <strong>{{ $siga->proveedor_siga ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Fecha compra</span>
-                        <strong>{{ $fmtFecha($siga->fecha_compra) ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Fecha alta</span>
-                        <strong>{{ $fmtFecha($siga->fecha_alta) ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Valor adquisición</span>
-                        <strong>{{ $fmtMoneda($siga->valor_adquisicion) ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Valor en libros</span>
-                        <strong>{{ $fmtMoneda($siga->valor_libros) ?: '—' }}</strong>
-                      </div>
-
-                      <div class="data-list-item">
-                        <span>Valor neto</span>
-                        <strong>{{ $fmtMoneda($siga->valor_neto) ?: '—' }}</strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div class="col-12">
-                <div class="section-card">
-                  <div class="section-card-header">
-                    <h6 class="mb-0">
-                      <i class="bx bx-map me-1"></i>
-                      Ubicación SIGA vs ubicación operativa
-                    </h6>
-                  </div>
-
-                  <div class="section-card-body">
-                    <div class="row g-3">
-
-                      <div class="col-md-6">
-                        <div class="comparison-box">
-                          <span class="comparison-label">Ubicación registrada en SIGA</span>
-                          <strong>{{ $siga->sede_ubicacion_siga ?: ($siga->sede_siga ?: '—') }}</strong>
-                          <small>Código ubicación SIGA: {{ $siga->codigo_ubicacion_siga ?: '—' }}</small>
-                        </div>
-                      </div>
-
-                      <div class="col-md-6">
-                        <div class="comparison-box">
-                          <span class="comparison-label">Ubicación operativa actual</span>
-                          <strong>
-                            {{ $activo->ubicacion?->sede?->nombre_sede ? $activo->ubicacion->sede->nombre_sede . ' › ' : '' }}{{ $rutaUbicacion ?: 'Sin ubicación registrada' }}
-                          </strong>
-                          <small>Ubicación física controlada por OTI</small>
-                        </div>
-                      </div>
-
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          @else
-            <div class="text-center py-5">
-              <div class="rounded-5 p-4 d-inline-flex bg-label-secondary mb-3">
-                <i class="bx bx-unlink" style="font-size: 2.5rem;"></i>
-              </div>
-              <h5 class="mb-1">Sin información patrimonial SIGA</h5>
-              <p class="text-muted mb-0">
-                Este activo aún no tiene datos patrimoniales referenciales cargados.
-                Los códigos SIGA/patrimonial, PECOSA y orden de compra pueden
-                registrarse al editar el activo.
-              </p>
-            </div>
-          @endif
-
-        </div>
-        <!-- / TAB SIGA -->
-
         <!-- TAB MOVIMIENTOS -->
         <div class="tab-pane fade" id="tab-movimientos" role="tabpanel">
 
@@ -1192,10 +1011,6 @@
                       <strong>{{ $ultimoMovimiento ? $fmtFecha($ultimoMovimiento->fecha_movimiento ?: $ultimoMovimiento->fecha_registro) : '—' }}</strong>
                     </div>
 
-                    <div class="data-list-item">
-                      <span>Estado de validación</span>
-                      <span class="badge bg-label-{{ $valColor }}">{{ $valTexto }}</span>
-                    </div>
                   </div>
                 </div>
               </div>

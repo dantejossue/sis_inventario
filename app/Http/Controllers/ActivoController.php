@@ -112,7 +112,6 @@ class ActivoController extends Controller
             'modelo.marca', 'modelo.categoriaActivo', 'categoria',
             'responsable.sedeDependencia.dependencia', 'responsable.sedeDependencia.sede',
             'ubicacion.sede', 'activoTecnico',
-            'patrimonialSiga', 'importacionSiga',
             'creadoPor.colaborador', 'actualizadoPor.colaborador',
             'documentos.subidoPor.colaborador',
         ])->findOrFail($id);
@@ -162,20 +161,15 @@ class ActivoController extends Controller
         $eventos = collect();
 
         $origenes = [
-            'IMPORTADO_SIGA' => 'Activo importado desde el padrón SIGA',
             'EXCEL'          => 'Activo cargado desde Excel',
             'MANUAL'         => 'Activo registrado manualmente',
             'REGULARIZACION' => 'Activo registrado por regularización',
         ];
-        $detalleRegistro = 'Registrado por ' . $nombreUsuario($activo->creadoPor);
-        if ($activo->origen_registro === 'IMPORTADO_SIGA' && $activo->importacionSiga) {
-            $detalleRegistro .= ' · Archivo: ' . $activo->importacionSiga->nombre_archivo;
-        }
         $eventos->push([
             'fecha'   => $activo->creado_en,
             'titulo'  => $origenes[$activo->origen_registro] ?? 'Activo registrado',
-            'detalle' => $detalleRegistro,
-            'icono'   => $activo->origen_registro === 'IMPORTADO_SIGA' ? 'bx-upload' : 'bx-plus-circle',
+            'detalle' => 'Registrado por ' . $nombreUsuario($activo->creadoPor),
+            'icono'   => 'bx-plus-circle',
             'color'   => 'primary',
         ]);
 

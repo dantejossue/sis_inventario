@@ -59,7 +59,7 @@ class Activo extends Model
         'numero_pecosa', 'numero_orden_compra', 'fecha_alta_siga', 'numero_serie',
         'descripcion', 'imagen', 'fecha_adquisicion', 'valor_compra', 'proveedor',
         'garantia_inicio', 'garantia_fin', 'observaciones', 'qr_token',
-        'origen_registro', 'estado_validacion', 'estado_siga', 'id_importacion',
+        'origen_registro', 'estado_siga',
         'creado_por', 'actualizado_por',
     ];
 
@@ -108,18 +108,6 @@ class Activo extends Model
     public function categoria()
     {
         return $this->belongsTo(CategoriaActivo::class, 'id_categoria', 'id_categoria');
-    }
-
-    /** Datos patrimoniales oficiales importados desde SIGA (1-a-1). */
-    public function patrimonialSiga()
-    {
-        return $this->hasOne(ActivoPatrimonialSiga::class, 'id_activo', 'id_activo');
-    }
-
-    /** Lote de importación SIGA del que proviene el activo, si aplica. */
-    public function importacionSiga()
-    {
-        return $this->belongsTo(ImportacionSiga::class, 'id_importacion', 'id_importacion');
     }
 
     /** Participaciones del activo en movimientos (detalle por activo). */

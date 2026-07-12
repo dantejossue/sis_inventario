@@ -45,13 +45,10 @@ return new class extends Migration
                 'EN_PROVEEDOR', 'OBSERVADO', 'DADO_DE_BAJA',
             ])->default('DISPONIBLE');
 
-            // ── Origen y validación ───────────────────────────────────
-            $table->enum('origen_registro', ['MANUAL', 'EXCEL', 'REGULARIZACION', 'IMPORTADO_SIGA'])->default('MANUAL');
-            // Flag "pendiente de actualización en SIGA" a nivel de activo (dato referencial).
+            // ── Origen de registro ────────────────────────────────────
+            $table->enum('origen_registro', ['MANUAL', 'EXCEL', 'REGULARIZACION'])->default('MANUAL');
+            // Flag referencial "pendiente de actualización en SIGA" a nivel de activo.
             $table->enum('estado_siga', ['NO_APLICA', 'PENDIENTE_ACTUALIZACION', 'REGISTRADO', 'OBSERVADO'])->default('NO_APLICA');
-            // Columnas dormidas: solo las usa el importador SIGA (fuera de alcance inicial).
-            $table->enum('estado_validacion', ['VALIDADO', 'PENDIENTE_VALIDACION', 'OBSERVADO'])->default('VALIDADO');
-            $table->integer('id_importacion')->nullable();
 
             // ── Auditoría ─────────────────────────────────────────────
             $table->integer('creado_por')->nullable();
@@ -65,7 +62,6 @@ return new class extends Migration
             $table->foreign('id_categoria')->references('id_categoria')->on('categoria_activo')->nullOnDelete();
             $table->foreign('id_ubicacion_actual', 'fk_activo_ubicacion')->references('id_ubicacion')->on('ubicaciones')->nullOnDelete();
             $table->foreign('id_responsable_actual')->references('id_colaborador')->on('colaboradores')->nullOnDelete();
-            $table->foreign('id_importacion')->references('id_importacion')->on('importaciones_siga')->nullOnDelete();
             $table->foreign('creado_por')->references('id_usuario')->on('usuarios')->nullOnDelete();
             $table->foreign('actualizado_por')->references('id_usuario')->on('usuarios')->nullOnDelete();
 

@@ -66,8 +66,7 @@
       "icon": "menu-icon icon-base bx bx-collection",
       "slug": [
         "categorias",
-        "marcas",
-        "estados"
+        "marcas"
       ],
       "roles": [
         "ADMINISTRADOR",
@@ -83,11 +82,6 @@
           "url": "marcas",
           "name": "Marcas y Modelos",
           "slug": "marcas.index"
-        },
-        {
-          "url": "estados",
-          "name": "Estados y Condiciones",
-          "slug": "estados.index"
         }
       ]
     },

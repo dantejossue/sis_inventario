@@ -50,7 +50,6 @@ use App\Http\Controllers\form_layouts\VerticalForm;
 use App\Http\Controllers\form_layouts\HorizontalForm;
 use App\Http\Controllers\tables\Basic as TablesBasic;
 use App\Http\Controllers\CategoriaActivoController;
-use App\Http\Controllers\EstadoActivoController;
 use App\Http\Controllers\MarcaController;
 use App\Http\Controllers\ProveedorController;
 use App\Http\Controllers\UsuarioController;
@@ -58,7 +57,6 @@ use App\Http\Controllers\ActivoController;
 use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\BajaActivoController;
-use App\Http\Controllers\ImportacionSigaController;
 use App\Http\Controllers\ReporteController;
 use App\Http\Controllers\AuditoriaController;
 
@@ -142,11 +140,6 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     Route::put('/modelos/{id}', [MarcaController::class, 'updateModelo'])->name('modelos.update');
     Route::post('/modelos/{id}/toggle-estado', [MarcaController::class, 'toggleEstadoModelo'])->name('modelos.toggle-estado');
 
-    Route::get('/estados', [EstadoActivoController::class, 'index'])->name('estados.index');
-    Route::post('/estados', [EstadoActivoController::class, 'store'])->name('estados.store');
-    Route::put('/estados/{id}', [EstadoActivoController::class, 'update'])->name('estados.update');
-    Route::post('/estados/{id}/toggle-estado', [EstadoActivoController::class, 'toggleEstado'])->name('estados.toggle-estado');
-
     // Gestión de Activos TI
     Route::get('/activos', [ActivoController::class, 'index'])->name('activos.index');
     Route::get('/activos/etiquetas', [ActivoController::class, 'etiquetas'])->name('activos.etiquetas');
@@ -186,14 +179,6 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     Route::put('/bajas/{id}/ejecutar', [BajaActivoController::class, 'ejecutar'])->name('bajas.ejecutar');
     Route::put('/bajas/{id}/rechazar', [BajaActivoController::class, 'rechazar'])->name('bajas.rechazar');
 
-    // Importación SIGA — FUERA DE ALCANCE INICIAL (brief §5/§11). Módulo dormido:
-    // el controlador, vistas y migraciones se conservan, pero se retira del flujo
-    // (menú + rutas) porque se construyó sobre el modelo patrimonial anterior.
-    // Reactivar y realinear al modelo ENUM en una versión futura.
-    // Route::get('/importaciones', [ImportacionSigaController::class, 'index'])->name('importaciones.index');
-    // Route::get('/importaciones/plantilla', [ImportacionSigaController::class, 'plantilla'])->name('importaciones.plantilla');
-    // Route::post('/importaciones', [ImportacionSigaController::class, 'store'])->name('importaciones.store');
-    // Route::get('/importaciones/{id}', [ImportacionSigaController::class, 'show'])->name('importaciones.show');
   });
 
   // ── Reportes y Auditoría (ADMINISTRADOR + SERVICIOS_GENERALES) ──────
