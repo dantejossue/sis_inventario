@@ -59,6 +59,7 @@ use App\Http\Controllers\MovimientoController;
 use App\Http\Controllers\MantenimientoController;
 use App\Http\Controllers\BajaActivoController;
 use App\Http\Controllers\ImportacionSigaController;
+use App\Http\Controllers\ReporteController;
 
 // Main Page Route
 // ==========================================
@@ -192,6 +193,11 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     // Route::get('/importaciones/plantilla', [ImportacionSigaController::class, 'plantilla'])->name('importaciones.plantilla');
     // Route::post('/importaciones', [ImportacionSigaController::class, 'store'])->name('importaciones.store');
     // Route::get('/importaciones/{id}', [ImportacionSigaController::class, 'show'])->name('importaciones.show');
+  });
+
+  // ── Reportes (ADMINISTRADOR + SERVICIOS_GENERALES consultan) ────────
+  Route::middleware('role:ADMINISTRADOR,SERVICIOS_GENERALES')->group(function () {
+    Route::get('/reportes', [ReporteController::class, 'index'])->name('reportes.index');
   });
 });
 
