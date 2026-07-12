@@ -184,11 +184,14 @@ Route::middleware(['auth', 'activo', 'no.cache'])->group(function () {
     Route::put('/bajas/{id}/ejecutar', [BajaActivoController::class, 'ejecutar'])->name('bajas.ejecutar');
     Route::put('/bajas/{id}/rechazar', [BajaActivoController::class, 'rechazar'])->name('bajas.rechazar');
 
-    // Importación SIGA (padrón patrimonial → base operativa)
-    Route::get('/importaciones', [ImportacionSigaController::class, 'index'])->name('importaciones.index');
-    Route::get('/importaciones/plantilla', [ImportacionSigaController::class, 'plantilla'])->name('importaciones.plantilla');
-    Route::post('/importaciones', [ImportacionSigaController::class, 'store'])->name('importaciones.store');
-    Route::get('/importaciones/{id}', [ImportacionSigaController::class, 'show'])->name('importaciones.show');
+    // Importación SIGA — FUERA DE ALCANCE INICIAL (brief §5/§11). Módulo dormido:
+    // el controlador, vistas y migraciones se conservan, pero se retira del flujo
+    // (menú + rutas) porque se construyó sobre el modelo patrimonial anterior.
+    // Reactivar y realinear al modelo ENUM en una versión futura.
+    // Route::get('/importaciones', [ImportacionSigaController::class, 'index'])->name('importaciones.index');
+    // Route::get('/importaciones/plantilla', [ImportacionSigaController::class, 'plantilla'])->name('importaciones.plantilla');
+    // Route::post('/importaciones', [ImportacionSigaController::class, 'store'])->name('importaciones.store');
+    // Route::get('/importaciones/{id}', [ImportacionSigaController::class, 'show'])->name('importaciones.show');
   });
 });
 

@@ -868,14 +868,11 @@
                 <i class="bx bx-unlink" style="font-size: 2.5rem;"></i>
               </div>
               <h5 class="mb-1">Sin información patrimonial SIGA</h5>
-              <p class="text-muted mb-3">
-                Este activo aún no está conciliado con el padrón patrimonial.
-                Puedes vincularlo mediante una importación SIGA.
+              <p class="text-muted mb-0">
+                Este activo aún no tiene datos patrimoniales referenciales cargados.
+                Los códigos SIGA/patrimonial, PECOSA y orden de compra pueden
+                registrarse al editar el activo.
               </p>
-              <a href="{{ route('importaciones.index') }}" class="btn btn-outline-primary">
-                <i class="bx bx-upload me-1"></i>
-                Ir a Importación SIGA
-              </a>
             </div>
           @endif
 
