@@ -74,16 +74,7 @@ class MovimientoController extends Controller
             'situacion_actual'          => ['nullable', 'in:' . implode(',', Activo::SITUACIONES)],
             'motivo'                    => 'nullable|string|max:500',
             'observaciones'             => 'nullable|string|max:500',
-            'tipo_documento'            => 'nullable|string|max:100',
-            // Documento de sustento OBLIGATORIO (acta de entrega / conformidad, etc.).
-            'documento'                 => ['required', 'file', 'max:5120', function ($attr, $value, $fail) {
-                $ext = strtolower($value->getClientOriginalExtension());
-                $ok = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar'];
-                if (! in_array($ext, $ok, true)) {
-                    $fail('Formato de documento no permitido (.' . $ext . ').');
-                }
-            }],
-        ], [
+        ] + $this->reglaDocumentoSustento(), [
             'tipo.required'       => 'Debes seleccionar un tipo de movimiento.',
             'activo_ids.required' => 'Debes seleccionar al menos un activo.',
             'documento.required'  => 'Adjunta el documento de sustento del movimiento (acta de entrega/conformidad).',
@@ -253,9 +244,10 @@ class MovimientoController extends Controller
             'condicion_retorno'      => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
             'estado_devolucion'      => ['required', 'in:DEVUELTO,DEVUELTO_OBSERVADO'],
             'observacion_devolucion' => 'nullable|string|max:500',
-        ], [
+        ] + $this->reglaDocumentoSustento(), [
             'condicion_retorno.required' => 'Indica en qué condición retorna el activo.',
             'estado_devolucion.required' => 'Indica si la devolución es conforme u observada.',
+            'documento.required'         => 'Adjunta el documento de sustento de la devolución (acta de conformidad de retorno).',
         ]);
 
         $mov = Movimiento::with('detalles')->findOrFail($id);
@@ -297,6 +289,9 @@ class MovimientoController extends Controller
         });
 
         $ids = $mov->detalles->pluck('id_activo')->all();
+
+        // Documento de sustento de la devolución (acta de conformidad de retorno).
+        $this->guardarSustento($mov, $request);
 
         AuditoriaCambio::registrar('MOVIMIENTO', $mov->id_movimiento, 'CERRAR', null, [
             'codigo'            => $mov->codigo_movimiento,
@@ -385,6 +380,20 @@ class MovimientoController extends Controller
             ->whereIn('roles.nombre', ['JEFE_AREA', 'ADMINISTRADOR'])
             ->orderByRaw("FIELD(roles.nombre,'JEFE_AREA','ADMINISTRADOR')")
             ->value('usuarios.id_usuario');
+    }
+
+    /** Regla de validación del documento de sustento (obligatorio). */
+    private function reglaDocumentoSustento(): array
+    {
+        return [
+            'tipo_documento' => 'nullable|string|max:100',
+            'documento'      => ['required', 'file', 'max:5120', function ($attr, $value, $fail) {
+                $ext = strtolower($value->getClientOriginalExtension());
+                if (! in_array($ext, ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar'], true)) {
+                    $fail('Formato de documento no permitido (.' . $ext . ').');
+                }
+            }],
+        ];
     }
 
     /** Guarda el documento de sustento del movimiento (disco privado 'local'). */

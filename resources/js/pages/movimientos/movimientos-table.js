@@ -226,25 +226,54 @@ $(function () {
             <option value="DEVUELTO">Conforme</option>
             <option value="DEVUELTO_OBSERVADO">Observado</option>
           </select>
+          <label class="form-label mt-3">Tipo de documento</label>
+          <select id="swal-tipodoc" class="form-select">
+            <option value="ACTA_RETORNO">Acta de conformidad de retorno</option>
+            <option value="ACTA_ENTREGA">Acta de entrega</option>
+            <option value="OFICIO">Oficio / memorando</option>
+            <option value="OTRO">Otro</option>
+          </select>
+          <label class="form-label mt-3">Documento de sustento <span class="text-danger">*</span></label>
+          <input type="file" id="swal-doc" class="form-control" accept=".pdf,.jpg,.jpeg,.png,.webp,.xls,.xlsx,.doc,.docx,.zip,.rar">
           <label class="form-label mt-3">Observación (opcional)</label>
           <textarea id="swal-obs" class="form-control" rows="2"></textarea>
         </div>`,
       showCancelButton: true,
       confirmButtonText: 'Registrar devolución',
       cancelButtonText: 'Cancelar',
-      preConfirm: () => ({
-        condicion_retorno: document.getElementById('swal-condicion').value,
-        estado_devolucion: document.getElementById('swal-estado').value,
-        observacion_devolucion: document.getElementById('swal-obs').value
-      })
+      preConfirm: () => {
+        const doc = document.getElementById('swal-doc').files[0];
+        if (!doc) {
+          Swal.showValidationMessage('Adjunta el documento de sustento (acta de conformidad de retorno).');
+          return false;
+        }
+        return {
+          condicion_retorno: document.getElementById('swal-condicion').value,
+          estado_devolucion: document.getElementById('swal-estado').value,
+          tipo_documento: document.getElementById('swal-tipodoc').value,
+          observacion_devolucion: document.getElementById('swal-obs').value,
+          documento: doc
+        };
+      }
     }).then(result => {
       if (!result.isConfirmed) return;
+      const v = result.value;
+
+      const fd = new FormData();
+      fd.append('_method', 'PUT'); // spoofing: PHP no parsea archivos en PUT multipart
+      fd.append('condicion_retorno', v.condicion_retorno);
+      fd.append('estado_devolucion', v.estado_devolucion);
+      fd.append('tipo_documento', v.tipo_documento);
+      if (v.observacion_devolucion) fd.append('observacion_devolucion', v.observacion_devolucion);
+      fd.append('documento', v.documento);
 
       $.ajax({
         url: window.routes.devolver.replace('__ID__', id),
-        type: 'PUT',
+        type: 'POST',
         headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
-        data: result.value,
+        data: fd,
+        processData: false,
+        contentType: false,
         success: res => {
           Swal.fire({ icon: 'success', title: 'Devolución registrada', text: res.message, timer: 2200, showConfirmButton: false })
             .then(() => window.location.reload());
