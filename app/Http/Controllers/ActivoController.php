@@ -33,9 +33,18 @@ class ActivoController extends Controller
             ->map(fn($a) => static::formatActivo($a, $ubicacionesPorId))
             ->values();
 
-        $colaboradores = Colaborador::where('estado', 'ACTIVO')
-            ->orderBy('per_apepat')
-            ->get(['id_colaborador', 'per_nombre', 'per_apepat', 'per_apemat', 'cargo']);
+        // Para el modal de movimiento: nombre completo + dependencia (para el
+        // select2 con subtexto). Sin cargo (por pedido).
+        $colaboradores = Colaborador::with('sedeDependencia.dependencia')
+            ->where('estado', 'ACTIVO')
+            ->orderBy('per_apepat')->orderBy('per_apemat')->orderBy('per_nombre')
+            ->get()
+            ->map(fn($c) => [
+                'id'          => $c->id_colaborador,
+                'nombre'      => trim("{$c->per_apepat} " . ($c->per_apemat ? "{$c->per_apemat} " : '') . ", {$c->per_nombre}"),
+                'dependencia' => $c->sedeDependencia?->dependencia?->nombre_dependencia ?? 'Sin dependencia',
+            ])
+            ->values();
 
         $ubicaciones = Ubicacion::with('sede:id_sede,nombre_sede')
             ->where('estado', 'ACTIVO')
@@ -471,7 +480,8 @@ class ActivoController extends Controller
         'antivirus',
         'accesorios',
         'observaciones_tecnicas',
-        'estado_operativo',
+        // estado_operativo NO se captura al registrar: lo gestiona el módulo de
+        // mantenimientos. Se conserva su valor (default OPERATIVO al crear la ficha).
     ];
 
     /** Reglas de validación de la ficha técnica (todas opcionales). */
@@ -491,7 +501,6 @@ class ActivoController extends Controller
             'tec_antivirus'              => 'nullable|string|max:100',
             'tec_accesorios'             => 'nullable|string|max:255',
             'tec_observaciones_tecnicas' => 'nullable|string|max:1000',
-            'tec_estado_operativo'       => 'nullable|in:OPERATIVO,INOPERATIVO,EN_REVISION,EN_MANTENIMIENTO,PENDIENTE_BAJA,DADO_DE_BAJA',
         ];
     }
 
@@ -515,8 +524,9 @@ class ActivoController extends Controller
             $valor = $request->input("tec_{$campo}");
             $datos[$campo] = is_string($valor) && trim($valor) !== '' ? trim($valor) : null;
         }
-        $datos['estado_operativo'] = $datos['estado_operativo'] ?: 'OPERATIVO';
 
+        // No se toca estado_operativo aquí: al crear usa el default OPERATIVO y al
+        // actualizar se conserva el valor que fijó el módulo de mantenimientos.
         ActivoTecnico::updateOrCreate(['id_activo' => $activo->id_activo], $datos);
     }
 

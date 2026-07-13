@@ -93,13 +93,24 @@
       ]
     },
     {
-      "url": "movimientos",
       "name": "Movimientos",
       "icon": "menu-icon icon-base bx bx-transfer",
-      "slug": "movimientos.index",
+      "slug": "movimientos",
       "roles": [
         "ADMINISTRADOR",
         "ALMACEN"
+      ],
+      "submenu": [
+        {
+          "url": "movimientos",
+          "name": "Lista",
+          "slug": "movimientos.index"
+        },
+        {
+          "url": "javascript:void(0)",
+          "name": "Ver",
+          "slug": "movimientos.ver"
+        }
       ]
     },
     {

@@ -31,28 +31,37 @@ class MovimientoController extends Controller
         'PRESTAMO' => [
             'situacion' => 'EN_PRESTAMO',
             'origen'    => ['DISPONIBLE', 'EN_USO'],
-            'colaborador' => true, 'ubicacion' => false, 'devolucion' => true,
+            'colaborador' => true,
+            'ubicacion' => false,
+            'devolucion' => true,
         ],
         'TRANSFERENCIA' => [
             'situacion' => 'EN_USO',
             'origen'    => ['DISPONIBLE', 'EN_USO'],
-            'colaborador' => true, 'ubicacion' => false, 'devolucion' => false,
+            'colaborador' => true,
+            'ubicacion' => false,
+            'devolucion' => false,
         ],
         'REGULARIZACION' => [
             'situacion' => null, // se toma del input o se conserva
             'origen'    => ['DISPONIBLE', 'EN_USO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO', 'EN_PROVEEDOR', 'OBSERVADO'],
-            'colaborador' => false, 'ubicacion' => false, 'devolucion' => false,
+            'colaborador' => false,
+            'ubicacion' => false,
+            'devolucion' => false,
         ],
     ];
 
     public function index()
     {
         $movimientos = Movimiento::with([
-                'detalles.activo:id_activo,codigo_interno,codigo_patrimonial',
-                'detalles.responsableOrigen', 'detalles.responsableDestino',
-                'detalles.ubicacionOrigen', 'detalles.ubicacionDestino',
-                'registradoPor.colaborador', 'documentos.subidoPor',
-            ])
+            'detalles.activo:id_activo,codigo_interno,codigo_patrimonial',
+            'detalles.responsableOrigen',
+            'detalles.responsableDestino',
+            'detalles.ubicacionOrigen',
+            'detalles.ubicacionDestino',
+            'registradoPor.colaborador',
+            'documentos.subidoPor',
+        ])
             ->orderByDesc('fecha_movimiento')
             ->get()
             ->map(fn($m) => $this->formatMovimiento($m))
@@ -65,10 +74,14 @@ class MovimientoController extends Controller
     public function show(int $id)
     {
         $mov = Movimiento::with([
-            'detalles.activo.modelo.marca', 'detalles.activo.categoria',
-            'detalles.responsableOrigen', 'detalles.responsableDestino',
-            'detalles.ubicacionOrigen', 'detalles.ubicacionDestino',
-            'registradoPor.colaborador', 'documentos.subidoPor.colaborador',
+            'detalles.activo.modelo.marca',
+            'detalles.activo.categoria',
+            'detalles.responsableOrigen',
+            'detalles.responsableDestino',
+            'detalles.ubicacionOrigen',
+            'detalles.ubicacionDestino',
+            'registradoPor.colaborador',
+            'documentos.subidoPor.colaborador',
         ])->findOrFail($id);
 
         return view('content.movimientos.ver', compact('mov'));
@@ -108,8 +121,10 @@ class MovimientoController extends Controller
                 throw ValidationException::withMessages(['motivo' => 'La regularización exige un motivo.']);
             }
             $cambios = array_filter([
-                $request->id_colaborador_destino, $request->id_ubicacion_destino,
-                $request->condicion_actual, $request->situacion_actual,
+                $request->id_colaborador_destino,
+                $request->id_ubicacion_destino,
+                $request->condicion_actual,
+                $request->situacion_actual,
             ]);
             if (empty($cambios)) {
                 throw ValidationException::withMessages(['motivo' => 'Indica al menos un dato a regularizar (responsable, ubicación, condición o situación).']);
@@ -280,7 +295,7 @@ class MovimientoController extends Controller
 
             foreach ($mov->detalles as $det) {
                 // Vuelve bien → DISPONIBLE; vuelve mal → OBSERVADO.
-                $situacionRetorno = $observado ? 'OBSERVADO' : 'DISPONIBLE';
+                $situacionRetorno = $observado ? 'OBSERVADO' : 'EN_USO';
 
                 $det->update([
                     'condicion_retorno'    => $request->condicion_retorno,

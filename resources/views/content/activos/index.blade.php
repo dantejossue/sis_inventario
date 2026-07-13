@@ -296,9 +296,9 @@
        MODAL — MOVER ACTIVO(S)
   ════════════════════════════════════════════════════════════════════════════ --}}
   <div class="modal fade" id="modalMover" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg" role="document">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
       <div class="modal-content">
-        <div class="modal-header border-bottom py-5">
+        <div class="modal-header border-bottom py-4">
           <h5 class="modal-title fw-bold d-flex align-items-center">
             <i class="bx bx-transfer me-2"></i> Registrar Movimiento
           </h5>
@@ -308,113 +308,95 @@
         <form id="formMover">
           @csrf
           <input type="hidden" id="mover-activo-ids" name="activo_ids_json">
-          <div class="modal-body py-5 px-5">
+          <div class="modal-body py-4">
 
             {{-- Lista de activos a mover --}}
-            <div class="mb-4">
+            <div class="mb-3">
               <p class="fw-semibold mb-2 text-muted small text-uppercase">Activos seleccionados:</p>
               <div id="mover-lista-activos" class="d-flex flex-wrap gap-2"></div>
             </div>
 
-            <div class="row g-4">
+            {{-- Formulario vertical (campos apilados) --}}
+            <div class="d-flex flex-column gap-3">
 
-              <div class="col-md-6">
-                <div class="form-floating form-floating-outline">
-                  <select class="form-select" id="mover-tipo" name="tipo">
-                    <option value="">Seleccionar tipo...</option>
-                    <option value="PRESTAMO">Préstamo</option>
-                    <option value="TRANSFERENCIA">Transferencia</option>
-                    <option value="REGULARIZACION">Regularización</option>
-                  </select>
-                  <label>Tipo de Movimiento <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback"></div>
-                </div>
+              <div>
+                <label class="form-label">Tipo de Movimiento <span class="text-danger">*</span></label>
+                <select class="form-select" id="mover-tipo" name="tipo">
+                  <option value="">Seleccionar tipo...</option>
+                  <option value="PRESTAMO">Préstamo</option>
+                  <option value="TRANSFERENCIA">Transferencia</option>
+                  <option value="REGULARIZACION">Regularización</option>
+                </select>
+                <div class="invalid-feedback"></div>
                 <small class="text-muted" id="mover-tipo-ayuda"></small>
               </div>
 
-              <div class="col-md-6 d-none" id="mover-colaborador-wrap">
-                <div class="form-floating form-floating-outline">
-                  <select class="form-select" id="mover-colaborador" name="id_colaborador_destino">
-                    <option value="">Seleccionar colaborador...</option>
-                    @foreach ($colaboradores as $col)
-                      <option value="{{ $col->id_colaborador }}">
-                        {{ $col->per_apepat }} {{ $col->per_apemat }}, {{ $col->per_nombre }}
-                        @if ($col->cargo)
-                          — {{ $col->cargo }}
-                        @endif
-                      </option>
-                    @endforeach
-                  </select>
-                  <label>Colaborador destino <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback"></div>
-                </div>
+              {{-- Colaborador actual (deshabilitado) + destino (Select2) --}}
+              <div class="d-none" id="mover-colaborador-wrap">
+                <label class="form-label">Colaborador actual</label>
+                <input type="text" class="form-control bg-label-secondary mb-3" id="mover-colaborador-actual" disabled
+                  placeholder="—">
+
+                <label class="form-label">Colaborador destino <span class="text-danger">*</span></label>
+                <select class="form-select" id="mover-colaborador" name="id_colaborador_destino"></select>
+                <div class="invalid-feedback"></div>
               </div>
 
-              <div class="col-md-6 d-none" id="mover-ubicacion-wrap">
-                <div class="form-floating form-floating-outline">
-                  <select class="form-select" id="mover-ubicacion" name="id_ubicacion_destino">
-                    <option value="">Sin cambio de ubicación</option>
-                    @foreach ($ubicaciones->groupBy(fn($u) => $u->sede?->nombre_sede ?? 'Sin sede') as $sedeNombre => $items)
-                      <optgroup label="{{ $sedeNombre }}">
-                        @foreach ($items as $u)
-                          <option value="{{ $u->id_ubicacion }}">
-                            {{ $u->nombre }} ({{ $u->tipo }}){{ $u->codigo ? ' — ' . $u->codigo : '' }}
-                          </option>
-                        @endforeach
-                      </optgroup>
-                    @endforeach
-                  </select>
-                  <label>Ubicación destino</label>
-                  <div class="invalid-feedback"></div>
-                </div>
+              <div class="d-none" id="mover-ubicacion-wrap">
+                <label class="form-label">Ubicación destino</label>
+                <select class="form-select" id="mover-ubicacion" name="id_ubicacion_destino">
+                  <option value="">Sin cambio de ubicación</option>
+                  @foreach ($ubicaciones->groupBy(fn($u) => $u->sede?->nombre_sede ?? 'Sin sede') as $sedeNombre => $items)
+                    <optgroup label="{{ $sedeNombre }}">
+                      @foreach ($items as $u)
+                        <option value="{{ $u->id_ubicacion }}">
+                          {{ $u->nombre }} ({{ $u->tipo }}){{ $u->codigo ? ' — ' . $u->codigo : '' }}
+                        </option>
+                      @endforeach
+                    </optgroup>
+                  @endforeach
+                </select>
+                <div class="invalid-feedback"></div>
               </div>
 
-              <div class="col-md-6 d-none" id="mover-devolucion-wrap">
-                <div class="form-floating form-floating-outline">
-                  <input type="date" class="form-control" id="mover-devolucion" name="fecha_devolucion_estimada">
-                  <label>Fecha estimada de devolución <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback"></div>
-                </div>
+              <div class="d-none" id="mover-devolucion-wrap">
+                <label class="form-label">Fecha estimada de devolución <span class="text-danger">*</span></label>
+                <input type="date" class="form-control" id="mover-devolucion" name="fecha_devolucion_estimada">
+                <div class="invalid-feedback"></div>
               </div>
 
               {{-- Solo REGULARIZACION: corrección de condición / situación --}}
-              <div class="col-md-6 d-none" id="mover-condicion-wrap">
-                <div class="form-floating form-floating-outline">
-                  <select class="form-select" id="mover-condicion" name="condicion_actual">
-                    <option value="">Sin cambio de condición</option>
-                    @foreach (\App\Models\Activo::CONDICION_LABELS as $code => $label)
-                      <option value="{{ $code }}">{{ $label }}</option>
-                    @endforeach
-                  </select>
-                  <label>Condición (regularizar)</label>
-                  <div class="invalid-feedback"></div>
-                </div>
+              <div class="d-none" id="mover-condicion-wrap">
+                <label class="form-label">Condición (regularizar)</label>
+                <select class="form-select" id="mover-condicion" name="condicion_actual">
+                  <option value="">Sin cambio de condición</option>
+                  @foreach (\App\Models\Activo::CONDICION_LABELS as $code => $label)
+                    <option value="{{ $code }}">{{ $label }}</option>
+                  @endforeach
+                </select>
+                <div class="invalid-feedback"></div>
               </div>
 
-              <div class="col-md-6 d-none" id="mover-situacion-wrap">
-                <div class="form-floating form-floating-outline">
-                  <select class="form-select" id="mover-situacion" name="situacion_actual">
-                    <option value="">Sin cambio de situación</option>
-                    @foreach (\App\Models\Activo::SITUACION_LABELS as $code => $label)
-                      <option value="{{ $code }}">{{ $label }}</option>
-                    @endforeach
-                  </select>
-                  <label>Situación (regularizar)</label>
-                  <div class="invalid-feedback"></div>
-                </div>
+              <div class="d-none" id="mover-situacion-wrap">
+                <label class="form-label">Situación (regularizar)</label>
+                <select class="form-select" id="mover-situacion" name="situacion_actual">
+                  <option value="">Sin cambio de situación</option>
+                  @foreach (\App\Models\Activo::SITUACION_LABELS as $code => $label)
+                    <option value="{{ $code }}">{{ $label }}</option>
+                  @endforeach
+                </select>
+                <div class="invalid-feedback"></div>
               </div>
 
-              <div class="col-md-12">
-                <div class="form-floating form-floating-outline">
-                  <textarea class="form-control" id="mover-motivo" name="motivo" placeholder="Motivo u observaciones"
-                    style="height:80px"></textarea>
-                  <label>Motivo / Observaciones</label>
-                  <div class="invalid-feedback"></div>
-                </div>
+              <div>
+                <label class="form-label">Motivo / Observaciones</label>
+                <textarea class="form-control" id="mover-motivo" name="motivo" rows="2"
+                  placeholder="Motivo u observaciones"></textarea>
+                <div class="invalid-feedback"></div>
               </div>
 
-              {{-- Documento de sustento OBLIGATORIO (acta de entrega / conformidad de retorno, etc.) --}}
-              <div class="col-md-5">
+              {{-- Documento de sustento OBLIGATORIO --}}
+              <div>
                 <label class="form-label" for="mover-tipo-doc">Tipo de documento</label>
                 <select class="form-select" id="mover-tipo-doc" name="tipo_documento">
                   <option value="ACTA_ENTREGA">Acta de entrega</option>
@@ -425,7 +407,7 @@
                 </select>
               </div>
 
-              <div class="col-md-7">
+              <div>
                 <label class="form-label" for="mover-documento">
                   Documento de sustento <span class="text-danger">*</span>
                 </label>

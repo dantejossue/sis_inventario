@@ -356,19 +356,6 @@
 
           <div class="col-md-4">
             <div class="form-floating form-floating-outline">
-              <select class="form-select" id="tec_estado_operativo" name="tec_estado_operativo">
-                @php $eo = old('tec_estado_operativo', $tec?->estado_operativo ?? 'OPERATIVO'); @endphp
-                @foreach (['OPERATIVO', 'INOPERATIVO', 'EN_REVISION', 'EN_MANTENIMIENTO', 'PENDIENTE_BAJA', 'DADO_DE_BAJA'] as $opt)
-                  <option value="{{ $opt }}" {{ $eo === $opt ? 'selected' : '' }}>
-                    {{ str_replace('_', ' ', $opt) }}</option>
-                @endforeach
-              </select>
-              <label>Estado Operativo</label>
-            </div>
-          </div>
-
-          <div class="col-md-3">
-            <div class="form-floating form-floating-outline">
               <input type="text" class="form-control" id="tec_nombre_equipo" name="tec_nombre_equipo"
                 value="{{ old('tec_nombre_equipo', $tec?->nombre_equipo) }}" placeholder="Ej: PC-OTI-01">
               <label>Nombre de Equipo</label>

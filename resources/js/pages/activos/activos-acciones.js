@@ -348,6 +348,47 @@ $(function () {
   const btnMover = $('#btnConfirmarMover');
   const spinnerMov = btnMover.find('.spinner-border');
 
+  // Select2 del colaborador destino (mismo diseño que el modal Nuevo Modelo):
+  // dropdownParent al form + width 100%. Muestra nombre completo y, debajo, la
+  // dependencia del colaborador (sin cargo).
+  function formatColaborador(c) {
+    if (!c.id) return c.text;
+    const dep = c.element ? c.element.dataset.dependencia || '' : '';
+    return $(`<div><div>${c.text}</div><small class="text-muted">${dep}</small></div>`);
+  }
+  if ($.fn.select2) {
+    $('#mover-colaborador').select2({
+      dropdownParent: $('#formMover'),
+      width: '100%',
+      placeholder: 'Seleccionar colaborador...',
+      templateResult: formatColaborador,
+      templateSelection: c => c.text
+    });
+  }
+
+  // Rellena el "colaborador actual" (deshabilitado) y el destino EXCLUYENDO al
+  // responsable actual (no tiene sentido mover un activo a su mismo responsable).
+  function poblarColaboradores(ids) {
+    const activos = ids.map(id => window.activos.find(a => a.id_activo === id)).filter(Boolean);
+    const respIds = [...new Set(activos.map(a => a.id_responsable_actual).filter(Boolean))];
+    const respNombres = [...new Set(activos.map(a => a.responsable_nombre).filter(Boolean))];
+
+    $('#mover-colaborador-actual').val(
+      respNombres.length === 1 ? respNombres[0] : respNombres.length > 1 ? 'Varios responsables' : '—'
+    );
+
+    const $sel = $('#mover-colaborador');
+    $sel.empty().append(new Option('', '', true, true));
+    (window.colaboradores || [])
+      .filter(c => !respIds.includes(c.id))
+      .forEach(c => {
+        const o = new Option(c.nombre, c.id, false, false);
+        o.dataset.dependencia = c.dependencia || '';
+        $sel.append(o);
+      });
+    $sel.val(null).trigger('change');
+  }
+
   // Qué campos exige/permite cada tipo de movimiento (espejo de MovimientoController).
   // colaborador / ubicacion: 'req' (obligatorio), 'opt' (opcional) o false (oculto).
   // regulariza: muestra los selects de condición/situación (solo REGULARIZACION).
@@ -444,6 +485,9 @@ $(function () {
       });
       return;
     }
+
+    // Colaborador actual (deshabilitado) + destino sin el responsable actual.
+    poblarColaboradores(ids);
 
     modalMover.modal('show');
   }

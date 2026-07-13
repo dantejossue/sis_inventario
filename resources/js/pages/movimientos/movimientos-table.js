@@ -120,8 +120,26 @@ $(function () {
     ]
   });
 
-  window.tablaMovimientos.on('draw.dt', initTooltips);
+  function initRowDropdowns() {
+    document.querySelectorAll('#miTablaMovimientos [data-bs-toggle="dropdown"]').forEach(element => {
+      bootstrap.Dropdown.getOrCreateInstance(element, {
+        boundary: document.body,
+        popperConfig(defaultConfig) {
+          return {
+            ...defaultConfig,
+            strategy: 'fixed'
+          };
+        }
+      });
+    });
+  }
+
+  window.tablaMovimientos.on('draw.dt', function () {
+    initTooltips();
+    initRowDropdowns();
+  });
   initTooltips();
+  initRowDropdowns();
 
   // ── Eliminar movimiento ────────────────────────────────────────────
   $(document).on('click', '.btn-eliminar-mov', function () {
@@ -171,8 +189,9 @@ $(function () {
     if (fin && (!fecha || fecha > fin)) return false;
     return true;
   });
-  $('#filtro-tipo, #filtro-devolucion, #filtro-responsable, #filtro-fecha-inicio, #filtro-fecha-fin')
-    .on('change', () => window.tablaMovimientos.draw());
+  $('#filtro-tipo, #filtro-devolucion, #filtro-responsable, #filtro-fecha-inicio, #filtro-fecha-fin').on('change', () =>
+    window.tablaMovimientos.draw()
+  );
   $('#filtro-reset').on('click', function () {
     $('#filtro-tipo, #filtro-devolucion, #filtro-fecha-inicio, #filtro-fecha-fin').val('');
     $('#filtro-responsable').val('').trigger('change');

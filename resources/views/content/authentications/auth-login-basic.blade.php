@@ -19,13 +19,14 @@
               <a href="{{ url('/') }}" class="app-brand-link">
                 {{-- <span class="app-brand-logo demo">@include('_partials.macros')</span>
                 <span class="app-brand-text demo text-heading fw-bold">{{ config('variables.templateName') }}</span> --}}
-                <img src="{{ asset('assets/img/undc/escudo-undc.png') }}" alt="Logo OTI UNDC" width="120"
+                <img src="{{ asset('assets/img/undc/oti-inventario.png') }}" alt="Logo OTI UNDC" width="300"
                   class="img-fluid">
               </a>
             </div>
             <!-- /Logo -->
-            <h4 class="mb-1 text-center text-primary font-w-bold">Inicio de Sesión</h4>
-            <p class="mb-6 text-center">Sistema de Gestión de Activos Tecnlógicos</p>
+            <div class="divider border-top"></div>
+            <h4 class="mb-1 text-center text-primary fw-bold pb-2">Inicio de Sesión</h4>
+            {{-- <p class="mb-6 text-center">Sistema de Gestión de Activos Tecnlógicos</p> --}}
 
             <form id="formAuthentication" class="mb-6" action="{{ route('login.post') }}" method="POST">
               @csrf
@@ -74,9 +75,9 @@
                     <input class="form-check-input" type="checkbox" id="remember-me" />
                     <label class="form-check-label" for="remember-me"> Recuérdame </label>
                   </div>
-                  <a href="{{ url('auth/forgot-password-basic') }}">
+                  {{-- <a href="{{ url('auth/forgot-password-basic') }}">
                     <span>¿Olvidaste tu contraseña?</span>
-                  </a>
+                  </a> --}}
                 </div>
               </div>
               <div class="mb-6">
