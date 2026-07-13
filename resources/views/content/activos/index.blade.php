@@ -44,6 +44,18 @@
       display: flex;
       align-items: center;
     }
+
+    /* Modal de mover: pegado arriba; si el contenido excede la pantalla, hace
+       scroll el overlay completo (comportamiento estándar; el modal-dialog-scrollable
+       de este build de Sneat dejaba parte del modal fuera de pantalla sin scroll). */
+    #modalMover.modal {
+      overflow-y: auto !important;
+    }
+
+    #modalMover .modal-dialog {
+      margin: 1.5rem auto !important;
+      align-items: flex-start !important;
+    }
   </style>
 
   <h4 class="fw-bold mb-0">
@@ -296,7 +308,7 @@
        MODAL — MOVER ACTIVO(S)
   ════════════════════════════════════════════════════════════════════════════ --}}
   <div class="modal fade" id="modalMover" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable" role="document">
+    <div class="modal-dialog" role="document">
       <div class="modal-content">
         <div class="modal-header border-bottom py-4">
           <h5 class="modal-title fw-bold d-flex align-items-center">
@@ -334,8 +346,8 @@
               {{-- Colaborador actual (deshabilitado) + destino (Select2) --}}
               <div class="d-none" id="mover-colaborador-wrap">
                 <label class="form-label">Colaborador actual</label>
-                <input type="text" class="form-control bg-label-secondary mb-3" id="mover-colaborador-actual" disabled
-                  placeholder="—">
+                <input type="text" class="form-control bg-label-secondary mb-3" id="mover-colaborador-actual"
+                  disabled placeholder="—">
 
                 <label class="form-label">Colaborador destino <span class="text-danger">*</span></label>
                 <select class="form-select" id="mover-colaborador" name="id_colaborador_destino"></select>
