@@ -3,8 +3,8 @@
 @section('title', 'Sedes - OTI')
 
 @section('content')
-  <h4 class="mb-4 fw-bold text-primary d-flex align-items-center">
-    <i class="bx bx-buildings me-2"></i> Gestión de Sedes (Campus)
+  <h4 class="mb-4 fw-bold text-secondary d-flex align-items-center">
+    <i class="bx bx-buildings me-2"></i> Gestión de Sedes
   </h4>
 
   <div class="card">
@@ -141,7 +141,7 @@
           </div>
         </div>
 
-        <div class="modal-body py-5 d-none" id="dep-body">
+        {{-- <div class="modal-body py-5 d-none" id="dep-body">
           @if ($dependencias->isEmpty())
             <div class="alert alert-warning mb-0">
               No hay dependencias registradas. Crea una desde el módulo de Dependencias.
@@ -167,6 +167,85 @@
               @endforeach
             </div>
           @endif
+        </div> --}}
+
+        <div class="modal-body py-5 d-none" id="dep-body">
+
+          @if ($dependencias->isEmpty())
+            <div class="alert alert-warning mb-0">
+              No hay dependencias registradas. Crea una desde el módulo de Dependencias.
+            </div>
+          @else
+            {{-- BUSCADOR --}}
+            <div class="input-group input-group-merge mb-3">
+              <span class="input-group-text">
+                <i class="bx bx-search"></i>
+              </span>
+
+              <input type="text" class="form-control" id="buscarDependencia" placeholder="Buscar dependencia..."
+                autocomplete="off">
+            </div>
+
+            {{-- CONTROLES --}}
+            <div class="d-flex justify-content-between align-items-center mb-3">
+
+              <div class="d-flex align-items-center gap-3">
+
+                <div class="form-check mb-0">
+                  <input class="form-check-input" type="checkbox" id="seleccionarTodasDeps">
+
+                  <label class="form-check-label" for="seleccionarTodasDeps">
+                    Seleccionar visibles
+                  </label>
+                </div>
+
+                <button type="button" class="btn btn-sm btn-label-secondary" id="limpiarDependencias">
+                  Limpiar
+                </button>
+
+              </div>
+
+              <span class="badge bg-label-primary" id="contadorDependencias">
+                0 seleccionadas
+              </span>
+
+            </div>
+
+            {{-- LISTADO --}}
+            <div id="listaDependencias" class="border rounded" style="max-height: 400px; overflow-y: auto;">
+
+              @foreach ($dependencias as $dep)
+                <label class="dep-item d-flex align-items-start gap-3 px-3 py-3 border-bottom mb-0"
+                  for="dep_{{ $dep->id_dependencia }}" data-nombre="{{ strtolower($dep->nombre_dependencia) }}"
+                  style="cursor: pointer;">
+
+                  <input class="form-check-input dep-check mt-1" type="checkbox" id="dep_{{ $dep->id_dependencia }}"
+                    value="{{ $dep->id_dependencia }}">
+
+                  <div class="flex-grow-1">
+
+                    <span class="fw-semibold d-block">
+                      {{ $dep->nombre_dependencia }}
+                    </span>
+
+                    <small class="text-secondary">
+                      {{ $dep->descripcion ?: 'Sin descripción' }}
+                    </small>
+
+                  </div>
+
+                </label>
+              @endforeach
+
+            </div>
+
+            <div id="sinResultadosDependencias" class="text-center text-muted py-4 d-none">
+              <i class="bx bx-search fs-3 d-block mb-2"></i>
+              No se encontraron dependencias.
+            </div>
+
+          @endif
+
         </div>
 
         <div class="modal-footer border-top py-5">

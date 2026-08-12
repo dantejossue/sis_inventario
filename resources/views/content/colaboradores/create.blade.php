@@ -5,7 +5,7 @@
 @section('content')
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
-      <h4 class="mb-0 fw-bold text-primary d-flex align-items-center">
+      {{-- <h4 class="mb-0 fw-bold text-primary d-flex align-items-center">
         <i class="bx bx-user-plus me-2"></i>Nuevo Colaborador
       </h4>
       <nav aria-label="breadcrumb">
@@ -13,9 +13,18 @@
           <li class="breadcrumb-item"><a href="{{ route('colaboradores.index') }}">Colaboradores</a></li>
           <li class="breadcrumb-item active">Nuevo</li>
         </ol>
-      </nav>
+      </nav> --}}
+      <h4 class="fw-bold mb-0">
+        <span class="text-secondary d-block d-md-inline">
+          <a class="text-secondary" href="{{ route('colaboradores.index') }}">Colaboradores</a>
+        </span>
+        <span class="d-none d-md-inline"> / </span>
+        <span class="d-block d-md-inline">
+          Nuevo
+        </span>
+      </h4>
     </div>
-    <a href="{{ route('colaboradores.index') }}" class="btn btn-label-secondary">
+    <a href="{{ route('colaboradores.index') }}" class="btn btn-secondary">
       <i class="bx bx-arrow-back me-1"></i> Volver
     </a>
   </div>

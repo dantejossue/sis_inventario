@@ -3,8 +3,18 @@
 @section('title', 'Colaboradores - OTI')
 
 @section('content')
-  <h4 class="mb-4 fw-bold text-primary d-flex align-items-center">
-    <i class="bx bx-group me-2"></i> Gestión de Colaboradores
+  {{-- <h4 class="mb-4 fw-bold text-secondary d-flex align-items-center">
+    <i class="bx bx-group me-1"></i> Gestión de Colaboradores
+  </h4> --}}
+
+  <h4 class="fw-bold mb-4">
+    <span class="text-secondary d-block d-md-inline">
+      Gestión Principal
+    </span>
+    <span class="d-none d-md-inline"> / </span>
+    <span class="d-block d-md-inline">
+      Colaboradores
+    </span>
   </h4>
 
   @if (session('success'))
@@ -14,7 +24,7 @@
     </div>
   @endif
 
-  <div class="card">
+  <div class="card rounded-4">
     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
       <h5 class="mb-0 fw-bold">Lista de Colaboradores</h5>
       <a href="{{ route('colaboradores.create') }}" class="btn btn-primary">

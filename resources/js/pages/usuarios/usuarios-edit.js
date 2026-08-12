@@ -50,7 +50,9 @@ $(function () {
           data.nombre_usuario = res.data.nombre_usuario;
           data.id_rol = res.data.id_rol;
           data.rol = res.data.rol;
-          row.data(data).draw(false);
+          row.invalidate().draw(false);
+
+          // row.data(data).draw(false);
         }
 
         Swal.mixin({

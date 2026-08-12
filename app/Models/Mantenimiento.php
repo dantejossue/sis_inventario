@@ -13,17 +13,38 @@ class Mantenimiento extends Model
     public $timestamps = false;
 
     /** Estados en los que el mantenimiento sigue abierto (activo intervenido). */
-    public const ESTADOS_ABIERTOS = ['SOLICITADO', 'EN_REVISION', 'EN_MANTENIMIENTO', 'DERIVADO_PROVEEDOR'];
+    public const ESTADOS_ABIERTOS = ['REGISTRADO', 'EN_ATENCION'];
 
-    /** Estados de resultado al finalizar la atención técnica. */
-    public const ESTADOS_RESULTADO = ['ATENDIDO', 'SIN_REPARACION', 'RECOMENDADO_BAJA'];
+    /** Estados terminales del proceso. */
+    public const ESTADOS_FINALES = ['FINALIZADO', 'CANCELADO'];
+
+    /** Resultado técnico independiente del estado de proceso. */
+    public const RESULTADOS_ATENCION = ['OPERATIVO', 'RECOMENDADO_BAJA'];
+
+    // Flujo anterior (fuera de uso). Se conserva comentado como referencia histórica:
+    // ESTADOS_ABIERTOS  = ['SOLICITADO', 'EN_REVISION', 'EN_MANTENIMIENTO', 'DERIVADO_PROVEEDOR'];
+    // ESTADOS_RESULTADO = ['ATENDIDO', 'SIN_REPARACION', 'RECOMENDADO_BAJA'];  (CERRADO era terminal)
 
     protected $fillable = [
-        'id_activo', 'solicitado_por', 'registrado_por', 'tecnico_responsable',
-        'tipo_mantenimiento', 'origen_reporte', 'prioridad',
-        'descripcion', 'diagnostico', 'proveedor', 'costo',
-        'fecha_reporte', 'fecha_inicio', 'fecha_fin',
-        'resultado', 'recomienda_baja', 'estado',
+        'id_activo',
+        'solicitado_por',
+        'registrado_por',
+        'tecnico_responsable',
+        'tipo_mantenimiento',
+        'modalidad_atencion',
+        // 'origen_reporte',
+        // 'prioridad',
+        'descripcion',
+        'diagnostico',
+        'proveedor',
+        'costo',
+        'fecha_reporte',
+        'fecha_inicio',
+        'fecha_fin',
+        'resultado',
+        'resultado_atencion',
+        'recomienda_baja',
+        'estado',
     ];
 
     protected $casts = [
@@ -60,6 +81,13 @@ class Mantenimiento extends Model
     public function tecnicoResponsable()
     {
         return $this->belongsTo(Colaborador::class, 'tecnico_responsable', 'id_colaborador');
+    }
+
+    /** Historial cronológico de avances técnicos. */
+    public function avances()
+    {
+        return $this->hasMany(MantenimientoAvance::class, 'id_mantenimiento', 'id_mantenimiento')
+            ->orderBy('creado_en');
     }
 
     /** Evidencias adjuntas (documentos transversales). */

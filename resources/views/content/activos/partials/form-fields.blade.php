@@ -118,6 +118,24 @@
             {{-- <small class="text-muted">La gestionan los movimientos (préstamo, transferencia, regularización).</small> --}}
           </div>
 
+          @if ($activo)
+            {{-- Motivo del cambio de condición: solo en edición. Se muestra/exige (vía JS
+                 y validación en el servidor) únicamente si cambia la condición física.
+                 Alimenta el historial de condición del activo. --}}
+            <div class="col-md-12 d-none" id="motivo-condicion-wrap">
+              <div class="form-floating form-floating-outline">
+                <textarea class="form-control @error('motivo_condicion') is-invalid @enderror" id="motivo_condicion"
+                  name="motivo_condicion" style="height: 80px" placeholder="Motivo del cambio de condición"
+                  data-condicion-original="{{ $activo->condicion_actual }}">{{ old('motivo_condicion') }}</textarea>
+                <label>Motivo del cambio de condición <span class="text-danger">*</span></label>
+                @error('motivo_condicion')
+                  <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+                <small class="text-muted">Requerido solo si cambias la condición física. Queda registrado en el historial del activo.</small>
+              </div>
+            </div>
+          @endif
+
           <div class="col-md-12">
             <div class="form-floating form-floating-outline">
               <input type="text" class="form-control @error('descripcion') is-invalid @enderror" id="descripcion"

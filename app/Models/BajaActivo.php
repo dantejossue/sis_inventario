@@ -12,26 +12,34 @@ class BajaActivo extends Model
     // La BD gestiona creado_en / actualizado_en
     public $timestamps = false;
 
-    /** Estados en los que la baja sigue en curso (previos a EJECUTADA/RECHAZADA). */
-    public const ESTADOS_ABIERTOS = ['REGISTRADA', 'EN_EVALUACION', 'RECOMENDADA', 'VALIDADA'];
+    /** Estados de proceso (flujo simplificado). */
+    public const ESTADOS = ['REGISTRADA', 'EJECUTADA', 'RECHAZADA'];
+
+    /** Estado en el que la baja sigue en curso (única propuesta pendiente). */
+    public const ESTADOS_ABIERTOS = ['REGISTRADA'];
 
     public const CAUSALES = [
-        'DANO', 'OBSOLESCENCIA_TECNICA', 'MANTENIMIENTO_ONEROSO', 'SIN_REPARACION',
+        'DANO_IRREPARABLE', 'OBSOLESCENCIA', 'REPARACION_NO_CONVENIENTE',
         'RAEE', 'SUSTRACCION', 'OTRO',
     ];
 
+    // Flujo anterior (fuera de uso). Referencia histórica:
+    // ESTADOS_ABIERTOS = ['REGISTRADA', 'EN_EVALUACION', 'RECOMENDADA', 'VALIDADA'];
+    // CAUSALES viejas   = ['DANO', 'OBSOLESCENCIA_TECNICA', 'MANTENIMIENTO_ONEROSO', 'SIN_REPARACION', 'RAEE', 'SUSTRACCION', 'OTRO'];
+    // La evaluación técnica (clasificacion_final, valor_referencial, informe) ya no forma
+    // parte del flujo nuevo; las columnas se conservan para los datos históricos.
     public const CLASIFICACIONES = [
         'RAEE', 'CHATARRA', 'OBSOLETO', 'SIN_REPARACION', 'NO_DETERMINADO', 'OTRO',
     ];
 
     protected $fillable = [
         'id_activo', 'id_mantenimiento_origen',
-        'registrado_por', 'evaluado_por', 'validado_por',
+        'registrado_por', 'evaluado_por', 'validado_por', 'ejecutado_por', 'rechazado_por',
         'causal_baja', 'clasificacion_final',
-        'motivo', 'diagnostico_tecnico',
+        'motivo', 'diagnostico_tecnico', 'motivo_rechazo',
         'numero_informe_tecnico', 'numero_documento_validacion', 'valor_referencial',
         'estado',
-        'fecha_registro', 'fecha_evaluacion', 'fecha_validacion', 'fecha_baja',
+        'fecha_registro', 'fecha_evaluacion', 'fecha_validacion', 'fecha_baja', 'fecha_rechazo',
         'observaciones',
     ];
 
@@ -40,6 +48,7 @@ class BajaActivo extends Model
         'fecha_evaluacion' => 'date',
         'fecha_validacion' => 'date',
         'fecha_baja'       => 'date',
+        'fecha_rechazo'    => 'date',
         'valor_referencial' => 'decimal:2',
         'creado_en'        => 'datetime',
         'actualizado_en'   => 'datetime',
@@ -77,6 +86,18 @@ class BajaActivo extends Model
     public function validadoPor()
     {
         return $this->belongsTo(Colaborador::class, 'validado_por', 'id_colaborador');
+    }
+
+    /** Usuario OTI que ejecutó formalmente la baja. */
+    public function ejecutadoPor()
+    {
+        return $this->belongsTo(User::class, 'ejecutado_por', 'id_usuario');
+    }
+
+    /** Usuario OTI que rechazó la propuesta. */
+    public function rechazadoPor()
+    {
+        return $this->belongsTo(User::class, 'rechazado_por', 'id_usuario');
     }
 
     /** Referencias de trámite documentario vinculadas a esta baja. */

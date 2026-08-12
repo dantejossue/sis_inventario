@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'ocs' => [
+        'url' => env('OCS_API_URL'),
+        'timeout' => (int) env('OCS_API_TIMEOUT', 15),
+    ],
+
 ];

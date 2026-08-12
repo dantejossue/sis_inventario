@@ -4,8 +4,7 @@
 
 'use strict';
 
-let menu,
-  animate;
+let menu, animate;
 document.addEventListener('DOMContentLoaded', function () {
   // class for ios specific styles
   if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
@@ -33,9 +32,41 @@ document.addEventListener('DOMContentLoaded', function () {
   menuToggler.forEach(item => {
     item.addEventListener('click', event => {
       event.preventDefault();
-      window.Helpers.toggleCollapsed();
+      if (window.Helpers.isSmallScreen()) {
+        // Pantallas pequeñas: abrir/cerrar el sidebar como overlay (comportamiento original)
+        window.Helpers.toggleCollapsed();
+      } else {
+        // Desktop: colapsar/expandir el sidebar. El proyecto no incluye el
+        // template-customizer, así que alternamos la clase manualmente y
+        // recordamos el estado en localStorage para que se mantenga al navegar
+        // (si no, al hacer clic en un módulo la página recargaría expandida).
+        const collapsed = document.documentElement.classList.toggle('layout-menu-collapsed');
+        try {
+          localStorage.setItem('menuCollapsed', collapsed);
+        } catch (e) {}
+        if (window.Helpers.mainMenu) window.Helpers.mainMenu.update();
+      }
     });
   });
+
+  // El colapso del sidebar es solo para desktop (>=1200). En pantallas menores el
+  // sidebar funciona como overlay: si dejáramos 'layout-menu-collapsed' puesto, la
+  // regla de Sneat (sin media query) ocultaría el nombre y la flecha. Por eso
+  // sincronizamos la clase según el ancho de la ventana.
+  const syncMenuCollapsedForViewport = () => {
+    const root = document.documentElement;
+    if (window.innerWidth < 1200) {
+      root.classList.remove('layout-menu-collapsed', 'layout-menu-hover');
+    } else {
+      let saved = false;
+      try {
+        saved = localStorage.getItem('menuCollapsed') === 'true';
+      } catch (e) {}
+      root.classList.toggle('layout-menu-collapsed', saved);
+    }
+  };
+  window.addEventListener('resize', syncMenuCollapsedForViewport);
+  syncMenuCollapsedForViewport();
 
   // Display menu toggle (layout-menu-toggle) on hover with delay
   let delay = function (elem, callback) {
@@ -121,7 +152,7 @@ document.addEventListener('DOMContentLoaded', function () {
   // If current layout is vertical and current window screen is > small
 
   // Auto update menu collapsed/expanded based on the themeConfig
-      window.Helpers.setCollapsed(true, false);
+  window.Helpers.setCollapsed(true, false);
 })();
 // Utils
 function isMacOS() {

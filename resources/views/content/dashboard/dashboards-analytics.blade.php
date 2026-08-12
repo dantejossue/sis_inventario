@@ -1,493 +1,537 @@
 @extends('layouts/contentNavbarLayout')
 
-@section('title', 'Dashboard - Analytics')
+@section('title', 'Panel de control - OTI')
 
 @section('vendor-style')
-@vite('resources/assets/vendor/libs/apex-charts/apex-charts.scss')
+  @vite('resources/assets/vendor/libs/apex-charts/apex-charts.scss')
 @endsection
 
 @section('vendor-script')
-@vite('resources/assets/vendor/libs/apex-charts/apexcharts.js')
-@endsection
-
-@section('page-script')
-@vite('resources/assets/js/dashboards-analytics.js')
+  @vite('resources/assets/vendor/libs/apex-charts/apexcharts.js')
 @endsection
 
 @section('content')
-<div class="row">
-    <div class="col-xxl-8 mb-6 order-0">
-        <div class="card">
-            <div class="d-flex align-items-start row">
-                <div class="col-sm-7">
-                    <div class="card-body">
-                        <h5 class="card-title text-primary mb-3">Congratulations John! 🎉</h5>
-                        <p class="mb-6">You have done 72% more sales today.<br />Check your new badge in your profile.</p>
 
-                        <a href="javascript:;" class="btn btn-sm btn-outline-primary">View Badges</a>
-                    </div>
-                </div>
-                <div class="col-sm-5 text-center text-sm-left">
-                    <div class="card-body pb-0 px-0 px-md-6">
-                        <img src="{{ asset('assets/img/illustrations/man-with-laptop.png') }}" height="175" alt="View Badge User" />
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <div class="col-xxl-4 col-lg-12 col-md-4 order-1">
-        <div class="row">
-            <div class="col-lg-6 col-md-12 col-6 mb-6">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                            <div class="avatar flex-shrink-0">
-                                <img src="{{ asset('assets/img/icons/unicons/chart-success.png') }}" alt="chart success" class="rounded" />
-                            </div>
-                            <div class="dropdown">
-                                <button class="btn p-0" type="button" id="cardOpt3" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt3">
-                                    <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                    <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="mb-1">Profit</p>
-                        <h4 class="card-title mb-3">$12,628</h4>
-                        <small class="text-success fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> +72.80%</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-lg-6 col-md-12 col-6 mb-6">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                            <div class="avatar flex-shrink-0">
-                                <img src="{{ asset('assets/img/icons/unicons/wallet-info.png') }}" alt="wallet info" class="rounded" />
-                            </div>
-                            <div class="dropdown">
-                                <button class="btn p-0" type="button" id="cardOpt6" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt6">
-                                    <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                    <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="mb-1">Sales</p>
-                        <h4 class="card-title mb-3">$4,679</h4>
-                        <small class="text-success fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> +28.42%</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- Total Revenue -->
-    <div class="col-12 col-xxl-8 order-2 order-md-3 order-xxl-2 mb-6 total-revenue">
-        <div class="card">
-            <div class="row row-bordered g-0">
-                <div class="col-lg-8">
-                    <div class="card-header d-flex align-items-center justify-content-between">
-                        <div class="card-title mb-0">
-                            <h5 class="m-0 me-2">Total Revenue</h5>
-                        </div>
-                        <div class="dropdown">
-                            <button class="btn p-0" type="button" id="totalRevenue" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="icon-base bx bx-dots-vertical-rounded icon-lg text-body-secondary"></i>
-                            </button>
-                            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="totalRevenue">
-                                <a class="dropdown-item" href="javascript:void(0);">Select All</a>
-                                <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
-                                <a class="dropdown-item" href="javascript:void(0);">Share</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="totalRevenueChart" class="px-3"></div>
-                </div>
-                <div class="col-lg-4">
-                    <div class="card-body px-xl-9 py-12 d-flex align-items-center flex-column">
-                        <div class="text-center mb-6">
-                            <div class="btn-group">
-                                <button type="button" class="btn btn-outline-primary">
-                                    <script>
-                                    document.write(new Date().getFullYear() - 1);
-                                    </script>
-                                </button>
-                                <button type="button" class="btn btn-outline-primary dropdown-toggle dropdown-toggle-split" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <span class="visually-hidden">Toggle Dropdown</span>
-                                </button>
-                                <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="javascript:void(0);">2021</a></li>
-                                    <li><a class="dropdown-item" href="javascript:void(0);">2020</a></li>
-                                    <li><a class="dropdown-item" href="javascript:void(0);">2019</a></li>
-                                </ul>
-                            </div>
-                        </div>
+  @php
+    $usuario = auth()->user()->colaborador?->nombre_completo ?? auth()->user()->nombre_usuario;
 
-                        <div id="growthChart"></div>
-                        <div class="text-center fw-medium my-6">62% Company Growth</div>
+    $mantEstadoBadge = [
+        'REGISTRADO' => 'bg-label-secondary',
+        'EN_ATENCION' => 'bg-label-warning',
+    ];
+    $movTipoBadge = [
+        'PRESTAMO' => 'bg-label-info',
+        'TRANSFERENCIA' => 'bg-label-primary',
+        'REGULARIZACION' => 'bg-label-secondary',
+    ];
+    $movEstadoBadge = [
+        'BORRADOR' => 'bg-label-secondary',
+        'EJECUTADO' => 'bg-label-success',
+        'OBSERVADO' => 'bg-label-warning',
+        'CANCELADO' => 'bg-label-danger',
+    ];
+  @endphp
 
-                        <div class="d-flex gap-11 justify-content-between">
-                            <div class="d-flex">
-                                <div class="avatar me-2">
-                                    <span class="avatar-initial rounded-2 bg-label-primary"><i class="icon-base bx bx-dollar icon-lg text-primary"></i></span>
-                                </div>
-                                <div class="d-flex flex-column">
-                                    <small>
-                                        <script>
-                                        document.write(new Date().getFullYear() - 1);
-                                        </script>
-                                    </small>
-                                    <h6 class="mb-0">$32.5k</h6>
-                                </div>
-                            </div>
-                            <div class="d-flex">
-                                <div class="avatar me-2">
-                                    <span class="avatar-initial rounded-2 bg-label-info"><i class="icon-base bx bx-wallet icon-lg text-info"></i></span>
-                                </div>
-                                <div class="d-flex flex-column">
-                                    <small>
-                                        <script>
-                                        document.write(new Date().getFullYear() - 2);
-                                        </script>
-                                    </small>
-                                    <h6 class="mb-0">$41.2k</h6>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!--/ Total Revenue -->
-    <div class="col-12 col-md-8 col-lg-12 col-xxl-4 order-3 order-md-2 profile-report">
-        <div class="row">
-            <div class="col-6 mb-6 payments">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                            <div class="avatar flex-shrink-0">
-                                <img src="{{ asset('assets/img/icons/unicons/paypal.png') }}" alt="paypal" class="rounded" />
-                            </div>
-                            <div class="dropdown">
-                                <button class="btn p-0" type="button" id="cardOpt4" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
-                                </button>
-                                <div class="dropdown-menu dropdown-menu-end" aria-labelledby="cardOpt4">
-                                    <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                    <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="mb-1">Payments</p>
-                        <h4 class="card-title mb-3">$2,456</h4>
-                        <small class="text-danger fw-medium"><i class="icon-base bx bx-down-arrow-alt"></i> -14.82%</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-6 mb-6 transactions">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="card-title d-flex align-items-start justify-content-between mb-4">
-                            <div class="avatar flex-shrink-0">
-                                <img src="{{ asset('assets/img/icons/unicons/cc-primary.png') }}" alt="Credit Card" class="rounded" />
-                            </div>
-                            <div class="dropdown">
-                                <button class="btn p-0" type="button" id="cardOpt1" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    <i class="icon-base bx bx-dots-vertical-rounded text-body-secondary"></i>
-                                </button>
-                                <div class="dropdown-menu" aria-labelledby="cardOpt1">
-                                    <a class="dropdown-item" href="javascript:void(0);">View More</a>
-                                    <a class="dropdown-item" href="javascript:void(0);">Delete</a>
-                                </div>
-                            </div>
-                        </div>
-                        <p class="mb-1">Transactions</p>
-                        <h4 class="card-title mb-3">$14,857</h4>
-                        <small class="text-success fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> +28.14%</small>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 mb-6 profile-report">
-                <div class="card h-100">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-center flex-sm-row flex-column gap-10 flex-wrap">
-                            <div class="d-flex flex-sm-column flex-row align-items-start justify-content-between">
-                                <div class="card-title mb-6">
-                                    <h5 class="text-nowrap mb-1">Profile Report</h5>
-                                    <span class="badge bg-label-warning">YEAR 2022</span>
-                                </div>
-                                <div class="mt-sm-auto">
-                                    <span class="text-success text-nowrap fw-medium"><i class="icon-base bx bx-up-arrow-alt"></i> 68.2%</span>
-                                    <h4 class="mb-0">$84,686k</h4>
-                                </div>
-                            </div>
-                            <div id="profileReportChart"></div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div class="row">
-    <!-- Order Statistics -->
-    <div class="col-md-6 col-lg-4 col-xl-4 order-0 mb-6">
-        <div class="card h-100">
-            <div class="card-header d-flex justify-content-between">
-                <div class="card-title mb-0">
-                    <h5 class="mb-1 me-2">Order Statistics</h5>
-                    <p class="card-subtitle">42.82k Total Sales</p>
-                </div>
-                <div class="dropdown">
-                    <button class="btn text-body-secondary p-0" type="button" id="orederStatistics" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="icon-base bx bx-dots-vertical-rounded icon-lg"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="orederStatistics">
-                        <a class="dropdown-item" href="javascript:void(0);">Select All</a>
-                        <a class="dropdown-item" href="javascript:void(0);">Refresh</a>
-                        <a class="dropdown-item" href="javascript:void(0);">Share</a>
-                    </div>
-                </div>
-            </div>
+  {{-- ── Bienvenida ─────────────────────────────────────────────────────── --}}
+  <div class="row">
+    <div class="col-12 mb-4">
+      <div class="card">
+        <div class="d-flex align-items-end row">
+          <div class="col-sm-8">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-6">
-                    <div class="d-flex flex-column align-items-center gap-1">
-                        <h3 class="mb-1">8,258</h3>
-                        <small>Total Orders</small>
-                    </div>
-                    <div id="orderStatisticsChart"></div>
-                </div>
-                <ul class="p-0 m-0">
-                    <li class="d-flex align-items-center mb-5">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <span class="avatar-initial rounded bg-label-primary"><i class="icon-base bx bx-mobile-alt"></i></span>
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <h6 class="mb-0">Electronic</h6>
-                                <small>Mobile, Earbuds, TV</small>
-                            </div>
-                            <div class="user-progress">
-                                <h6 class="mb-0">82.5k</h6>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="d-flex align-items-center mb-5">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <span class="avatar-initial rounded bg-label-success"><i class="icon-base bx bx-closet"></i></span>
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <h6 class="mb-0">Fashion</h6>
-                                <small>T-shirt, Jeans, Shoes</small>
-                            </div>
-                            <div class="user-progress">
-                                <h6 class="mb-0">23.8k</h6>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="d-flex align-items-center mb-5">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <span class="avatar-initial rounded bg-label-info"><i class="icon-base bx bx-home-alt"></i></span>
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <h6 class="mb-0">Decor</h6>
-                                <small>Fine Art, Dining</small>
-                            </div>
-                            <div class="user-progress">
-                                <h6 class="mb-0">849k</h6>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="d-flex align-items-center">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <span class="avatar-initial rounded bg-label-secondary"><i class="icon-base bx bx-football"></i></span>
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <h6 class="mb-0">Sports</h6>
-                                <small>Football, Cricket Kit</small>
-                            </div>
-                            <div class="user-progress">
-                                <h6 class="mb-0">99</h6>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
+              <h5 class="card-title text-primary mb-2">¡Hola, {{ $usuario }}! 👋</h5>
+              <p class="mb-3">
+                Este es el panel de control del inventario de activos tecnológicos.
+                Tienes <strong>{{ $totalActivos }}</strong> activos registrados y
+                <strong>{{ $prestamosVigentes }}</strong> préstamos pendientes de devolución.
+              </p>
+              <a href="{{ route('activos.index') }}" class="btn btn-sm btn-outline-primary">
+                <i class="bx bx-devices me-1"></i> Ver activos
+              </a>
             </div>
+          </div>
+          <div class="col-sm-4 text-center text-sm-end">
+            <div class="card-body pb-0 px-0 px-md-4">
+              <img src="{{ asset('assets/img/illustrations/man-with-laptop.png') }}" height="150"
+                alt="Panel de inventario" onerror="this.style.display='none'" />
+            </div>
+          </div>
         </div>
+      </div>
     </div>
-    <!--/ Order Statistics -->
+  </div>
 
-    <!-- Expense Overview -->
-    <div class="col-md-6 col-lg-4 order-1 mb-6">
-        <div class="card h-100">
-            <div class="card-header nav-align-top">
-                <ul class="nav nav-pills flex-wrap row-gap-2" role="tablist">
-                    <li class="nav-item">
-                        <button type="button" class="nav-link active" role="tab" data-bs-toggle="tab" data-bs-target="#navs-tabs-line-card-income" aria-controls="navs-tabs-line-card-income" aria-selected="true">Income</button>
-                    </li>
-                    <li class="nav-item">
-                        <button type="button" class="nav-link" role="tab">Expenses</button>
-                    </li>
-                    <li class="nav-item">
-                        <button type="button" class="nav-link" role="tab">Profit</button>
-                    </li>
-                </ul>
-            </div>
+  {{-- ── KPIs ───────────────────────────────────────────────────────────── --}}
+  <div class="row g-4 mb-4">
+    @foreach ($kpis as $kpi)
+      <div class="col-lg-3 col-md-6 col-sm-6">
+        <a href="{{ $kpi['ruta'] }}" class="text-reset text-decoration-none">
+          <div class="card h-100">
             <div class="card-body">
-                <div class="tab-content p-0">
-                    <div class="tab-pane fade show active" id="navs-tabs-line-card-income" role="tabpanel">
-                        <div class="d-flex mb-6">
-                            <div class="avatar flex-shrink-0 me-3">
-                                <img src="{{ asset('assets/img/icons/unicons/wallet.png') }}" alt="User" />
-                            </div>
-                            <div>
-                                <p class="mb-0">Total Balance</p>
-                                <div class="d-flex align-items-center">
-                                    <h6 class="mb-0 me-1">$459.10</h6>
-                                    <small class="text-success fw-medium">
-                                        <i class="icon-base bx bx-chevron-up icon-lg"></i>
-                                        42.9%
-                                    </small>
-                                </div>
-                            </div>
-                        </div>
-                        <div id="incomeChart"></div>
-                        <div class="d-flex align-items-center justify-content-center mt-6 gap-3">
-                            <div class="flex-shrink-0">
-                                <div id="expensesOfWeek"></div>
-                            </div>
-                            <div>
-                                <h6 class="mb-0">Income this week</h6>
-                                <small>$39k less than last week</small>
-                            </div>
-                        </div>
-                    </div>
+              <div class="d-flex align-items-start justify-content-between">
+                <div>
+                  <span class="fw-semibold d-block mb-1">{{ $kpi['titulo'] }}</span>
+                  <h3 class="card-title mb-2">{{ $kpi['valor'] }}</h3>
+                  <small class="text-muted fw-semibold">{{ $kpi['sub'] }}</small>
                 </div>
+                <div class="avatar">
+                  <span class="avatar-initial rounded bg-label-{{ $kpi['color'] }}">
+                    <i class="bx {{ $kpi['icono'] }} fs-3"></i>
+                  </span>
+                </div>
+              </div>
             </div>
-        </div>
-    </div>
-    <!--/ Expense Overview -->
+          </div>
+        </a>
+      </div>
+    @endforeach
+  </div>
 
-    <!-- Transactions -->
-    <div class="col-md-6 col-lg-4 order-2 mb-6">
-        <div class="card h-100">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <h5 class="card-title m-0 me-2">Transactions</h5>
-                <div class="dropdown">
-                    <button class="btn text-body-secondary p-0" type="button" id="transactionID" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                        <i class="icon-base bx bx-dots-vertical-rounded icon-lg"></i>
-                    </button>
-                    <div class="dropdown-menu dropdown-menu-end" aria-labelledby="transactionID">
-                        <a class="dropdown-item" href="javascript:void(0);">Last 28 Days</a>
-                        <a class="dropdown-item" href="javascript:void(0);">Last Month</a>
-                        <a class="dropdown-item" href="javascript:void(0);">Last Year</a>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body pt-4">
-                <ul class="p-0 m-0">
-                    <li class="d-flex align-items-center mb-6">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <img src="{{ asset('assets/img/icons/unicons/paypal.png') }}" alt="User" class="rounded" />
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <small class="d-block">Paypal</small>
-                                <h6 class="fw-normal mb-0">Send money</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-2">
-                                <h6 class="fw-normal mb-0">+82.6</h6>
-                                <span class="text-body-secondary">USD</span>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="d-flex align-items-center mb-6">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <img src="{{ asset('assets/img/icons/unicons/wallet.png') }}" alt="User" class="rounded" />
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <small class="d-block">Wallet</small>
-                                <h6 class="fw-normal mb-0">Mac'D</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-2">
-                                <h6 class="fw-normal mb-0">+270.69</h6>
-                                <span class="text-body-secondary">USD</span>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="d-flex align-items-center mb-6">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <img src="{{ asset('assets/img/icons/unicons/chart.png') }}" alt="User" class="rounded" />
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <small class="d-block">Transfer</small>
-                                <h6 class="fw-normal mb-0">Refund</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-2">
-                                <h6 class="fw-normal mb-0">+637.91</h6>
-                                <span class="text-body-secondary">USD</span>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="d-flex align-items-center mb-6">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <img src="{{ asset('assets/img/icons/unicons/cc-primary.png') }}" alt="User" class="rounded" />
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <small class="d-block">Credit Card</small>
-                                <h6 class="fw-normal mb-0">Ordered Food</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-2">
-                                <h6 class="fw-normal mb-0">-838.71</h6>
-                                <span class="text-body-secondary">USD</span>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="d-flex align-items-center mb-6">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <img src="{{ asset('assets/img/icons/unicons/wallet.png') }}" alt="User" class="rounded" />
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <small class="d-block">Wallet</small>
-                                <h6 class="fw-normal mb-0">Starbucks</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-2">
-                                <h6 class="fw-normal mb-0">+203.33</h6>
-                                <span class="text-body-secondary">USD</span>
-                            </div>
-                        </div>
-                    </li>
-                    <li class="d-flex align-items-center">
-                        <div class="avatar flex-shrink-0 me-3">
-                            <img src="{{ asset('assets/img/icons/unicons/cc-warning.png') }}" alt="User" class="rounded" />
-                        </div>
-                        <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
-                            <div class="me-2">
-                                <small class="d-block">Mastercard</small>
-                                <h6 class="fw-normal mb-0">Ordered Food</h6>
-                            </div>
-                            <div class="user-progress d-flex align-items-center gap-2">
-                                <h6 class="fw-normal mb-0">-92.45</h6>
-                                <span class="text-body-secondary">USD</span>
-                            </div>
-                        </div>
-                    </li>
-                </ul>
-            </div>
+  {{-- ── Gráficos ───────────────────────────────────────────────────────── --}}
+  <div class="row g-4 mb-4">
+    {{-- Activos por categoría --}}
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div>
+            <h5 class="mb-0">Activos por categoría</h5>
+            <small class="text-muted">Distribución del parque tecnológico</small>
+          </div>
+          <i class="bx bx-category fs-4 text-primary"></i>
         </div>
+        <div class="card-body">
+          @if ($categoriaChart['data']->isEmpty())
+            <p class="text-muted mb-0 text-center py-5">Aún no hay activos registrados.</p>
+          @else
+            <div id="categoriaChart"></div>
+          @endif
+        </div>
+      </div>
     </div>
-    <!--/ Transactions -->
-</div>
+
+    {{-- Activos por situación --}}
+    <div class="col-lg-3 col-md-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">Por situación</h5>
+          <small class="text-muted">Estado operativo</small>
+        </div>
+        <div class="card-body d-flex align-items-center justify-content-center">
+          @if ($situacionChart['data']->isEmpty())
+            <p class="text-muted mb-0">Sin datos.</p>
+          @else
+            <div id="situacionChart" class="w-100"></div>
+          @endif
+        </div>
+      </div>
+    </div>
+
+    {{-- Activos por condición --}}
+    <div class="col-lg-3 col-md-6">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">Por condición</h5>
+          <small class="text-muted">Estado físico</small>
+        </div>
+        <div class="card-body d-flex align-items-center justify-content-center">
+          @if ($condicionChart['data']->isEmpty())
+            <p class="text-muted mb-0">Sin datos.</p>
+          @else
+            <div id="condicionChart" class="w-100"></div>
+          @endif
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- ── Tendencias temporales ──────────────────────────────────────────── --}}
+  <div class="row g-4 mb-4">
+    {{-- Actividad de los últimos 6 meses --}}
+    <div class="col-lg-8">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div>
+            <h5 class="mb-0">Actividad de los últimos 6 meses</h5>
+            <small class="text-muted">Altas de activos, movimientos y mantenimientos por mes</small>
+          </div>
+          <i class="bx bx-line-chart fs-4 text-primary"></i>
+        </div>
+        <div class="card-body">
+          <div id="actividadChart"></div>
+        </div>
+      </div>
+    </div>
+
+    {{-- Movimientos por tipo --}}
+    <div class="col-lg-4">
+      <div class="card h-100">
+        <div class="card-header">
+          <h5 class="mb-0">Movimientos por tipo</h5>
+          <small class="text-muted">Distribución histórica</small>
+        </div>
+        <div class="card-body d-flex align-items-center justify-content-center">
+          @if ($movTipoChart['data']->isEmpty())
+            <p class="text-muted mb-0 py-5">Aún no hay movimientos.</p>
+          @else
+            <div id="movTipoChart" class="w-100"></div>
+          @endif
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- ── Rankings y valor ───────────────────────────────────────────────── --}}
+  <div class="row g-4 mb-4">
+    {{-- Top responsables --}}
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div>
+            <h5 class="mb-0">Responsables con más activos</h5>
+            <small class="text-muted">Top 6 por número de activos asignados</small>
+          </div>
+          <i class="bx bx-user fs-4 text-primary"></i>
+        </div>
+        <div class="card-body">
+          @if ($topResponsablesChart['data']->isEmpty())
+            <p class="text-muted mb-0 text-center py-5">Sin activos asignados.</p>
+          @else
+            <div id="topResponsablesChart"></div>
+          @endif
+        </div>
+      </div>
+    </div>
+
+    {{-- Top ubicaciones --}}
+    <div class="col-lg-6">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <div>
+            <h5 class="mb-0">Ubicaciones con más activos</h5>
+            <small class="text-muted">Top 6 por número de activos</small>
+          </div>
+          <i class="bx bx-map fs-4 text-primary"></i>
+        </div>
+        <div class="card-body">
+          @if ($topUbicacionesChart['data']->isEmpty())
+            <p class="text-muted mb-0 text-center py-5">Sin activos ubicados.</p>
+          @else
+            <div id="topUbicacionesChart"></div>
+          @endif
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- ── Valor del inventario por categoría ──────────────────────────────── --}}
+  @if ($valorCategoriaChart['data']->sum() > 0)
+    <div class="row g-4 mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <div>
+              <h5 class="mb-0">Valor del inventario por categoría</h5>
+              <small class="text-muted">Suma referencial del valor de compra (S/)</small>
+            </div>
+            <i class="bx bx-money fs-4 text-success"></i>
+          </div>
+          <div class="card-body">
+            <div id="valorCategoriaChart"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  @endif
+
+  {{-- ── Tablas de seguimiento ──────────────────────────────────────────── --}}
+  <div class="row g-4 mb-4">
+    {{-- Últimos movimientos --}}
+    <div class="col-lg-7">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Últimos movimientos</h5>
+          <a href="{{ route('movimientos.index') }}" class="btn btn-sm btn-outline-primary">Ver todos</a>
+        </div>
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Código</th>
+                <th>Tipo</th>
+                <th>Activos</th>
+                <th>Estado</th>
+                <th>Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+              @forelse ($ultimosMovimientos as $mov)
+                <tr>
+                  <td class="fw-semibold">{{ $mov->codigo_movimiento ?: '#' . $mov->id_movimiento }}</td>
+                  <td>
+                    <span class="badge {{ $movTipoBadge[$mov->tipo] ?? 'bg-label-secondary' }}">
+                      {{ ucfirst(strtolower($mov->tipo)) }}
+                    </span>
+                  </td>
+                  <td>{{ $mov->detalles_count }}</td>
+                  <td>
+                    <span class="badge {{ $movEstadoBadge[$mov->estado] ?? 'bg-label-secondary' }}">
+                      {{ ucfirst(strtolower($mov->estado)) }}
+                    </span>
+                  </td>
+                  <td class="text-muted">{{ optional($mov->fecha_registro)->format('d/m/Y') ?? '—' }}</td>
+                </tr>
+              @empty
+                <tr>
+                  <td colspan="5" class="text-center text-muted py-4">No hay movimientos registrados.</td>
+                </tr>
+              @endforelse
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    {{-- Mantenimientos abiertos --}}
+    <div class="col-lg-5">
+      <div class="card h-100">
+        <div class="card-header d-flex align-items-center justify-content-between">
+          <h5 class="mb-0">Mantenimientos abiertos</h5>
+          <a href="{{ route('mantenimientos.index') }}" class="btn btn-sm btn-outline-primary">Ver todos</a>
+        </div>
+        <div class="card-body">
+          @forelse ($mantenimientosAbiertos as $mant)
+            <div class="d-flex align-items-center mb-4">
+              <div class="avatar flex-shrink-0 me-3">
+                <span class="avatar-initial rounded bg-label-warning"><i class="bx bx-wrench"></i></span>
+              </div>
+              <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                <div class="me-2">
+                  <h6 class="mb-0">{{ $mant->codigo }}</h6>
+                  <small class="text-muted">
+                    {{ $mant->activo?->codigo_patrimonial ?? 'Activo #' . $mant->id_activo }}
+                    · {{ $mant->activo?->modelo?->nombre ?? '' }}
+                  </small>
+                </div>
+                <span class="badge {{ $mantEstadoBadge[$mant->estado] ?? 'bg-label-secondary' }}">
+                  {{ ucfirst(strtolower(str_replace('_', ' ', $mant->estado))) }}
+                </span>
+              </div>
+            </div>
+          @empty
+            <p class="text-muted text-center py-4 mb-0">
+              <i class="bx bx-check-circle fs-3 d-block mb-2 text-success"></i>
+              No hay mantenimientos abiertos.
+            </p>
+          @endforelse
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{-- ── Garantías por vencer ───────────────────────────────────────────── --}}
+  @if ($garantiasPorVencer->isNotEmpty())
+    <div class="row g-4 mb-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header d-flex align-items-center justify-content-between">
+            <div>
+              <h5 class="mb-0">Garantías por vencer</h5>
+              <small class="text-muted">Activos cuya garantía termina en los próximos 90 días</small>
+            </div>
+            <i class="bx bx-shield-x fs-4 text-warning"></i>
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th>Código patrimonial</th>
+                  <th>Equipo</th>
+                  <th>Fin de garantía</th>
+                  <th>Días restantes</th>
+                </tr>
+              </thead>
+              <tbody>
+                @foreach ($garantiasPorVencer as $act)
+                  @php $dias = \Carbon\Carbon::today()->diffInDays($act->garantia_fin, false); @endphp
+                  <tr>
+                    <td class="fw-semibold">{{ $act->codigo_patrimonial ?: '—' }}</td>
+                    <td>{{ trim(($act->modelo?->marca?->nombre ?? '') . ' ' . ($act->modelo?->nombre ?? '')) ?: '—' }}</td>
+                    <td>{{ $act->garantia_fin->format('d/m/Y') }}</td>
+                    <td>
+                      <span class="badge {{ $dias <= 30 ? 'bg-label-danger' : 'bg-label-warning' }}">
+                        {{ (int) $dias }} días
+                      </span>
+                    </td>
+                  </tr>
+                @endforeach
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  @endif
+
+@endsection
+
+@section('page-script')
+  <script>
+    (function initDash() {
+      // ApexCharts se carga con Vite como modulo (type=module), que se ejecuta
+      // de forma diferida; este script clasico puede correr antes. Si aun no
+      // esta disponible, reintenta hasta que cargue y recien ahi dibuja.
+      if (typeof ApexCharts === 'undefined') {
+        initDash.intentos = (initDash.intentos || 0) + 1;
+        if (initDash.intentos <= 100) setTimeout(initDash, 100);
+        return;
+      }
+
+      const paleta = ['#696cff', '#03c3e3', '#71dd37', '#ffab00', '#ff3e1d', '#8592a3', '#233446'];
+      const ejeColor = '#a1acb8';
+
+      // ── Activos por categoría (barras horizontales) ──────────────────────
+      const catEl = document.querySelector('#categoriaChart');
+      if (catEl) {
+        new ApexCharts(catEl, {
+          chart: { type: 'bar', height: 320, toolbar: { show: false } },
+          series: [{ name: 'Activos', data: @json($categoriaChart['data']) }],
+          plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true } },
+          dataLabels: { enabled: true },
+          legend: { show: false },
+          colors: paleta,
+          xaxis: {
+            categories: @json($categoriaChart['labels']),
+            labels: { style: { colors: ejeColor } }
+          },
+          yaxis: { labels: { style: { colors: ejeColor } } },
+          grid: { borderColor: 'rgba(0,0,0,.06)' }
+        }).render();
+      }
+
+      // ── Activos por situación (dona) ─────────────────────────────────────
+      const sitEl = document.querySelector('#situacionChart');
+      if (sitEl) {
+        new ApexCharts(sitEl, {
+          chart: { type: 'donut', height: 260 },
+          series: @json($situacionChart['data']),
+          labels: @json($situacionChart['labels']),
+          colors: paleta,
+          legend: { position: 'bottom', labels: { colors: ejeColor } },
+          dataLabels: { enabled: true },
+          plotOptions: { pie: { donut: { size: '65%' } } }
+        }).render();
+      }
+
+      // ── Activos por condición (dona) ─────────────────────────────────────
+      const condEl = document.querySelector('#condicionChart');
+      if (condEl) {
+        new ApexCharts(condEl, {
+          chart: { type: 'donut', height: 260 },
+          series: @json($condicionChart['data']),
+          labels: @json($condicionChart['labels']),
+          colors: ['#71dd37', '#03c3e3', '#ffab00', '#ff3e1d'],
+          legend: { position: 'bottom', labels: { colors: ejeColor } },
+          dataLabels: { enabled: true },
+          plotOptions: { pie: { donut: { size: '65%' } } }
+        }).render();
+      }
+
+      // ── Actividad de los últimos 6 meses (líneas) ────────────────────────
+      const actEl = document.querySelector('#actividadChart');
+      if (actEl) {
+        new ApexCharts(actEl, {
+          chart: { type: 'line', height: 320, toolbar: { show: false } },
+          series: [
+            { name: 'Altas de activos', data: @json($actividadChart['altas']) },
+            { name: 'Movimientos', data: @json($actividadChart['movimientos']) },
+            { name: 'Mantenimientos', data: @json($actividadChart['mantenimientos']) }
+          ],
+          colors: ['#696cff', '#03c3e3', '#ffab00'],
+          stroke: { curve: 'smooth', width: 3 },
+          markers: { size: 4 },
+          dataLabels: { enabled: false },
+          legend: { position: 'top', labels: { colors: ejeColor } },
+          xaxis: {
+            categories: @json($actividadChart['labels']),
+            labels: { style: { colors: ejeColor } }
+          },
+          yaxis: { labels: { style: { colors: ejeColor } }, min: 0, forceNiceScale: true },
+          grid: { borderColor: 'rgba(0,0,0,.06)' }
+        }).render();
+      }
+
+      // ── Movimientos por tipo (dona) ──────────────────────────────────────
+      const movTipoEl = document.querySelector('#movTipoChart');
+      if (movTipoEl) {
+        new ApexCharts(movTipoEl, {
+          chart: { type: 'donut', height: 260 },
+          series: @json($movTipoChart['data']),
+          labels: @json($movTipoChart['labels']),
+          colors: ['#03c3e3', '#696cff', '#8592a3'],
+          legend: { position: 'bottom', labels: { colors: ejeColor } },
+          dataLabels: { enabled: true },
+          plotOptions: { pie: { donut: { size: '65%' } } }
+        }).render();
+      }
+
+      // ── Top responsables (barras horizontales) ───────────────────────────
+      const respEl = document.querySelector('#topResponsablesChart');
+      if (respEl) {
+        new ApexCharts(respEl, {
+          chart: { type: 'bar', height: 320, toolbar: { show: false } },
+          series: [{ name: 'Activos', data: @json($topResponsablesChart['data']) }],
+          plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true } },
+          dataLabels: { enabled: true },
+          legend: { show: false },
+          colors: paleta,
+          xaxis: {
+            categories: @json($topResponsablesChart['labels']),
+            labels: { style: { colors: ejeColor } }
+          },
+          yaxis: { labels: { style: { colors: ejeColor } } },
+          grid: { borderColor: 'rgba(0,0,0,.06)' }
+        }).render();
+      }
+
+      // ── Top ubicaciones (barras horizontales) ────────────────────────────
+      const ubiEl = document.querySelector('#topUbicacionesChart');
+      if (ubiEl) {
+        new ApexCharts(ubiEl, {
+          chart: { type: 'bar', height: 320, toolbar: { show: false } },
+          series: [{ name: 'Activos', data: @json($topUbicacionesChart['data']) }],
+          plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true } },
+          dataLabels: { enabled: true },
+          legend: { show: false },
+          colors: paleta,
+          xaxis: {
+            categories: @json($topUbicacionesChart['labels']),
+            labels: { style: { colors: ejeColor } }
+          },
+          yaxis: { labels: { style: { colors: ejeColor } } },
+          grid: { borderColor: 'rgba(0,0,0,.06)' }
+        }).render();
+      }
+
+      // ── Valor del inventario por categoría (barras) ──────────────────────
+      const valCatEl = document.querySelector('#valorCategoriaChart');
+      if (valCatEl) {
+        const soles = val => 'S/ ' + Number(val).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        new ApexCharts(valCatEl, {
+          chart: { type: 'bar', height: 320, toolbar: { show: false } },
+          series: [{ name: 'Valor (S/)', data: @json($valorCategoriaChart['data']) }],
+          plotOptions: { bar: { horizontal: false, borderRadius: 6, columnWidth: '45%', distributed: true } },
+          dataLabels: { enabled: false },
+          legend: { show: false },
+          colors: paleta,
+          xaxis: {
+            categories: @json($valorCategoriaChart['labels']),
+            labels: { style: { colors: ejeColor } }
+          },
+          yaxis: { labels: { style: { colors: ejeColor }, formatter: soles } },
+          tooltip: { y: { formatter: soles } },
+          grid: { borderColor: 'rgba(0,0,0,.06)' }
+        }).render();
+      }
+    })();
+  </script>
 @endsection

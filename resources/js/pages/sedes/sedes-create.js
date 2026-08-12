@@ -2,12 +2,15 @@ import $ from 'jquery';
 import Swal from 'sweetalert2';
 
 $(function () {
-  const form    = $('#formNuevaSede');
-  const modal   = $('#modalNuevaSede');
-  const btn     = $('#btnGuardarSede');
+  const form = $('#formNuevaSede');
+  const modal = $('#modalNuevaSede');
+  const btn = $('#btnGuardarSede');
   const spinner = btn.find('.spinner-border');
 
-  modal.on('show.bs.modal', () => { limpiar(); form.trigger('reset'); });
+  modal.on('show.bs.modal', () => {
+    limpiar();
+    form.trigger('reset');
+  });
 
   form.on('input', 'input', function () {
     $(this).removeClass('is-invalid');
@@ -21,17 +24,56 @@ $(function () {
     spinner.removeClass('d-none');
 
     $.ajax({
-      url: form.attr('action'), type: 'POST', data: form.serialize(),
+      url: form.attr('action'),
+      type: 'POST',
+      data: form.serialize(),
 
       success(res) {
-        btn.prop('disabled', false); spinner.addClass('d-none');
+        btn.prop('disabled', false);
+        spinner.addClass('d-none');
         modal.modal('hide');
-        if (res.data) window.tablaSedes.row.add(res.data).draw(false);
-        Swal.fire({ icon: 'success', title: 'Sede registrada', text: res.message, timer: 2000, showConfirmButton: false });
+        if (res.data) window.tablaSedes.row.add(res.data).draw();
+        Swal.fire({
+          icon: 'success',
+          title: 'Sede registrada',
+          text: res.message,
+          timer: 2000,
+          showConfirmButton: false
+        });
       },
+      // success(res) {
+      //   btn.prop('disabled', false);
+      //   spinner.addClass('d-none');
+      //   modal.modal('hide');
+
+      //   if (res.data) {
+      //     window.tablaSedes.row.add(res.data).draw();
+      //   }
+
+      //   Swal.fire({
+      //     toast: true,
+      //     position: 'top-end',
+      //     icon: 'success',
+      //     title: 'Sede registrada',
+      //     text: res.message,
+
+      //     background: '#2b2c40',
+      //     color: '#fff',
+
+      //     showConfirmButton: false,
+      //     timer: 3000,
+      //     timerProgressBar: true,
+
+      //     didOpen: toast => {
+      //       toast.onmouseenter = Swal.stopTimer;
+      //       toast.onmouseleave = Swal.resumeTimer;
+      //     }
+      //   });
+      // },
 
       error(xhr) {
-        btn.prop('disabled', false); spinner.addClass('d-none');
+        btn.prop('disabled', false);
+        spinner.addClass('d-none');
         if (xhr.status === 422) {
           const errors = xhr.responseJSON.errors;
           Object.keys(errors).forEach(c => {

@@ -28,7 +28,7 @@
   <div class="row g-4">
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card rounded-5">
+      <div class="card maintenance-kpi-card rounded-3">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
@@ -47,7 +47,7 @@
     </div>
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card rounded-5 movement-kpi-card">
+      <div class="card maintenance-kpi-card rounded-3 movement-kpi-card">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
@@ -66,7 +66,7 @@
     </div>
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card rounded-5 movement-kpi-card">
+      <div class="card maintenance-kpi-card rounded-3 movement-kpi-card">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
@@ -85,7 +85,7 @@
     </div>
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card rounded-5 movement-kpi-card">
+      <div class="card maintenance-kpi-card rounded-3 movement-kpi-card">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
@@ -107,9 +107,9 @@
 
 
   <!-- Filtros -->
-  <div class="card mb-4 rounded-4">
+  <div class="card mb-4 rounded-3">
     <div class="card-header">
-      <h5 class="mb-0">Filtros de búsqueda</h5>
+      <h5 class="mb-0 fw-bold">Filtros de búsqueda</h5>
       <small class="text-muted">
         Filtra por tipo, estado, devolución, responsable o fechas.
       </small>
@@ -120,7 +120,9 @@
         $respsMov = collect($movimientos)
             ->filter(fn($m) => $m['registrado_por_id'] && $m['registrado_por'])
             ->map(fn($m) => ['id' => $m['registrado_por_id'], 'nombre' => $m['registrado_por']])
-            ->unique('id')->sortBy('nombre')->values();
+            ->unique('id')
+            ->sortBy('nombre')
+            ->values();
       @endphp
       <div class="row g-3">
 
@@ -176,7 +178,7 @@
     </div>
   </div>
 
-  <div class="card rounded-4">
+  <div class="card rounded-3">
     <div class="card-header border-bottom align-items-center">
       <h5 class="mb-0 fw-bold">Listado de Movimientos</h5>
       <small class="text-muted">
@@ -216,12 +218,9 @@
     window.routes = {
       ver: '{{ route('movimientos.ver', ['id' => '__ID__']) }}',
       devolver: '{{ route('movimientos.devolver', ['id' => '__ID__']) }}',
-      destroy: '{{ route('movimientos.destroy', ['id' => '__ID__']) }}'
+      datosDevolucion: '{{ route('movimientos.devolucion.datos', ['id' => '__ID__']) }}',
+      destroy: '{{ route('movimientos.destroy', ['id' => '__ID__']) }}',
     };
   </script>
-  @vite([
-    'resources/js/vendors/index.js',
-    'resources/js/pages/movimientos/movimientos-table.js',
-    'resources/js/pages/movimientos/movimientos-devolucion.js',
-  ])
+  @vite(['resources/js/vendors/index.js', 'resources/js/pages/movimientos/movimientos-table.js', 'resources/js/pages/movimientos/movimientos-devolucion.js'])
 @endsection

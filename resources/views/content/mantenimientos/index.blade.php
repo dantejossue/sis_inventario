@@ -7,12 +7,12 @@
   <!-- Encabezado -->
   <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
     <div>
-      <h4 class="fw-bold mb-1">
-        <span class="text-muted fw-light">Ciclo de vida /</span>
+      <h4 class="fw-bold mb-0">
+        <span class="text-secondary fw-bold">Ciclo de vida /</span>
         Mantenimientos
       </h4>
 
-      <p class="text-muted mb-0">
+      <p class="text-muted fw-light mb-1">
         Control de mantenimientos preventivos, correctivos, garantía y revisión técnica.
       </p>
     </div>
@@ -26,24 +26,24 @@
   </div>
 
   <!-- KPIs -->
-  <div class="row">
+  <div class="row g-4">
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card maintenance-kpi-card">
+      <div class="card maintenance-kpi-card rounded-3">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
-              <span class="fw-semibold d-block mb-1">En mantenimiento</span>
+              <span class="fw-semibold d-block mb-1">En atención</span>
               <h3 class="mb-2" id="kpi-abiertos">0</h3>
-              <small class="text-warning fw-semibold">
-                <i class="bx bx-time"></i>
-                <span id="kpi-abiertos-detalle">0 en atención</span>
+              <small class="text-warning fw-semibold d-flex align-items-center">
+                <i class="bx bx-time me-1"></i>
+                <span id="kpi-abiertos-detalle">0 registrados</span>
               </small>
             </div>
 
             <div class="avatar">
-              <span class="avatar-initial rounded bg-label-warning">
-                <i class="bx bx-wrench"></i>
+              <span class="avatar-initial rounded-4 bg-label-warning">
+                <i class="bx bxs-wrench fs-4"></i>
               </span>
             </div>
           </div>
@@ -52,7 +52,7 @@
     </div>
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card maintenance-kpi-card">
+      <div class="card maintenance-kpi-card rounded-3">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
@@ -64,8 +64,8 @@
             </div>
 
             <div class="avatar">
-              <span class="avatar-initial rounded bg-label-info">
-                <i class="bx bx-calendar-check"></i>
+              <span class="avatar-initial rounded-4 bg-label-info">
+                <i class="bx bxs-calendar-check fs-4"></i>
               </span>
             </div>
           </div>
@@ -74,20 +74,20 @@
     </div>
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card maintenance-kpi-card">
+      <div class="card maintenance-kpi-card rounded-3">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
               <span class="fw-semibold d-block mb-1">Correctivos</span>
               <h3 class="mb-2" id="kpi-correctivos">0</h3>
               <small class="text-danger fw-semibold">
-                <span id="kpi-correctivos-detalle">0 críticos</span>
+                <span id="kpi-correctivos-detalle">0 en curso</span>
               </small>
             </div>
 
             <div class="avatar">
-              <span class="avatar-initial rounded bg-label-danger">
-                <i class="bx bx-error-circle"></i>
+              <span class="avatar-initial rounded-4 bg-label-danger">
+                <i class="bx bxs-error-circle fs-4"></i>
               </span>
             </div>
           </div>
@@ -96,21 +96,21 @@
     </div>
 
     <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-      <div class="card maintenance-kpi-card">
+      <div class="card maintenance-kpi-card rounded-3">
         <div class="card-body">
           <div class="d-flex align-items-start justify-content-between">
             <div>
               <span class="fw-semibold d-block mb-1">Finalizados</span>
               <h3 class="mb-2" id="kpi-finalizados">0</h3>
-              <small class="text-success fw-semibold">
-                <i class="bx bx-check-circle"></i>
+              <small class="text-success fw-semibold d-flex align-items-center">
+                <i class="bx bx-check-circle me-1"></i>
                 <span id="kpi-finalizados-detalle">0 este mes</span>
               </small>
             </div>
 
             <div class="avatar">
-              <span class="avatar-initial rounded bg-label-success">
-                <i class="bx bx-check-shield"></i>
+              <span class="avatar-initial rounded-4 bg-label-success">
+                <i class="bx bxs-check-shield fs-4"></i>
               </span>
             </div>
           </div>
@@ -121,7 +121,7 @@
   </div>
 
   <!-- Panel superior -->
-  <div class="row mb-4">
+  {{-- <div class="row mb-4">
 
     <!-- Flujo de atención -->
     <div class="col-xl-8 col-lg-7 mb-4 mb-lg-0">
@@ -235,14 +235,14 @@
       </div>
     </div>
 
-  </div>
+  </div> --}}
 
   <!-- Filtros -->
-  <div class="card mb-4">
+  <div class="card mb-4 rounded-3">
     <div class="card-header">
-      <h5 class="mb-0">Filtros de búsqueda</h5>
-      <small class="text-muted">
-        Filtra por tipo, estado, prioridad, técnico o fecha de reporte.
+      <h5 class="mb-0 fw-bold">Filtros de búsqueda</h5>
+      <small class="text-light">
+        Filtra por tipo, estado o fecha de reporte.
       </small>
     </div>
 
@@ -255,7 +255,8 @@
             <option value="">Todos</option>
             <option value="PREVENTIVO">Preventivo</option>
             <option value="CORRECTIVO">Correctivo</option>
-            <option value="GARANTIA">Garantía</option>
+            {{-- Garantía ya no es un tipo de mantenimiento (ahora es una modalidad de atención) --}}
+            {{-- <option value="GARANTIA">Garantía</option> --}}
             <option value="REVISION_TECNICA">Revisión técnica</option>
           </select>
         </div>
@@ -265,19 +266,15 @@
           <select class="form-select" id="filtro-estado">
             <option value="">Todos</option>
             <option value="ABIERTOS">— Abiertos —</option>
-            <option value="SOLICITADO">Solicitado</option>
-            <option value="EN_REVISION">En diagnóstico</option>
-            <option value="EN_MANTENIMIENTO">En atención</option>
-            <option value="DERIVADO_PROVEEDOR">Derivado a proveedor</option>
-            <option value="ATENDIDO">Atendido</option>
-            <option value="SIN_REPARACION">Sin reparación</option>
-            <option value="RECOMENDADO_BAJA">Recomendado baja</option>
-            <option value="CERRADO">Cerrado</option>
+            <option value="REGISTRADO">Registrado</option>
+            <option value="EN_ATENCION">En atención</option>
+            <option value="FINALIZADO">Finalizado</option>
             <option value="CANCELADO">Cancelado</option>
           </select>
         </div>
 
-        <div class="col-lg-2 col-md-6">
+        {{-- Filtro por prioridad retirado: prioridad ya no se usa en el módulo de mantenimientos --}}
+        {{-- <div class="col-lg-2 col-md-6">
           <label class="form-label" for="filtro-prioridad">Prioridad</label>
           <select class="form-select" id="filtro-prioridad">
             <option value="">Todas</option>
@@ -286,7 +283,7 @@
             <option value="ALTA">Alta</option>
             <option value="CRITICA">Crítica</option>
           </select>
-        </div>
+        </div> --}}
 
         <div class="col-lg-2 col-md-6">
           <label class="form-label" for="filtro-fecha">Reportados desde</label>
@@ -295,7 +292,7 @@
 
         <div class="col-lg-2 col-md-6 d-flex align-items-end">
           <button class="btn btn-outline-secondary w-100" id="filtro-reset">
-            <i class="bx bx-reset me-1"></i>
+            <i class="bx bxs-eraser me-1"></i>
             Limpiar
           </button>
         </div>
@@ -305,10 +302,10 @@
   </div>
 
   <!-- Tabla -->
-  <div class="card">
+  <div class="card rounded-3">
     <div class="card-header border-bottom">
-      <h5 class="mb-0">Listado de mantenimientos</h5>
-      <small class="text-muted">
+      <h5 class="mb-0 fw-bold">Listado de mantenimientos</h5>
+      <small class="text-light">
         Historial técnico de diagnósticos, reparaciones, garantías y evidencias.
       </small>
     </div>
@@ -320,9 +317,11 @@
             <th class="fw-bold">Código</th>
             <th class="fw-bold">Activo</th>
             <th class="fw-bold">Tipo</th>
-            <th class="fw-bold">Problema / Diagnóstico</th>
+            {{-- <th class="fw-bold">Problema / Diagnóstico</th> --}}
             <th class="fw-bold">Técnico / Proveedor</th>
-            <th class="fw-bold">Prioridad</th>
+            {{-- Columna prioridad retirada; reemplazada por Modalidad --}}
+            {{-- <th class="fw-bold">Prioridad</th> --}}
+            <th class="fw-bold">Modalidad</th>
             <th class="fw-bold">Estado</th>
             <th class="fw-bold">Costo</th>
             <th class="fw-bold">Fecha</th>
@@ -336,7 +335,7 @@
 
 
   <!-- Modal nuevo mantenimiento -->
-  <div class="modal fade" id="modalNuevoMantenimiento" tabindex="-1" aria-hidden="true">
+  {{-- <div class="modal fade" id="modalNuevoMantenimiento" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
 
@@ -532,62 +531,321 @@
 
       </div>
     </div>
-  </div>
+  </div> --}}
   <!-- / Modal nuevo mantenimiento -->
+  {{-- Modal nuevo mantenimiento --}}
+  <div class="modal fade" id="modalNuevoMantenimiento" tabindex="-1" aria-hidden="true">
 
+    <div class="modal-dialog modal-dialog-centered">
+
+      <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
+
+        <div class="modal-header py-4 border-bottom">
+          <div>
+            <h5 class="modal-title d-flex align-items-center fw-bold" id="modalNuevoMantenimientoLabel">
+              <i class="bx bx-wrench me-1"></i>
+              Nuevo mantenimiento
+            </h5>
+
+            <small class="text-light">
+              Registra la atención técnica de un activo de OTI.
+            </small>
+          </div>
+
+          <button type="button" class="btn-close" data-bs-dismiss="modal">
+          </button>
+        </div>
+
+        <form id="form-nuevo-mantenimiento" class="d-flex flex-column flex-grow-1 overflow-hidden">
+          <div class="modal-body overflow-auto py-4">
+
+            <div class="row g-3">
+
+              {{-- Activo --}}
+              <div class="col-12">
+                <label class="form-label" for="nuevo-activo">
+                  Activo
+                  <span class="text-danger">*</span>
+                </label>
+
+                <select class="form-select" id="nuevo-activo" name="id_activo" required>
+
+                  <option value="">Seleccione un activo...</option>
+
+                  @foreach ($activos as $a)
+                    <option value="{{ $a['id_activo'] }}">
+                      {{ $a['codigo_interno'] }}
+                      @if (!empty($a['codigo_patrimonial']))
+                        · {{ $a['codigo_patrimonial'] }}
+                      @endif
+                      — {{ $a['modelo'] ?: 'Sin modelo registrado' }}
+                    </option>
+                  @endforeach
+                </select>
+
+                <div class="invalid-feedback"></div>
+
+                <small class="text-light fw-light">
+                  Solo se muestran activos disponibles para mantenimiento.
+                </small>
+              </div>
+
+              {{-- Tipo de mantenimiento --}}
+              <div class="col-md-6">
+                <label class="form-label" for="nuevo-tipo">
+                  Tipo de mantenimiento
+                  <span class="text-danger">*</span>
+                </label>
+
+                <select class="form-select" id="nuevo-tipo" name="tipo_mantenimiento" required>
+
+                  <option value="">Seleccione...</option>
+                  <option value="PREVENTIVO">Preventivo</option>
+                  <option value="CORRECTIVO">Correctivo</option>
+                  <option value="REVISION_TECNICA">Revisión técnica</option>
+                </select>
+
+                <div class="invalid-feedback"></div>
+              </div>
+
+              {{-- Modalidad de atención: se decide automáticamente en el servidor según la
+                   garantía del activo. El input oculto solo transporta el valor calculado por JS;
+                   el backend lo vuelve a verificar. --}}
+              <input type="hidden" id="nuevo-modalidad" name="modalidad_atencion">
+
+              {{-- Fecha de reporte --}}
+              <div class="col-md-6">
+                <label class="form-label" for="nuevo-fecha">
+                  Fecha de reporte
+                  <span class="text-danger">*</span>
+                </label>
+
+                <input type="date" class="form-control" id="nuevo-fecha" name="fecha_reporte"
+                  value="{{ now()->toDateString() }}" max="{{ now()->toDateString() }}" required>
+
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-12 d-none" id="grupo-estado-garantia">
+                <div class="alert mb-0" id="alerta-garantia">
+                  <div class="d-flex align-items-start">
+                    <i class="bx bx-shield-quarter fs-5 me-1"></i>
+                    <div>
+                      <strong id="garantia-titulo"></strong>
+                      <div class="small mt-1" id="garantia-detalle"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {{-- Técnico OTI --}}
+              <div class="col-md-12" id="grupo-tecnico">
+                <label class="form-label" for="nuevo-tecnico">
+                  Técnico responsable
+                  <span class="text-danger">*</span>
+                </label>
+
+                <select class="form-select" id="nuevo-tecnico" name="tecnico_responsable">
+
+                  <option value="">Seleccione un técnico...</option>
+
+                  @foreach ($tecnicosOti as $c)
+                    <option value="{{ $c->id_colaborador }}">
+                      {{ $c->per_apepat }}
+                      {{ $c->per_apemat }},
+                      {{ $c->per_nombre }}
+
+                      @if ($c->cargo)
+                        — {{ $c->cargo }}
+                      @endif
+                    </option>
+                  @endforeach
+                </select>
+
+                <div class="invalid-feedback"></div>
+
+                <small class="text-muted">
+                  Técnico de OTI encargado de la evaluación y atención.
+                </small>
+              </div>
+
+              {{-- Proveedor --}}
+              <div class="col-md-12 d-none" id="grupo-proveedor">
+                <label class="form-label" for="nuevo-proveedor">
+                  Proveedor responsable
+                  <span class="text-danger">*</span>
+                </label>
+
+                <input type="text" class="form-control" id="nuevo-proveedor" name="proveedor" maxlength="150"
+                  placeholder="Ej. Lenovo Perú, HP, proveedor adjudicado...">
+
+                <div class="invalid-feedback"></div>
+
+                <small class="text-muted">
+                  Empresa que atenderá el activo mediante garantía.
+                </small>
+              </div>
+
+
+
+              {{-- Solicitado por --}}
+              <div class="col-md-12">
+                <label class="form-label" for="nuevo-solicitante">
+                  Reportado por
+                  <span class="text-muted">(opcional)</span>
+                </label>
+
+                <select class="form-select" id="nuevo-solicitante" name="solicitado_por">
+
+                  <option value="">No especificado</option>
+
+                  @foreach ($colaboradores as $c)
+                    <option value="{{ $c->id_colaborador }}">
+                      {{ $c->per_apepat }}
+                      {{ $c->per_apemat }},
+                      {{ $c->per_nombre }}
+
+                      @if ($c->cargo)
+                        — {{ $c->cargo }}
+                      @endif
+                    </option>
+                  @endforeach
+                </select>
+
+                <div class="invalid-feedback"></div>
+              </div>
+
+              {{-- Problema reportado --}}
+              <div class="col-12">
+                <label class="form-label" for="nuevo-descripcion">
+                  Problema reportado o motivo
+                  <span class="text-danger">*</span>
+                </label>
+
+                <textarea class="form-control" id="nuevo-descripcion" name="descripcion" rows="4" maxlength="2000" required
+                  placeholder="Describe la falla, el problema presentado o el motivo del mantenimiento preventivo..."></textarea>
+
+                <div class="invalid-feedback"></div>
+
+                <small class="text-light fw-light">
+                  El diagnóstico técnico se registrará durante la atención.
+                </small>
+              </div>
+
+              {{-- Información --}}
+              <div class="col-12">
+                <div class="alert alert-info mb-0">
+                  <div class="d-flex">
+                    <i class="bx bx-info-circle fs-5 me-2 mt-0"></i>
+
+                    <div>
+                      <strong>Flujo del mantenimiento</strong>
+
+                      <div class="small mt-1">
+                        Al registrar, el mantenimiento quedará pendiente de atención.
+                        Cuando el técnico inicie el trabajo, el activo pasará a
+                        <strong>EN MANTENIMIENTO</strong>.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <div class="modal-footer py-4 border-top">
+            <button type="button" class="btn btn-label-secondary" data-bs-dismiss="modal">
+              Cancelar
+            </button>
+
+            <button type="submit" class="btn btn-primary" id="btn-guardar-mantenimiento">
+
+              <span class="spinner-border spinner-border-sm d-none me-1" role="status">
+              </span>
+
+              <i class="bx bx-save me-1"></i>
+              Registrar mantenimiento
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+    </div>
+  </div>
 
   <!-- Modal detalle mantenimiento -->
   <div class="modal fade" id="modalDetalleMantenimiento" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
-      <div class="modal-content">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
 
-        <div class="modal-header">
+        <div class="modal-header py-4 border-bottom border-sw">
           <div>
-            <h5 class="modal-title">
-              <i class="bx bx-wrench me-1"></i>
-              Detalle del mantenimiento <span id="det-codigo"></span>
+            <h5 class="modal-title d-flex align-items-center fw-bold" style="color:#084b8a;">
+              <i class="bx bxs-wrench me-1"></i>
+              Detalle del mantenimiento: &nbsp; <span id="det-codigo" style="color: brown;"></span>
             </h5>
-            <small class="text-muted">
+            <small class="d-block text-muted">
               Diagnóstico, atención técnica, evidencias, costos y trazabilidad.
             </small>
           </div>
 
-          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3"
+            data-bs-dismiss="modal"></button>
         </div>
 
-        <div class="modal-body">
+
+        <div class="modal-body overflow-auto">
 
           <div class="row">
 
             <!-- Principal -->
             <div class="col-lg-8">
 
-              <div class="maintenance-detail-header mb-4">
-                <div>
-                  <span class="badge mb-2" id="det-tipo"></span>
-                  <h4 class="mb-1" id="det-titulo"></h4>
-                  <p class="text-muted mb-0" id="det-subtitulo"></p>
+
+
+              <div class="maintenance-detail-header row g-3 mb-4">
+
+                <div class="col-12 col-md-4">
+                  <div class="maintenance-detail-priority">
+                    <span>Tipo</span>
+                    <strong id="det-tipo"></strong>
+                  </div>
                 </div>
 
-                <div class="maintenance-detail-priority">
-                  <span>Prioridad</span>
-                  <strong id="det-prioridad"></strong>
+                <div class="col-12 col-md-4">
+                  <div class="maintenance-detail-priority">
+                    <span>Modalidad</span>
+                    <strong id="det-modalidad"></strong>
+                  </div>
                 </div>
+
+                <div class="col-12 col-md-4">
+                  <div class="maintenance-detail-priority">
+                    <span>Reportado el</span>
+                    <strong id="det-subtitulo"></strong>
+                  </div>
+                </div>
+
               </div>
 
               <!-- Activo -->
-              <div class="card border mb-4">
+              <div class="card border rounded-4 mb-4">
                 <div class="card-header">
-                  <h6 class="mb-0">
-                    <i class="bx bx-laptop me-1"></i>
-                    Activo vinculado
-                  </h6>
+                  <div class="d-flex align-items-center">
+                    <i class="bx bx-laptop me-1 fw-bold"></i>
+                    <h6 class="mb-0 fw-bold">
+                      Activo vinculado
+                    </h6>
+                  </div>
                 </div>
 
                 <div class="card-body">
                   <div class="maintenance-linked-asset">
                     <div class="maintenance-linked-icon bg-label-primary">
-                      <i class="bx bx-devices"></i>
+                      <i id="icon-category"></i>
                     </div>
 
                     <div class="flex-grow-1">
@@ -605,12 +863,14 @@
               </div>
 
               <!-- Diagnóstico -->
-              <div class="card border mb-4">
+              <div class="card border rounded-4 mb-4">
                 <div class="card-header">
-                  <h6 class="mb-0">
-                    <i class="bx bx-search-alt me-1"></i>
-                    Diagnóstico técnico
-                  </h6>
+                  <div class="d-flex align-items-center">
+                    <i class="bx bx-search-alt me-1 fw-bold"></i>
+                    <h6 class="mb-0 fw-bold">
+                      Diagnóstico técnico
+                    </h6>
+                  </div>
                 </div>
 
                 <div class="card-body">
@@ -631,13 +891,31 @@
                 </div>
               </div>
 
+              <!-- Historial de avances -->
+              <div class="card border rounded-4 mb-4">
+                <div class="card-header">
+                  <div class="d-flex align-items-center">
+                    <i class="bx bx-history me-1 fw-bold"></i>
+                    <h6 class="mb-0 fw-bold">
+                      Historial de avances
+                    </h6>
+                  </div>
+                </div>
+
+                <div class="card-body">
+                  <div id="det-historial-avances"></div>
+                </div>
+              </div>
+
               <!-- Evidencias -->
-              <div class="card border">
+              <div class="card border rounded-4">
                 <div class="card-header d-flex justify-content-between align-items-center">
-                  <h6 class="mb-0">
-                    <i class="bx bx-paperclip me-1"></i>
-                    Evidencias
-                  </h6>
+                  <div class="d-flex align-items-center">
+                    <i class="bx bx-paperclip me-1 fw-bold"></i>
+                    <h6 class="mb-0 fw-bold">
+                      Evidencias
+                    </h6>
+                  </div>
                 </div>
 
                 <div class="card-body">
@@ -682,10 +960,12 @@
             <div class="col-lg-4">
 
               <div class="maintenance-side-card mb-4">
-                <h6 class="mb-3">
-                  <i class="bx bx-info-circle me-1"></i>
-                  Estado técnico
-                </h6>
+                <div class="d-flex align-items-center">
+                  <i class="bx bx-info-circle me-1 fw-bold"></i>
+                  <h6 class="m-0 fw-bold">
+                    Estado técnico
+                  </h6>
+                </div>
 
                 <div class="data-list">
                   <div class="data-list-item">
@@ -694,9 +974,15 @@
                   </div>
 
                   <div class="data-list-item">
+                    <span>Resultado de atención</span>
+                    <span class="badge" id="det-resultado-atencion"></span>
+                  </div>
+
+                  {{-- Origen del reporte retirado de la interfaz nueva --}}
+                  {{-- <div class="data-list-item">
                     <span>Origen</span>
                     <strong id="det-origen"></strong>
-                  </div>
+                  </div> --}}
 
                   <div class="data-list-item">
                     <span>Solicitado por</span>
@@ -726,10 +1012,12 @@
               </div>
 
               <div class="maintenance-side-card mb-4">
-                <h6 class="mb-3">
-                  <i class="bx bx-calendar me-1"></i>
-                  Fechas
-                </h6>
+                <div class="d-flex align-items-center">
+                  <i class="bx bx-calendar me-1 fw-bold"></i>
+                  <h6 class="m-0 fw-bold">
+                    Fechas
+                  </h6>
+                </div>
 
                 <div class="data-list">
                   <div class="data-list-item">
@@ -750,10 +1038,12 @@
               </div>
 
               <div class="maintenance-side-card">
-                <h6 class="mb-3">
-                  <i class="bx bx-cog me-1"></i>
-                  Acciones rápidas
-                </h6>
+                <div class="d-flex align-items-center mb-3">
+                  <i class="bx bx-cog me-1 fw-bold"></i>
+                  <h6 class="m-0 fw-bold">
+                    Acciones rápidas
+                  </h6>
+                </div>
 
                 <div id="det-acciones" class="d-grid gap-2"></div>
               </div>
@@ -764,8 +1054,8 @@
 
         </div>
 
-        <div class="modal-footer">
-          <button class="btn btn-outline-secondary" data-bs-dismiss="modal">
+        <div class="modal-footer border-top py-4">
+          <button class="btn btn-label-secondary fw-bold" data-bs-dismiss="modal">
             Cerrar
           </button>
         </div>
@@ -783,56 +1073,66 @@
 
         <div class="modal-header">
           <div>
-            <h5 class="modal-title">
+            <h5 class="modal-title d-flex align-items-center">
               <i class="bx bx-edit me-1"></i>
-              Avance técnico <span id="avance-codigo"></span>
+              Avance técnico: &nbsp; <span class="text-navy fw-bold" id="avance-codigo"></span>
             </h5>
-            <small class="text-muted">
-              Registra el avance del diagnóstico y la atención. El activo pasará a EN MANTENIMIENTO.
+            <small class="text-light">
+              Registra un avance del diagnóstico y la atención. El activo pasará a
+              atención (interna o proveedor según la modalidad definida al registrar).
             </small>
           </div>
 
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <form id="form-avance">
+        <form id="form-avance" enctype="multipart/form-data">
           <div class="modal-body">
 
             <div class="row g-3">
 
-              <div class="col-md-6">
-                <label class="form-label" for="avance-estado">Nuevo estado</label>
-                <select class="form-select" id="avance-estado" name="estado" required></select>
+              <div class="col-12">
+                <label class="form-label" for="avance-diagnostico">Diagnóstico</label>
+                <textarea class="form-control" id="avance-diagnostico" name="diagnostico" rows="3" maxlength="2000"
+                  placeholder="Diagnóstico técnico del avance (opcional)..."></textarea>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="avance-actividad">
+                  Actividad realizada
+                  <span class="text-danger">*</span>
+                </label>
+                <textarea class="form-control" id="avance-actividad" name="actividad_realizada" rows="3" maxlength="2000"
+                  required placeholder="Describe la actividad ejecutada en este avance..."></textarea>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="avance-observacion">Observación</label>
+                <textarea class="form-control" id="avance-observacion" name="observacion" rows="2" maxlength="2000"
+                  placeholder="Observaciones adicionales (opcional)..."></textarea>
+                <div class="invalid-feedback"></div>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label" for="avance-tecnico">Técnico responsable</label>
-                <select class="form-select" id="avance-tecnico" name="tecnico_responsable">
-                  <option value="">Mantener actual / por asignar</option>
-                  @foreach ($colaboradores as $c)
-                    <option value="{{ $c->id_colaborador }}">
-                      {{ $c->per_apepat }} {{ $c->per_apemat }}, {{ $c->per_nombre }}{{ $c->cargo ? ' — ' . $c->cargo : '' }}
-                    </option>
-                  @endforeach
-                </select>
-              </div>
-
-              <div class="col-md-12">
-                <label class="form-label" for="avance-diagnostico">Diagnóstico actualizado</label>
-                <textarea class="form-control" id="avance-diagnostico" name="diagnostico" rows="4" maxlength="2000"
-                  placeholder="Describe el diagnóstico actualizado..."></textarea>
+                <label class="form-label" for="avance-costo">
+                  Costo (S/)
+                  <span class="text-muted">(opcional)</span>
+                </label>
+                <input type="number" step="0.01" min="0" class="form-control" id="avance-costo"
+                  name="costo" placeholder="0.00" />
+                <div class="invalid-feedback"></div>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label" for="avance-proveedor">Proveedor</label>
-                <input type="text" class="form-control" id="avance-proveedor" name="proveedor" maxlength="150"
-                  placeholder="Obligatorio si derivas a proveedor" />
-              </div>
-
-              <div class="col-md-6">
-                <label class="form-label" for="avance-costo">Costo estimado / real (S/)</label>
-                <input type="number" step="0.01" min="0" class="form-control" id="avance-costo" name="costo"
-                  placeholder="0.00" />
+                <label class="form-label" for="avance-evidencia">
+                  Evidencia
+                  <span class="text-muted">(opcional · máx. 5 MB)</span>
+                </label>
+                <input type="file" class="form-control" id="avance-evidencia" name="evidencia"
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx" />
+                <div class="invalid-feedback"></div>
               </div>
 
             </div>
@@ -876,36 +1176,79 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
         </div>
 
-        <form id="form-finalizar">
+        <form id="form-finalizar" enctype="multipart/form-data">
           <div class="modal-body">
 
             <div class="row g-3">
 
               <div class="col-md-6">
-                <label class="form-label" for="fin-estado">Resultado de la atención</label>
-                <select class="form-select" id="fin-estado" name="estado" required>
-                  <option value="ATENDIDO">Atendido (equipo operativo)</option>
-                  <option value="SIN_REPARACION">Sin reparación (inoperativo)</option>
+                <label class="form-label" for="fin-resultado-atencion">
+                  Resultado de la atención
+                  <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="fin-resultado-atencion" name="resultado_atencion" required>
+                  <option value="OPERATIVO">Equipo operativo</option>
                   <option value="RECOMENDADO_BAJA">Recomendar baja</option>
                 </select>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-md-6" id="fin-condicion-wrap">
+                <label class="form-label" for="fin-condicion">
+                  Condición física resultante
+                  <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="fin-condicion" name="condicion_resultante">
+                  <option value="">Selecciona...</option>
+                  <option value="NUEVO">Nuevo</option>
+                  <option value="BUENO">Bueno</option>
+                  <option value="REGULAR">Regular</option>
+                  <option value="MALO">Malo</option>
+                </select>
+                <div class="form-text">Condición que certifica el técnico tras atender o revisar el equipo.</div>
+                <div class="invalid-feedback"></div>
               </div>
 
               <div class="col-md-6">
-                <label class="form-label" for="fin-costo">Costo final (S/)</label>
-                <input type="number" step="0.01" min="0" class="form-control" id="fin-costo" name="costo"
-                  placeholder="0.00" />
+                <label class="form-label" for="fin-costo">
+                  Costo final (S/)
+                  <span class="text-muted">(opcional)</span>
+                </label>
+                <input type="number" step="0.01" min="0" class="form-control" id="fin-costo"
+                  name="costo" placeholder="0.00" />
+                <div class="invalid-feedback"></div>
               </div>
 
               <div class="col-md-12">
-                <label class="form-label" for="fin-diagnostico">Diagnóstico técnico</label>
-                <textarea class="form-control" id="fin-diagnostico" name="diagnostico" rows="3" maxlength="2000"
-                  placeholder="Diagnóstico final (obligatorio si aún no fue registrado)..."></textarea>
+                <label class="form-label" for="fin-diagnostico">
+                  Diagnóstico final
+                  <span class="text-danger">*</span>
+                </label>
+                <textarea class="form-control" id="fin-diagnostico" name="diagnostico" rows="3" maxlength="2000" required
+                  placeholder="Diagnóstico técnico final..."></textarea>
+                <div class="invalid-feedback"></div>
               </div>
 
               <div class="col-md-12">
-                <label class="form-label" for="fin-resultado">Resultado / actividad realizada</label>
+                <label class="form-label" for="fin-resultado">
+                  Actividad / resultado final
+                  <span class="text-danger">*</span>
+                </label>
                 <textarea class="form-control" id="fin-resultado" name="resultado" rows="3" required maxlength="2000"
                   placeholder="Describe la actividad realizada, repuestos y resultado final..."></textarea>
+                <div class="invalid-feedback"></div>
+              </div>
+
+              <div class="col-12">
+                <label class="form-label" for="fin-evidencia">
+                  Evidencia final
+                  <span class="text-danger">*</span>
+                  <span class="text-muted">(informe, foto, informe del proveedor, cotización, acta u otro sustento · máx.
+                    5 MB)</span>
+                </label>
+                <input type="file" class="form-control" id="fin-evidencia" name="evidencia" required
+                  accept=".pdf,.jpg,.jpeg,.png,.webp,.doc,.docx,.xls,.xlsx" />
+                <div class="invalid-feedback"></div>
               </div>
 
               <div class="col-12">
@@ -937,17 +1280,27 @@
   </div>
   <!-- / Modal finalizar mantenimiento -->
 
+  {{-- Modal de nueva baja reutilizable: se abre al finalizar con RECOMENDADO_BAJA.
+       Se incluye sin $bajasActivos; el activo se precarga desde el mantenimiento. --}}
+  @include('content.bajas.partials.modal-nueva-baja')
+
 @endsection
 
 @section('page-script')
   <script>
     window.mantenimientos = @json($mantenimientos);
+    window.activosMantenimiento = @json($activos->keyBy('id_activo'));
     window.routesMant = {
       store: @json(route('mantenimientos.store')),
       avanzar: @json(url('/mantenimientos')) + '/{id}/avanzar',
       finalizar: @json(url('/mantenimientos')) + '/{id}/finalizar',
-      cerrar: @json(url('/mantenimientos')) + '/{id}/cerrar',
+      // cerrar: fuera de uso (FINALIZADO es el estado terminal)
+      // cerrar: @json(url('/mantenimientos')) + '/{id}/cerrar',
       cancelar: @json(url('/mantenimientos')) + '/{id}/cancelar'
+    };
+    // Ruta usada por el modal de baja compartido (integración mantenimiento → baja).
+    window.routesBajas = {
+      store: @json(route('bajas.store'))
     };
   </script>
   @vite(['resources/js/vendors/index.js', 'resources/js/pages/mantenimientos/mantenimientos.js'])

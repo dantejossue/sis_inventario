@@ -18,36 +18,10 @@
       animation: flashScan 1.2s ease-out;
     }
 
-    /* Select2 con la misma altura que los form-select de Sneat */
-    #filtro-responsable+.select2-container .select2-selection--single {
-      height: 38px !important;
-      min-height: 38px !important;
-      display: flex;
-      align-items: center;
-      border: 1px solid #d9dee3;
-      border-radius: 0.375rem;
-    }
-
-    /* Texto y placeholder */
-    #filtro-responsable+.select2-container .select2-selection--single .select2-selection__rendered {
-      line-height: normal !important;
-      padding-left: 0.875rem;
-      padding-right: 2.25rem;
-      color: #697a8d;
-    }
-
-    /* Flecha del Select2 */
-    #filtro-responsable+.select2-container .select2-selection--single .select2-selection__arrow {
-      height: 100% !important;
-      top: 0 !important;
-      right: 0.65rem;
-      display: flex;
-      align-items: center;
-    }
 
     /* Modal de mover: pegado arriba; si el contenido excede la pantalla, hace
-       scroll el overlay completo (comportamiento estándar; el modal-dialog-scrollable
-       de este build de Sneat dejaba parte del modal fuera de pantalla sin scroll). */
+                                                                                                                                       scroll el overlay completo (comportamiento estándar; el modal-dialog-scrollable
+                                                                                                                                       de este build de Sneat dejaba parte del modal fuera de pantalla sin scroll). */
     #modalMover.modal {
       overflow-y: auto !important;
     }
@@ -86,22 +60,33 @@
     $kObservado = $acts->where('situacion_actual', 'OBSERVADO')->count();
     $kBaja = $acts->where('situacion_actual', 'DADO_DE_BAJA')->count();
     $kpiCards = [
-        ['Total activos', $kTotal, 'primary', 'bx-devices', $kDisponible . ' disponibles', 'text-success', 'todas'],
-        ['En uso', $kEnUso, 'success', 'bx-user-check', 'Asignados a responsable', 'text-muted', 'EN_USO'],
+        [
+            'Total activos',
+            $kTotal,
+            'white',
+            'primary',
+            'bxs-devices',
+            $kDisponible . ' disponibles',
+            'text-primary',
+            'todas',
+        ],
+        ['En uso', $kEnUso, 'white', 'success', 'bxs-user-check', 'Asignados a responsable', 'text-success', 'EN_USO'],
         [
             'En préstamo',
             $kPrestamo,
-            'info',
-            'bx-time-five',
+            'white',
+            'warning',
+            'bxs-time-five',
             $kMantenimiento . ' en mantenimiento',
-            'text-muted',
+            'text-warning',
             'EN_PRESTAMO',
         ],
         [
             'Observados',
             $kObservado,
-            'warning',
-            'bx-error-circle',
+            'white',
+            'danger',
+            'bxs-error-circle',
             $kBaja . ' dados de baja',
             'text-danger',
             'OBSERVADO',
@@ -111,21 +96,20 @@
 
   <!-- KPIs rápidos (clic para filtrar por situación) -->
   <div class="row g-4">
-    @foreach ($kpiCards as [$titulo, $valor, $color, $icono, $sub, $subClass, $filtro])
+    @foreach ($kpiCards as [$titulo, $valor, $fondo, $color, $icono, $sub, $subClass, $filtro])
       <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
-        <div class="card rounded-5 kpi-card kpi-filtro" role="button" data-situacion="{{ $filtro }}"
-          title="Filtrar por {{ $titulo }}">
-          <div class="card-body">
+        <div class="card maintenance-kpi-card rounded-3 kpi-card kpi-filtro" role="button"
+          data-situacion="{{ $filtro }}" title="Filtrar por {{ $titulo }}">
+          <div class="card-body bg-{{ $fondo }} bg-gradient rounded-5">
             <div class="d-flex align-items-start justify-content-between">
               <div>
-                <span class="fw-semibold d-block mb-1">{{ $titulo }}</span>
-                <h3 class="card-title mb-2">{{ $valor }}</h3>
+                <span class="fw-bold d-block mb-1">{{ $titulo }}</span>
+                <h3 class="card-title mb-2 fw-bold">{{ $valor }}</h3>
                 <small class="{{ $subClass }} fw-semibold">{{ $sub }}</small>
               </div>
-              <div class="avatar">
-                <span class="avatar-initial rounded bg-label-{{ $color }}">
-                  <i class="bx {{ $icono }} fs-3"></i>
-                </span>
+              <div class="rounded-5 bg-label-{{ $color }}  p-2 d-flex align-items-center justify-content-center"
+                style="width:55px; height:55px;">
+                <i class="bx {{ $icono }} fs-2 bg-{{ $color }}"></i>
               </div>
             </div>
           </div>
@@ -135,9 +119,9 @@
   </div>
 
   <!-- Filtros -->
-  <div class="card rounded-4 mb-4">
+  <div class="card rounded-3 mb-4">
     <div class="card-header">
-      <h5 class="mb-0">Filtros de búsqueda</h5>
+      <h5 class="mb-0 fw-bold">Filtros de búsqueda</h5>
       <small class="text-muted">
         Filtra por sede, categoría, estado, responsable o información patrimonial.
       </small>
@@ -154,6 +138,7 @@
             ->sortBy('nombre')
             ->values();
       @endphp
+
       <div class="row g-3">
 
         <div class="col-lg-3 col-md-6">
@@ -216,12 +201,20 @@
     </div>
   </div>
 
-  <div class="card rounded-4">
-    <div class="card-header border-bottom d-flex justify-content-between align-items-center">
+  <div class="card rounded-3">
+    <div class="card-header border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
       <h5 class="mb-0 fw-bold">Inventario de Activos</h5>
-      <a href="{{ route('activos.create') }}" class="btn btn-primary">
-        <i class="bx bx-plus me-1"></i> Nuevo Activo
-      </a>
+      <div class="d-flex gap-2">
+        <a href="{{ route('activos.importar.plantilla') }}" class="btn btn-label-secondary">
+          <i class="bx bx-download me-1"></i> Descargar plantilla
+        </a>
+        <button type="button" class="btn btn-label-success" data-bs-toggle="modal" data-bs-target="#modalImportarExcel">
+          <i class="bx bx-upload me-1"></i> Importar Excel
+        </button>
+        <a href="{{ route('activos.create') }}" class="btn btn-primary">
+          <i class="bx bx-plus me-1"></i> Nuevo Activo
+        </a>
+      </div>
     </div>
 
     <div class="card-body pt-4">
@@ -444,6 +437,61 @@
     </div>
   </div>
 
+
+  {{-- ════════════════════════════════════════════════════════════════════════════
+       MODAL — IMPORTAR ACTIVOS DESDE EXCEL
+  ════════════════════════════════════════════════════════════════════════════ --}}
+  <div class="modal fade" id="modalImportarExcel" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+      <div class="modal-content">
+        <div class="modal-header border-bottom py-4">
+          <h5 class="modal-title fw-bold d-flex align-items-center">
+            <i class="bx bx-upload me-2"></i> Importar Activos desde Excel
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+
+        <form id="formImportarExcel">
+          @csrf
+          <div class="modal-body py-4">
+            <div class="alert alert-info d-flex align-items-start gap-2">
+              <i class="bx bx-info-circle fs-5"></i>
+              <div>
+                Usa la plantilla oficial para llenar los datos.
+                <a href="{{ route('activos.importar.plantilla') }}" class="fw-semibold">Descárgala aquí</a>
+                si aún no la tienes. Cada fila se procesa por separado: las filas con errores se
+                reportan al final sin bloquear a las demás.
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label" for="importar-archivo">Archivo Excel (.xlsx, .xls) <span
+                  class="text-danger">*</span></label>
+              <input type="file" class="form-control" id="importar-archivo" name="archivo" required
+                accept=".xlsx,.xls">
+              <div class="invalid-feedback"></div>
+              <small class="text-muted">Tamaño máximo 5 MB.</small>
+            </div>
+
+            {{-- Resultado tras procesar el archivo --}}
+            <div id="importar-resultado" class="d-none">
+              <hr>
+              <div id="importar-resumen" class="mb-3"></div>
+              <div id="importar-errores"></div>
+            </div>
+          </div>
+
+          <div class="modal-footer border-top py-4">
+            <button type="button" class="btn btn-label-danger" data-bs-dismiss="modal">Cerrar</button>
+            <button type="submit" class="btn btn-success" id="btnConfirmarImportar">
+              <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>
+              <i class="bx bx-upload me-1"></i> Importar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 
   {{-- ════════════════════════════════════════════════════════════════════════════
        MODAL — UBICACIÓN FÍSICA COMPLETA
@@ -895,7 +943,9 @@
       mover: '{{ route('movimientos.store') }}',
       etiquetas: '{{ route('activos.etiquetas') }}',
       ver: '/activos/{id}/ver',
+      importar: '{{ route('activos.importar') }}',
+      exportarExcel: '{{ route('activos.exportar.excel') }}',
     };
   </script>
-  @vite(['resources/js/vendors/index.js', 'resources/js/pages/activos/activos-table.js', 'resources/js/pages/activos/activos-acciones.js'])
+  @vite(['resources/js/vendors/index.js', 'resources/js/pages/activos/activos-table.js', 'resources/js/pages/activos/activos-acciones.js', 'resources/js/pages/activos/activos-importar.js'])
 @endsection

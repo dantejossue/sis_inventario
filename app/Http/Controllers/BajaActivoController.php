@@ -6,48 +6,64 @@ use App\Models\Activo;
 use App\Models\ActivoTecnico;
 use App\Models\AuditoriaCambio;
 use App\Models\BajaActivo;
-use App\Models\Colaborador;
+use App\Models\DocumentoAdjunto;
 use App\Models\Mantenimiento;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
 /**
- * Bajas técnicas OTI (F-C, brief §16). NO es una baja patrimonial: es una
- * recomendación técnica que OTI registra, evalúa y valida internamente.
+ * Bajas de activos (flujo simplificado). El módulo NO evalúa técnicamente el
+ * activo: esa evaluación ya la hace mantenimientos, que finaliza con
+ * resultado_atencion = RECOMENDADO_BAJA. Aquí solo se registra, sustenta,
+ * ejecuta o rechaza formalmente la propuesta.
  *
- *   REGISTRADA ─► EN_EVALUACION ─► RECOMENDADA ─► VALIDADA ─► EJECUTADA
- *        │              │               │
- *        └──────────────┴───────────────┴─► RECHAZADA
+ *   REGISTRADA ─► EJECUTADA
+ *        └──────► RECHAZADA
  *
- * Reglas:
- *  - OTI registra y recomienda (no "solicita"/"aprueba" como área externa):
- *    registrado_por = usuario; evaluado_por / validado_por = colaborador OTI.
- *  - Al recomendar: el activo queda OBSERVADO y condición MALO.
- *  - Solo al EJECUTAR el activo pasa a DADO_DE_BAJA (y pierde responsable).
- *  - Rechazar en cualquier etapa previa restaura la situación operativa.
+ * - REGISTRADA: activo OBSERVADO, condición MALO, ficha PENDIENTE_BAJA.
+ * - EJECUTADA: baja confirmada por documento formal → activo DADO_DE_BAJA.
+ * - RECHAZADA: propuesta administrativa no aceptada; el activo permanece
+ *   OBSERVADO (su recuperación se hace luego por mantenimiento/regularización).
  */
 class BajaActivoController extends Controller
 {
+    /** Extensiones permitidas para documentos de sustento. */
+    private const EXTENSIONES = 'pdf,jpg,jpeg,png,webp,doc,docx,xls,xlsx';
+
+    /** Tipos de documento formal admitidos al ejecutar la baja. */
+    private const TIPOS_DOC_FORMAL = ['ACTA_BAJA', 'RESOLUCION', 'DOCUMENTO_PATRIMONIAL', 'INFORME_FINAL', 'OTRO'];
+
+    /** Relaciones que se cargan para formatear una baja. */
+    private const RELACIONES = [
+        'activo.modelo.marca',
+        'activo.categoria',
+        'activo.responsable',
+        'mantenimientoOrigen',
+        'registradoPor.colaborador',
+        'ejecutadoPor.colaborador',
+        'rechazadoPor.colaborador',
+        'documentos.subidoPor.colaborador',
+    ];
+
     public function index()
     {
-        $bajas = BajaActivo::with([
-                'activo.modelo.marca', 'activo.categoria', 'activo.responsable',
-                'mantenimientoOrigen', 'registradoPor.colaborador', 'evaluadoPor', 'validadoPor',
-                'documentos.subidoPor.colaborador',
-            ])
+        $bajas = BajaActivo::with(self::RELACIONES)
             ->orderByDesc('id_baja')
             ->get()
             ->map(fn($b) => $this->formatBaja($b))
             ->values();
 
-        // Activos elegibles: no dados de baja y sin baja abierta en curso.
+        // Activos elegibles: no dados de baja y sin propuesta REGISTRADA en curso.
+        // (Una baja EJECUTADA deja el activo DADO_DE_BAJA, ya excluido por situación.)
         $conBajaAbierta = BajaActivo::whereIn('estado', BajaActivo::ESTADOS_ABIERTOS)
             ->pluck('id_activo');
 
-        $activos = Activo::with('modelo.marca')
+        $activos = Activo::with('modelo.marca', 'categoria')
             ->whereNotIn('id_activo', $conBajaAbierta)
             ->where('situacion_actual', '!=', 'DADO_DE_BAJA')
             ->orderBy('codigo_interno')
@@ -56,45 +72,50 @@ class BajaActivoController extends Controller
                 'id_activo'      => $a->id_activo,
                 'codigo_interno' => $a->codigo_interno,
                 'modelo'         => trim(($a->modelo?->marca?->nombre ?? '') . ' ' . ($a->modelo?->nombre ?? '')),
+                'categoria' => [
+                    'nombre' => $a->categoria?->nombre,
+                    'icono'  => $a->categoria?->icono,
+                ],
                 'situacion'      => $a->situacion_actual,
-                'valor_compra'   => $a->valor_compra,
             ])
             ->values();
 
         // Mantenimientos que recomendaron baja, por activo (para vincular origen).
-        $mantsBaja = Mantenimiento::where(function ($q) {
-                $q->where('recomienda_baja', true)->orWhere('estado', 'RECOMENDADO_BAJA');
-            })
+        $mantsBaja = Mantenimiento::where('recomienda_baja', true)
             ->orderByDesc('id_mantenimiento')
-            ->get(['id_mantenimiento', 'id_activo', 'descripcion', 'estado'])
+            ->get(['id_mantenimiento', 'id_activo', 'descripcion', 'diagnostico', 'resultado'])
             ->groupBy('id_activo')
             ->map(fn($grupo) => $grupo->map(fn($m) => [
                 'id_mantenimiento' => $m->id_mantenimiento,
                 'codigo'           => $m->codigo,
-                'descripcion'      => \Illuminate\Support\Str::limit($m->descripcion, 70),
+                'descripcion'      => Str::limit($m->descripcion, 70),
+                'diagnostico'      => $m->diagnostico,
+                'resultado'        => $m->resultado,
             ])->values());
 
-        $colaboradores = Colaborador::where('estado', 'ACTIVO')
-            ->orderBy('per_apepat')
-            ->get(['id_colaborador', 'per_nombre', 'per_apepat', 'per_apemat', 'cargo']);
-
-        return view('content.bajas.index', compact('bajas', 'activos', 'mantsBaja', 'colaboradores'));
+        return view('content.bajas.index', compact('bajas', 'activos', 'mantsBaja'));
     }
 
+    /**
+     * Registra una propuesta de baja (REGISTRADA). Deja el activo OBSERVADO.
+     * Acepta un documento inicial opcional (FormData).
+     */
     public function store(Request $request)
     {
         $request->validate([
             'id_activo'               => 'required|integer|exists:activo,id_activo',
             'causal_baja'             => ['required', Rule::in(BajaActivo::CAUSALES)],
             'motivo'                  => 'required|string|max:2000',
-            'diagnostico_tecnico'     => 'nullable|string|max:2000',
             'id_mantenimiento_origen' => 'nullable|integer|exists:mantenimientos,id_mantenimiento',
             'fecha_registro'          => 'required|date|before_or_equal:today',
             'observaciones'           => 'nullable|string|max:1000',
+            'documento'               => 'nullable|file|mimes:' . self::EXTENSIONES . '|max:5120',
         ], [
             'id_activo.required'   => 'Debes seleccionar un activo.',
             'causal_baja.required' => 'Debes seleccionar la causal de baja.',
             'motivo.required'      => 'El motivo/sustento de la baja es obligatorio.',
+            'documento.mimes'      => 'Formato de documento no permitido.',
+            'documento.max'        => 'El documento no puede superar los 5 MB.',
         ]);
 
         $activo = Activo::findOrFail($request->id_activo);
@@ -103,161 +124,101 @@ class BajaActivoController extends Controller
             throw ValidationException::withMessages(['id_activo' => 'El activo ya está dado de baja.']);
         }
 
-        $abierta = BajaActivo::where('id_activo', $activo->id_activo)
-            ->whereIn('estado', BajaActivo::ESTADOS_ABIERTOS)
+        // Sin duplicados: no se permite otra propuesta si ya hay una REGISTRADA o EJECUTADA.
+        $existente = BajaActivo::where('id_activo', $activo->id_activo)
+            ->whereIn('estado', ['REGISTRADA', 'EJECUTADA'])
             ->first();
-        if ($abierta) {
-            throw ValidationException::withMessages(['id_activo' => "El activo ya tiene la baja {$abierta->codigo} en curso."]);
+        if ($existente) {
+            throw ValidationException::withMessages([
+                'id_activo' => "El activo ya tiene la baja {$existente->codigo} ({$this->legible($existente->estado)}).",
+            ]);
         }
 
+        $mantOrigen = null;
         if ($request->id_mantenimiento_origen) {
-            $pertenece = Mantenimiento::where('id_mantenimiento', $request->id_mantenimiento_origen)
-                ->where('id_activo', $activo->id_activo)->exists();
-            if (! $pertenece) {
+            $mantOrigen = Mantenimiento::where('id_mantenimiento', $request->id_mantenimiento_origen)
+                ->where('id_activo', $activo->id_activo)
+                ->first();
+            if (! $mantOrigen) {
                 throw ValidationException::withMessages([
                     'id_mantenimiento_origen' => 'El mantenimiento vinculado no corresponde al activo seleccionado.',
                 ]);
             }
         }
 
-        $baja = BajaActivo::create([
-            'id_activo'               => $activo->id_activo,
-            'id_mantenimiento_origen' => $request->id_mantenimiento_origen ?: null,
-            'registrado_por'          => Auth::id(),
-            'causal_baja'             => $request->causal_baja,
-            'motivo'                  => trim($request->motivo),
-            'diagnostico_tecnico'     => $request->diagnostico_tecnico ? trim($request->diagnostico_tecnico) : null,
-            'estado'                  => 'REGISTRADA',
-            'fecha_registro'          => $request->fecha_registro,
-            'observaciones'           => $request->observaciones ? trim($request->observaciones) : null,
-        ]);
+        $baja = DB::transaction(function () use ($request, $activo, $mantOrigen) {
+            $baja = BajaActivo::create([
+                'id_activo'               => $activo->id_activo,
+                'id_mantenimiento_origen' => $mantOrigen?->id_mantenimiento,
+                'registrado_por'          => Auth::id(),
+                'causal_baja'             => $request->causal_baja,
+                'motivo'                  => trim($request->motivo),
+                // Snapshot del diagnóstico del mantenimiento de origen (si existe).
+                'diagnostico_tecnico'     => $mantOrigen?->diagnostico,
+                'estado'                  => 'REGISTRADA',
+                'fecha_registro'          => $request->fecha_registro,
+                'observaciones'           => $request->observaciones ? trim($request->observaciones) : null,
+            ]);
+
+            // El activo queda OBSERVADO / condición MALO / ficha PENDIENTE_BAJA.
+            $this->situarActivo($activo, 'OBSERVADO');
+            // Traza de condición: la propuesta de baja fuerza la condición a MALO.
+            $activo->marcarOrigenCondicion('BAJA', 'BAJA', $baja->id_baja, $request->motivo ? trim($request->motivo) : null);
+            $activo->update(['condicion_actual' => 'MALO']);
+
+            if ($request->hasFile('documento')) {
+                $this->guardarDocumento($request->file('documento'), $baja->id_baja, 'SUSTENTO_INICIAL');
+            }
+
+            return $baja;
+        });
 
         AuditoriaCambio::registrar('BAJA', $baja->id_baja, 'CREAR', null, [
-            'codigo' => $baja->codigo, 'id_activo' => $baja->id_activo, 'causal' => $baja->causal_baja,
+            'codigo' => $baja->codigo,
+            'id_activo' => $baja->id_activo,
+            'causal' => $baja->causal_baja,
         ], $request->motivo);
 
         return $this->respuesta($baja, "Baja {$baja->codigo} registrada.");
     }
 
     /**
-     * Evaluación técnica. resultado ∈ {EN_EVALUACION, RECOMENDADA, RECHAZADA}.
-     * Recomendar exige informe/diagnóstico + clasificación y deja el activo
-     * OBSERVADO con condición MALO.
+     * Ejecuta formalmente la baja (solo desde REGISTRADA). Exige documento
+     * formal. El activo pasa a DADO_DE_BAJA.
      */
-    public function evaluar(Request $request, int $id)
+    public function ejecutar(Request $request, int $id)
     {
         $baja = BajaActivo::with('activo')->findOrFail($id);
 
-        if (! in_array($baja->estado, ['REGISTRADA', 'EN_EVALUACION'], true)) {
+        if ($baja->estado !== 'REGISTRADA') {
             throw ValidationException::withMessages([
-                'estado' => "La baja {$baja->codigo} ya fue evaluada ({$this->legible($baja->estado)}).",
+                'estado' => "Solo se puede ejecutar una baja REGISTRADA (esta está {$this->legible($baja->estado)}).",
             ]);
         }
 
         $request->validate([
-            'resultado'           => ['required', Rule::in(['EN_EVALUACION', 'RECOMENDADA', 'RECHAZADA'])],
-            'evaluado_por'        => 'nullable|integer|exists:colaboradores,id_colaborador',
-            'diagnostico_tecnico' => 'nullable|string|max:2000',
-            'valor_referencial'   => 'nullable|numeric|min:0',
-            'clasificacion_final' => ['nullable', Rule::in(BajaActivo::CLASIFICACIONES)],
-            'numero_informe_tecnico' => 'nullable|string|max:100',
-            'motivo'              => 'nullable|string|max:1000',
-            'observaciones'       => 'nullable|string|max:1000',
+            'fecha_ejecucion'  => 'required|date|before_or_equal:today',
+            'tipo_documento'   => ['required', Rule::in(self::TIPOS_DOC_FORMAL)],
+            'numero_documento' => 'nullable|string|max:100',
+            'documento'        => 'required|file|mimes:' . self::EXTENSIONES . '|max:5120',
+            'observaciones'    => 'nullable|string|max:1000',
         ], [
-            'resultado.required' => 'Indica el resultado de la evaluación.',
+            'fecha_ejecucion.required' => 'Indica la fecha de ejecución.',
+            'tipo_documento.required'  => 'Indica el tipo de documento formal.',
+            'documento.required'       => 'El documento formal de baja es obligatorio.',
+            'documento.mimes'          => 'Formato de documento no permitido.',
+            'documento.max'            => 'El documento no puede superar los 5 MB.',
         ]);
 
-        $diagnostico = $request->filled('diagnostico_tecnico')
-            ? trim($request->diagnostico_tecnico)
-            : $baja->diagnostico_tecnico;
-
-        if ($request->resultado === 'RECOMENDADA') {
-            if (! $diagnostico) {
-                throw ValidationException::withMessages([
-                    'diagnostico_tecnico' => 'No se puede recomendar la baja sin informe/diagnóstico técnico.',
-                ]);
-            }
-            if (! $request->clasificacion_final) {
-                throw ValidationException::withMessages([
-                    'clasificacion_final' => 'Indica la clasificación final del activo (RAEE, chatarra, obsoleto…).',
-                ]);
-            }
-        }
-
-        DB::transaction(function () use ($request, $baja, $diagnostico) {
+        DB::transaction(function () use ($request, $baja) {
             $baja->update([
-                'estado'                 => $request->resultado,
-                'evaluado_por'           => $request->evaluado_por ?: $baja->evaluado_por,
-                'diagnostico_tecnico'    => $diagnostico,
-                'valor_referencial'      => $request->filled('valor_referencial') ? $request->valor_referencial : $baja->valor_referencial,
-                'clasificacion_final'    => $request->clasificacion_final ?: $baja->clasificacion_final,
-                'numero_informe_tecnico' => $request->numero_informe_tecnico ?: $baja->numero_informe_tecnico,
-                'fecha_evaluacion'       => now()->toDateString(),
-                'observaciones'          => $this->anotar($baja->observaciones, $request->observaciones ?: ($request->motivo ?: null)),
+                'estado'        => 'EJECUTADA',
+                'fecha_baja'    => $request->fecha_ejecucion,
+                'ejecutado_por' => Auth::id(),
+                'observaciones' => $this->anotar($baja->observaciones, $request->observaciones),
             ]);
 
-            if ($request->resultado === 'RECOMENDADA') {
-                // Brief §16: al recomendar, el activo queda OBSERVADO y condición MALO.
-                $this->situarActivo($baja->activo, 'OBSERVADO');
-                $baja->activo->update(['condicion_actual' => 'MALO']);
-            } elseif ($request->resultado === 'RECHAZADA') {
-                $this->restaurarActivo($baja);
-            }
-        });
-
-        AuditoriaCambio::registrar('BAJA', $baja->id_baja, $request->resultado === 'RECHAZADA' ? 'CANCELAR' : 'ACTUALIZAR', null, [
-            'codigo' => $baja->codigo, 'resultado' => $request->resultado, 'clasificacion' => $baja->clasificacion_final,
-        ]);
-
-        return $this->respuesta($baja, "Baja {$baja->codigo}: evaluación registrada ({$this->legible($request->resultado)}).");
-    }
-
-    /** Validación interna OTI: RECOMENDADA → VALIDADA. */
-    public function validar(Request $request, int $id)
-    {
-        $baja = BajaActivo::findOrFail($id);
-
-        if ($baja->estado !== 'RECOMENDADA') {
-            throw ValidationException::withMessages([
-                'estado' => 'Solo se valida una baja con evaluación técnica RECOMENDADA.',
-            ]);
-        }
-
-        $request->validate([
-            'validado_por'                => 'nullable|integer|exists:colaboradores,id_colaborador',
-            'numero_documento_validacion' => 'nullable|string|max:100',
-            'observaciones'               => 'nullable|string|max:1000',
-        ]);
-
-        $baja->update([
-            'estado'                      => 'VALIDADA',
-            'validado_por'                => $request->validado_por ?: null,
-            'numero_documento_validacion' => $request->numero_documento_validacion ?: null,
-            'fecha_validacion'            => now()->toDateString(),
-            'observaciones'               => $this->anotar($baja->observaciones, $request->observaciones),
-        ]);
-
-        AuditoriaCambio::registrar('BAJA', $baja->id_baja, 'ACTUALIZAR', null, [
-            'codigo' => $baja->codigo, 'estado' => 'VALIDADA', 'documento' => $baja->numero_documento_validacion,
-        ]);
-
-        return $this->respuesta($baja, "Baja {$baja->codigo} validada. Ya puede ejecutarse.");
-    }
-
-    /** Ejecución: el activo pasa a DADO_DE_BAJA. */
-    public function ejecutar(int $id)
-    {
-        $baja = BajaActivo::with('activo')->findOrFail($id);
-
-        if ($baja->estado !== 'VALIDADA') {
-            throw ValidationException::withMessages(['estado' => 'Solo se puede ejecutar una baja VALIDADA.']);
-        }
-
-        DB::transaction(function () use ($baja) {
-            $baja->update([
-                'estado'     => 'EJECUTADA',
-                'fecha_baja' => now()->toDateString(),
-            ]);
+            $this->guardarDocumento($request->file('documento'), $baja->id_baja, $request->tipo_documento, $request->numero_documento);
 
             $activo = $baja->activo;
             $this->situarActivo($activo, 'DADO_DE_BAJA');
@@ -265,19 +226,23 @@ class BajaActivoController extends Controller
         });
 
         AuditoriaCambio::registrar('BAJA', $baja->id_baja, 'EJECUTAR', null, [
-            'codigo' => $baja->codigo, 'id_activo' => $baja->id_activo, 'fecha_baja' => $baja->fecha_baja?->toDateString(),
+            'codigo' => $baja->codigo,
+            'id_activo' => $baja->id_activo,
+            'fecha_baja' => $baja->fecha_baja?->toDateString(),
         ]);
 
         return $this->respuesta($baja, "Baja {$baja->codigo} ejecutada: el activo quedó DADO DE BAJA.");
     }
 
-    /** Rechazo en cualquier etapa previa a la ejecución; restaura el activo. */
+    /** Rechaza la propuesta (solo desde REGISTRADA). El activo permanece OBSERVADO. */
     public function rechazar(Request $request, int $id)
     {
         $baja = BajaActivo::with('activo')->findOrFail($id);
 
-        if (! in_array($baja->estado, BajaActivo::ESTADOS_ABIERTOS, true)) {
-            throw ValidationException::withMessages(['estado' => "La baja {$baja->codigo} ya no está en curso."]);
+        if ($baja->estado !== 'REGISTRADA') {
+            throw ValidationException::withMessages([
+                'estado' => "Solo se puede rechazar una baja REGISTRADA (esta está {$this->legible($baja->estado)}).",
+            ]);
         }
 
         $request->validate(
@@ -288,16 +253,26 @@ class BajaActivoController extends Controller
         DB::transaction(function () use ($request, $baja) {
             $baja->update([
                 'estado'        => 'RECHAZADA',
-                'observaciones' => $this->anotar($baja->observaciones, 'RECHAZADA: ' . trim($request->motivo)),
+                'motivo_rechazo' => trim($request->motivo),
+                'fecha_rechazo' => now()->toDateString(),
+                'rechazado_por' => Auth::id(),
             ]);
-
-            $this->restaurarActivo($baja);
+            // El activo se mantiene OBSERVADO: el rechazo administrativo no lo vuelve operativo.
         });
 
         AuditoriaCambio::registrar('BAJA', $baja->id_baja, 'CANCELAR', null, ['codigo' => $baja->codigo], $request->motivo);
 
-        return $this->respuesta($baja, "Baja {$baja->codigo} rechazada; el activo vuelve a su situación operativa.");
+        return $this->respuesta($baja, "Baja {$baja->codigo} rechazada. El activo permanece OBSERVADO.");
     }
+
+    /*
+     * ── Métodos del flujo anterior: FUERA DE USO ──
+     * La evaluación técnica ya no vive en bajas (la hace mantenimientos).
+     * Rutas comentadas en routes/web.php.
+     *
+     * public function evaluar(Request $request, int $id) { ... }  // EN_EVALUACION / RECOMENDADA / RECHAZADA
+     * public function validar(Request $request, int $id) { ... }  // RECOMENDADA → VALIDADA
+     */
 
     // ──────────────────────────────────────────────────────────────────
     // Helpers
@@ -317,13 +292,22 @@ class BajaActivoController extends Controller
             ->update(['estado_operativo' => $estadoOperativo]);
     }
 
-    /** Devuelve el activo a su situación operativa si quedó OBSERVADO por la baja. */
-    private function restaurarActivo(BajaActivo $baja): void
+    /** Guarda un documento de sustento en el disco privado local. */
+    private function guardarDocumento(UploadedFile $file, int $idBaja, string $tipoDocumento, ?string $numeroDocumento = null): void
     {
-        $activo = $baja->activo;
-        if ($activo->situacion_actual === 'OBSERVADO') {
-            $this->situarActivo($activo, $activo->id_responsable_actual ? 'EN_USO' : 'DISPONIBLE');
-        }
+        $ruta = $file->store('documentos/baja', 'local');
+
+        DocumentoAdjunto::create([
+            'entidad_tipo'     => 'BAJA',
+            'entidad_id'       => $idBaja,
+            'tipo_documento'   => $tipoDocumento,
+            'numero_documento' => $numeroDocumento ?: null,
+            'archivo'          => $ruta,
+            'nombre_original'  => $file->getClientOriginalName(),
+            'extension'        => strtolower($file->getClientOriginalExtension()),
+            'tamano_kb'        => (int) round($file->getSize() / 1024),
+            'subido_por'       => Auth::id(),
+        ]);
     }
 
     /** Acumula notas en observaciones sin perder las anteriores. */
@@ -344,11 +328,7 @@ class BajaActivoController extends Controller
 
     private function respuesta(BajaActivo $baja, string $mensaje)
     {
-        $baja->refresh()->load([
-            'activo.modelo.marca', 'activo.categoria', 'activo.responsable',
-            'mantenimientoOrigen', 'registradoPor.colaborador', 'evaluadoPor', 'validadoPor',
-            'documentos.subidoPor.colaborador',
-        ]);
+        $baja->refresh()->load(self::RELACIONES);
 
         return response()->json([
             'success' => true,
@@ -370,31 +350,36 @@ class BajaActivoController extends Controller
             'activo_patrimonial'  => $a?->codigo_patrimonial,
             'activo_modelo'       => trim(($a?->modelo?->marca?->nombre ?? '') . ' ' . ($a?->modelo?->nombre ?? '')),
             'activo_categoria'    => $a?->categoria?->nombre,
+            'activo_categoria_icono' => $a?->categoria?->icono,
             'activo_situacion'    => $a ? $a->situacionLabel() : null,
             'activo_url'          => $a ? route('activos.ver', $a->id_activo) : null,
-            'valor_compra'        => $a?->valor_compra,
             'causal'              => $b->causal_baja,
-            'clasificacion'       => $b->clasificacion_final,
             'estado'              => $b->estado,
             'motivo'              => $b->motivo,
-            'diagnostico'         => $b->diagnostico_tecnico,
-            'informe_tecnico'     => $b->numero_informe_tecnico,
-            'documento_validacion' => $b->numero_documento_validacion,
-            'valor_referencial'   => $b->valor_referencial,
             'observaciones'       => $b->observaciones,
-            'origen'              => $b->mantenimientoOrigen
-                ? 'Mantenimiento ' . $b->mantenimientoOrigen->codigo
-                : 'Registro directo',
+            'diagnostico'         => $b->diagnostico_tecnico,
+            // Origen de mantenimiento
+            'origen'              => $b->mantenimientoOrigen ? 'Mantenimiento ' . $b->mantenimientoOrigen->codigo : 'Registro directo',
+            'id_mantenimiento_origen'   => $b->id_mantenimiento_origen,
+            'mantenimiento_origen'      => $b->mantenimientoOrigen?->codigo,
+            'diagnostico_mantenimiento' => $b->mantenimientoOrigen?->diagnostico,
+            'resultado_mantenimiento'   => $b->mantenimientoOrigen?->resultado,
+            // Rechazo
+            'motivo_rechazo'      => $b->motivo_rechazo,
+            // Usuarios
             'registrado_por'      => $nombreUsuario($b->registradoPor),
-            'evaluado_por'        => $b->evaluadoPor?->nombre_completo,
-            'validado_por'        => $b->validadoPor?->nombre_completo,
+            'ejecutado_por'       => $nombreUsuario($b->ejecutadoPor),
+            'rechazado_por'       => $nombreUsuario($b->rechazadoPor),
+            // Fechas
             'fecha_registro'      => $b->fecha_registro?->format('Y-m-d'),
-            'fecha_evaluacion'    => $b->fecha_evaluacion?->format('Y-m-d'),
-            'fecha_validacion'    => $b->fecha_validacion?->format('Y-m-d'),
-            'fecha_baja'          => $b->fecha_baja?->format('Y-m-d'),
+            'fecha_ejecucion'     => $b->fecha_baja?->format('Y-m-d'),
+            'fecha_rechazo'       => $b->fecha_rechazo?->format('Y-m-d'),
+            // Documentos
+            'documentos_count'    => $b->documentos->count(),
             'documentos'          => $b->documentos->map(fn($d) => [
                 'id_documento'    => $d->id_documento,
                 'tipo_documento'  => $d->tipo_documento,
+                'numero_documento' => $d->numero_documento,
                 'nombre_original' => $d->nombre_original,
                 'extension'       => $d->extension,
                 'tamano_kb'       => $d->tamano_kb,

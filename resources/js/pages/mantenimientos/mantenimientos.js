@@ -1,68 +1,80 @@
 import $ from 'jquery';
 import Swal from 'sweetalert2';
 import dtDefaults from '../../plugins/datatables-defaults';
+import { initNuevaBajaModal, prefillBajaDesdeMantenimiento } from '../bajas/nueva-baja-modal';
 
 /**
- * Módulo de mantenimientos (F5): tabla, KPIs, filtros y ciclo
- * Solicitud → Diagnóstico → Atención → Resultado → Cierre.
+ * Módulo de mantenimientos (F5) — flujo simplificado:
+ *   REGISTRADO → EN_ATENCION → FINALIZADO   (ruta alternativa: → CANCELADO)
+ * El resultado técnico (OPERATIVO | RECOMENDADO_BAJA) es independiente del estado.
+ * Cada avance crea un registro en el historial (mantenimiento_avances).
  */
 
 const tipoBadge = {
   PREVENTIVO: 'bg-label-info',
   CORRECTIVO: 'bg-label-danger',
-  GARANTIA: 'bg-label-primary',
+  // GARANTIA: 'bg-label-primary',
   REVISION_TECNICA: 'bg-label-warning'
 };
 
+const tipoTexto = {
+  PREVENTIVO: 'Preventivo',
+  CORRECTIVO: 'Correctivo',
+  // GARANTIA: 'bg-label-primary',
+  REVISION_TECNICA: 'Revisión técnica'
+};
+
+// ── Estados del proceso (nuevo flujo) ──────────────────────────────
 const estadoBadge = {
-  SOLICITADO: 'bg-label-primary',
-  EN_REVISION: 'bg-label-info',
-  EN_MANTENIMIENTO: 'bg-label-warning',
-  DERIVADO_PROVEEDOR: 'bg-label-warning',
-  ATENDIDO: 'bg-label-success',
-  SIN_REPARACION: 'bg-label-danger',
-  RECOMENDADO_BAJA: 'bg-label-danger',
-  CERRADO: 'bg-success',
+  REGISTRADO: 'bg-label-primary',
+  EN_ATENCION: 'bg-label-warning',
+  FINALIZADO: 'bg-success',
   CANCELADO: 'bg-label-dark'
 };
 
-const prioridadBadge = {
-  BAJA: 'bg-label-secondary',
-  MEDIA: 'bg-label-warning',
-  ALTA: 'bg-label-danger',
-  CRITICA: 'bg-danger'
-};
-
 const estadoTexto = {
-  SOLICITADO: 'Solicitado',
-  EN_REVISION: 'En diagnóstico',
-  EN_MANTENIMIENTO: 'En atención',
-  DERIVADO_PROVEEDOR: 'Derivado a proveedor',
-  ATENDIDO: 'Atendido',
-  SIN_REPARACION: 'Sin reparación',
-  RECOMENDADO_BAJA: 'Recomendado baja',
-  CERRADO: 'Cerrado',
+  REGISTRADO: 'Registrado',
+  EN_ATENCION: 'En atención',
+  FINALIZADO: 'Finalizado',
   CANCELADO: 'Cancelado'
 };
 
-const origenTexto = {
-  USUARIO: 'Área usuaria',
-  OTI: 'OTI',
-  USG: 'Servicios Generales',
-  INVENTARIO: 'Inventario',
-  OTRO: 'Otro'
+// ── Resultado técnico (independiente del estado) ───────────────────
+const resultadoBadge = {
+  OPERATIVO: 'bg-label-success',
+  RECOMENDADO_BAJA: 'bg-label-danger'
 };
 
-// Debe reflejar MantenimientoController::AVANCES
-const AVANCES = {
-  SOLICITADO: ['EN_REVISION', 'EN_MANTENIMIENTO', 'DERIVADO_PROVEEDOR'],
-  EN_REVISION: ['EN_MANTENIMIENTO', 'DERIVADO_PROVEEDOR'],
-  EN_MANTENIMIENTO: ['DERIVADO_PROVEEDOR'],
-  DERIVADO_PROVEEDOR: ['EN_MANTENIMIENTO']
+const resultadoTexto = {
+  OPERATIVO: 'Equipo operativo',
+  RECOMENDADO_BAJA: 'Recomendado para baja'
 };
 
-const ABIERTOS = ['SOLICITADO', 'EN_REVISION', 'EN_MANTENIMIENTO', 'DERIVADO_PROVEEDOR'];
-const RESULTADOS = ['ATENDIDO', 'SIN_REPARACION', 'RECOMENDADO_BAJA'];
+// ── Modalidad de atención ──────────────────────────────────────────
+const modalidadBadge = {
+  INTERNA_OTI: 'bg-label-info',
+  GARANTIA_PROVEEDOR: 'bg-label-primary'
+};
+
+const modalidadTexto = {
+  INTERNA_OTI: 'Atención interna OTI',
+  GARANTIA_PROVEEDOR: 'Garantía / proveedor'
+};
+
+/*
+ * ── Constantes del flujo anterior: FUERA DE USO ──
+ * Se conservan comentadas como referencia histórica.
+ *
+ * const estadoBadge_ANTERIOR = { SOLICITADO, EN_REVISION, EN_MANTENIMIENTO, DERIVADO_PROVEEDOR, ATENDIDO, SIN_REPARACION, RECOMENDADO_BAJA, CERRADO, CANCELADO };
+ * const estadoTexto_ANTERIOR = { ... };
+ * const AVANCES = { SOLICITADO: [...], EN_REVISION: [...], EN_MANTENIMIENTO: [...], DERIVADO_PROVEEDOR: [...] };  // ya no hay transiciones manuales
+ * const RESULTADOS = ['ATENDIDO', 'SIN_REPARACION', 'RECOMENDADO_BAJA'];
+ * const prioridadBadge = { ... };   // prioridad eliminada
+ * const origenTexto = { ... };      // origen eliminado
+ */
+
+const ABIERTOS = ['REGISTRADO', 'EN_ATENCION'];
+const FINALES = ['FINALIZADO', 'CANCELADO'];
 
 const dash = '<span class="text-muted">—</span>';
 const legible = v => (v ?? '').replace(/_/g, ' ');
@@ -71,6 +83,13 @@ const fmtCosto = c => (c !== null && c !== undefined && c !== '' ? `S/ ${Number(
 const csrf = () => $('meta[name="csrf-token"]').attr('content');
 
 const buscar = id => window.mantenimientos.find(m => m.id_mantenimiento === id);
+
+function extensionIcono(ext) {
+  if (ext === 'pdf') return ['bxs-file-pdf', 'bg-label-danger'];
+  if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) return ['bx-image', 'bg-label-primary'];
+  if (['xls', 'xlsx'].includes(ext)) return ['bx-spreadsheet', 'bg-label-success'];
+  return ['bx-file', 'bg-label-info'];
+}
 
 $(function () {
   // ═══════════════════════════════════════════
@@ -83,31 +102,29 @@ $(function () {
     columns: [
       {
         data: 'codigo',
-        render: (d, t, row) =>
-          `<span class="fw-semibold d-block">${d}</span>` +
-          `<small class="text-muted">${origenTexto[row.origen] ?? ''}</small>`
+        render: d => `<span class="fw-semibold d-block">${d}</span>`
       },
       {
-        data: 'activo_codigo',
+        data: 'activo_patrimonial',
         render: (d, t, row) =>
           `<a href="${row.activo_url ?? '#'}" class="fw-semibold d-block">${d ?? '—'}</a>` +
           `<small class="text-muted">${row.activo_modelo || '—'}</small>`
       },
       {
         data: 'tipo',
-        render: d => `<span class="badge ${tipoBadge[d] ?? 'bg-label-secondary'}">${legible(d)}</span>`
+        render: d => `<span class="badge ${tipoBadge[d] ?? 'bg-label-secondary'}">${legible(tipoTexto[d])}</span>`
       },
-      {
-        data: 'descripcion',
-        orderable: false,
-        render: (d, t, row) => {
-          const problema = d ? `<span class="d-block text-truncate" style="max-width: 240px;">${d}</span>` : dash;
-          const diag = row.diagnostico
-            ? `<small class="text-muted d-block text-truncate" style="max-width: 240px;">${row.diagnostico}</small>`
-            : '';
-          return problema + diag;
-        }
-      },
+      // {
+      //   data: 'descripcion',
+      //   orderable: false,
+      //   render: (d, t, row) => {
+      //     const problema = d ? `<span class="d-block text-truncate" style="max-width: 240px;">${d}</span>` : dash;
+      //     const diag = row.diagnostico
+      //       ? `<small class="text-muted d-block text-truncate" style="max-width: 240px;">${row.diagnostico}</small>`
+      //       : '';
+      //     return problema + diag;
+      //   }
+      // },
       {
         data: 'tecnico',
         render: (d, t, row) => {
@@ -118,12 +135,14 @@ $(function () {
         }
       },
       {
-        data: 'prioridad',
-        render: d => `<span class="badge ${prioridadBadge[d] ?? 'bg-label-secondary'}">${legible(d)}</span>`
+        data: 'modalidad',
+        render: d =>
+          `<span class="badge ${modalidadBadge[d] ?? 'bg-label-secondary'}">${modalidadTexto[d] ?? legible(d)}</span>`
       },
       {
         data: 'estado',
-        render: d => `<span class="badge ${estadoBadge[d] ?? 'bg-label-secondary'}">${estadoTexto[d] ?? legible(d)}</span>`
+        render: d =>
+          `<span class="badge ${estadoBadge[d] ?? 'bg-label-secondary'}">${estadoTexto[d] ?? legible(d)}</span>`
       },
       {
         data: 'costo',
@@ -133,8 +152,10 @@ $(function () {
         data: 'fecha_reporte',
         render: (d, t, row) => {
           if (t === 'sort' || t === 'type') return d ?? '';
-          return `<span class="d-block">${fmtFecha(d) ?? '—'}</span>` +
-            (row.fecha_fin ? `<small class="text-muted">Fin: ${fmtFecha(row.fecha_fin)}</small>` : '');
+          return (
+            `<span class="d-block">${fmtFecha(d) ?? '—'}</span>` +
+            (row.fecha_fin ? `<small class="text-muted">Fin: ${fmtFecha(row.fecha_fin)}</small>` : '')
+          );
         }
       },
       {
@@ -144,7 +165,6 @@ $(function () {
         className: 'text-end',
         render: row => {
           const abierto = ABIERTOS.includes(row.estado);
-          const conResultado = RESULTADOS.includes(row.estado);
 
           let items = `
             <li>
@@ -159,25 +179,23 @@ $(function () {
               <a class="dropdown-item btn-avance-mant d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_mantenimiento}">
                 <i class="bx bx-edit me-1"></i> Avance técnico
               </a>
-            </li>
+            </li>`;
+
+            // Finalizar solo desde EN_ATENCION (no se puede finalizar un REGISTRADO sin avance).
+            if (row.estado === 'EN_ATENCION') {
+              items += `
             <li>
               <a class="dropdown-item btn-finalizar-mant d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_mantenimiento}">
                 <i class="bx bx-check-circle me-1"></i> Finalizar
               </a>
-            </li>
+            </li>`;
+            }
+
+            items += `
             <li><hr class="dropdown-divider"></li>
             <li>
               <a class="dropdown-item text-danger btn-cancelar-mant d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_mantenimiento}">
                 <i class="bx bx-x-circle me-1"></i> Cancelar
-              </a>
-            </li>`;
-          }
-
-          if (conResultado) {
-            items += `
-            <li>
-              <a class="dropdown-item btn-cerrar-mant d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_mantenimiento}">
-                <i class="bx bx-lock me-1"></i> Cerrar mantenimiento
               </a>
             </li>`;
           }
@@ -202,74 +220,36 @@ $(function () {
   });
 
   // ═══════════════════════════════════════════
-  // KPIs Y ALERTAS
+  // KPIs
   // ═══════════════════════════════════════════
   function refrescarIndicadores() {
     const data = window.mantenimientos;
-    const abiertos = data.filter(m => ABIERTOS.includes(m.estado));
-    const enAtencion = data.filter(m => ['EN_MANTENIMIENTO', 'DERIVADO_PROVEEDOR'].includes(m.estado));
-    const finalizados = data.filter(m => [...RESULTADOS, 'CERRADO'].includes(m.estado));
+    const enAtencion = data.filter(m => m.estado === 'EN_ATENCION');
+    const registrados = data.filter(m => m.estado === 'REGISTRADO');
+    const finalizados = data.filter(m => m.estado === 'FINALIZADO');
     const mesActual = new Date().toISOString().slice(0, 7);
 
-    $('#kpi-abiertos').text(abiertos.length);
-    $('#kpi-abiertos-detalle').text(`${enAtencion.length} en atención`);
+    // En atención
+    $('#kpi-abiertos').text(enAtencion.length);
+    $('#kpi-abiertos-detalle').text(`${registrados.length} registrados`);
 
+    // Preventivos
     const preventivos = data.filter(m => m.tipo === 'PREVENTIVO');
     $('#kpi-preventivos').text(preventivos.length);
     $('#kpi-preventivos-detalle').text(`${preventivos.filter(m => ABIERTOS.includes(m.estado)).length} en curso`);
 
+    // Correctivos
     const correctivos = data.filter(m => m.tipo === 'CORRECTIVO');
-    const criticosAbiertos = data.filter(m => m.prioridad === 'CRITICA' && ABIERTOS.includes(m.estado));
     $('#kpi-correctivos').text(correctivos.length);
-    $('#kpi-correctivos-detalle').text(`${criticosAbiertos.length} críticos`);
+    $('#kpi-correctivos-detalle').text(`${correctivos.filter(m => ABIERTOS.includes(m.estado)).length} en curso`);
 
+    // Finalizados
     $('#kpi-finalizados').text(finalizados.length);
     $('#kpi-finalizados-detalle').text(
       `${finalizados.filter(m => (m.fecha_fin ?? '').startsWith(mesActual)).length} este mes`
     );
 
-    // Mini stats del panel de flujo
-    const cerradosOk = data.filter(m => ['ATENDIDO', 'CERRADO'].includes(m.estado) && !m.recomienda_baja);
-    $('#stat-atendidos').text(data.length ? Math.round((cerradosOk.length / data.length) * 100) + '%' : '0%');
-    $('#stat-criticos').text(criticosAbiertos.length);
-    $('#stat-garantia').text(data.filter(m => m.tipo === 'GARANTIA').length);
-    $('#stat-baja').text(data.filter(m => m.recomienda_baja || m.estado === 'RECOMENDADO_BAJA').length);
-
-    // Alertas técnicas
-    const alertas = [];
-    const critCorrectivos = data.filter(m => m.tipo === 'CORRECTIVO' && m.prioridad === 'CRITICA' && ABIERTOS.includes(m.estado));
-    if (critCorrectivos.length) {
-      alertas.push(['bg-label-danger', 'bx-error', `${critCorrectivos.length} correctivo(s) crítico(s)`, 'Equipos posiblemente fuera de servicio.']);
-    }
-    const conProveedor = data.filter(m => m.estado === 'DERIVADO_PROVEEDOR');
-    if (conProveedor.length) {
-      alertas.push(['bg-label-info', 'bx-package', `${conProveedor.length} con proveedor`, 'Garantía o reparación externa en curso.']);
-    }
-    const recomBaja = data.filter(m => m.estado === 'RECOMENDADO_BAJA');
-    if (recomBaja.length) {
-      alertas.push(['bg-label-secondary', 'bx-trash', `${recomBaja.length} recomendado(s) para baja`, 'Pendientes de propuesta formal de baja.']);
-    }
-    const sinTecnico = abiertos.filter(m => !m.tecnico && !m.proveedor);
-    if (sinTecnico.length) {
-      alertas.push(['bg-label-warning', 'bx-user-x', `${sinTecnico.length} sin técnico asignado`, 'Solicitudes a la espera de asignación.']);
-    }
-
-    $('#alertas-tecnicas').html(
-      alertas.length
-        ? alertas
-            .map(
-              ([color, icono, titulo, detalle]) => `
-                <div class="maintenance-alert-item">
-                  <div class="maintenance-alert-icon ${color}"><i class="bx ${icono}"></i></div>
-                  <div>
-                    <h6 class="mb-1">${titulo}</h6>
-                    <small class="text-muted">${detalle}</small>
-                  </div>
-                </div>`
-            )
-            .join('')
-        : '<p class="text-muted mb-0">Sin alertas pendientes.</p>'
-    );
+    // Panel de flujo/alertas y stats (#stat-*, #alertas-tecnicas) retirados de la interfaz: sin cálculo.
   }
 
   refrescarIndicadores();
@@ -291,18 +271,15 @@ $(function () {
       return false;
     }
 
-    const prioridad = $('#filtro-prioridad').val();
-    if (prioridad && row.prioridad !== prioridad) return false;
-
     const desde = $('#filtro-fecha').val();
     if (desde && (!row.fecha_reporte || row.fecha_reporte < desde)) return false;
 
     return true;
   });
 
-  $('#filtro-tipo, #filtro-estado, #filtro-prioridad, #filtro-fecha').on('change', () => window.tablaMant.draw());
+  $('#filtro-tipo, #filtro-estado, #filtro-fecha').on('change', () => window.tablaMant.draw());
   $('#filtro-reset').on('click', () => {
-    $('#filtro-tipo, #filtro-estado, #filtro-prioridad').val('');
+    $('#filtro-tipo, #filtro-estado').val('');
     $('#filtro-fecha').val('');
     window.tablaMant.search('').draw();
   });
@@ -334,62 +311,262 @@ $(function () {
     }
   }
 
-  function enviar(url, metodo, payload, modalId, fallback, onSuccess) {
+  // Envío simple (payload serializado) — usado por cancelar.
+  function enviar(url, metodo, payload, modalId, fallback) {
     $.ajax({
       url,
       type: metodo,
       data: payload,
       headers: { 'X-CSRF-TOKEN': csrf() },
+      success: res => aplicarRespuesta(res, modalId),
+      error: xhr => manejarError(xhr, fallback)
+    });
+  }
+
+  // Envío con archivos (FormData + method spoofing) — usado por avance y finalizar.
+  function enviarFormData(url, formEl, modalId, fallback, onSuccess) {
+    const formData = new FormData(formEl);
+    formData.append('_method', 'PUT');
+
+    $.ajax({
+      url,
+      type: 'POST',
+      data: formData,
+      processData: false,
+      contentType: false,
+      headers: { 'X-CSRF-TOKEN': csrf() },
       success: res => {
         aplicarRespuesta(res, modalId);
+        formEl.reset();
         if (onSuccess) onSuccess(res);
       },
       error: xhr => manejarError(xhr, fallback)
     });
   }
 
+  // Modal de baja compartido (integración: al finalizar con RECOMENDADO_BAJA).
+  initNuevaBajaModal();
+
   // ═══════════════════════════════════════════
   // NUEVO MANTENIMIENTO
   // ═══════════════════════════════════════════
-  $('#nuevo-activo').on('change', function () {
-    $('#resumen-activo').text($(this).find('option:selected').text().split('—')[0].trim() || 'No seleccionado');
-  });
-  $('#nuevo-tipo').on('change', function () {
-    $('#resumen-tipo').text($(this).find('option:selected').text() || 'No seleccionado');
-  });
-  $('#nuevo-prioridad').on('change', function () {
-    $('#resumen-prioridad').text($(this).find('option:selected').text());
-  });
+  const modalNuevo = $('#modalNuevoMantenimiento');
+  const formNuevo = $('#form-nuevo-mantenimiento');
+  const btnGuardar = $('#btn-guardar-mantenimiento');
+  const spinnerGuardar = btnGuardar.find('.spinner-border');
 
-  $('#form-nuevo-mantenimiento').on('submit', function (e) {
-    e.preventDefault();
-    const form = this;
-    const usado = $('#nuevo-activo').val();
+  const modalidad = $('#nuevo-modalidad');
+  const grupoTecnico = $('#grupo-tecnico');
+  const grupoProveedor = $('#grupo-proveedor');
 
-    enviar(
-      window.routesMant.store,
-      'POST',
-      $(form).serialize(),
-      'modalNuevoMantenimiento',
-      'No se pudo registrar el mantenimiento.',
-      () => {
-        // El activo usado deja de ser elegible hasta que se cierre/cancele
-        if (usado) $(`#nuevo-activo option[value="${usado}"]`).remove();
-        form.reset();
-        $('#resumen-activo, #resumen-tipo').text('No seleccionado');
-        $('#resumen-prioridad').text('Media');
-      }
+  const tecnico = $('#nuevo-tecnico');
+  const proveedor = $('#nuevo-proveedor');
+
+  function limpiarErroresNuevo() {
+    formNuevo.find('.is-invalid').removeClass('is-invalid');
+    formNuevo.find('.invalid-feedback').removeClass('d-block').text('');
+    formNuevo.find('.select2-selection').removeClass('border-danger');
+  }
+
+  // La modalidad se decide automáticamente por la garantía del activo (el backend la re-verifica).
+  function obtenerActivoSeleccionado() {
+    const id = $('#nuevo-activo').val();
+    if (!id) return null;
+    return window.activosMantenimiento?.[id] ?? window.activosMantenimiento?.[String(id)] ?? null;
+  }
+
+  function actualizarAtencionPorActivo() {
+    const activo = obtenerActivoSeleccionado();
+
+    // Estado inicial: ocultar técnico, proveedor y mensaje de garantía.
+    grupoTecnico.addClass('d-none');
+    grupoProveedor.addClass('d-none');
+    $('#grupo-estado-garantia').addClass('d-none');
+    tecnico.prop('required', false).val(null).trigger('change');
+    proveedor.prop('required', false).val('');
+    modalidad.val('');
+
+    if (!activo) return;
+
+    $('#grupo-estado-garantia').removeClass('d-none');
+
+    if (activo.garantia_vigente) {
+      // Garantía vigente → atención por proveedor.
+      modalidad.val('GARANTIA_PROVEEDOR');
+      grupoProveedor.removeClass('d-none');
+      proveedor.prop('required', true).val(activo.proveedor ?? '');
+
+      $('#alerta-garantia').removeClass('alert-secondary alert-warning alert-danger').addClass('alert-success');
+      $('#garantia-titulo').text('Activo con garantía vigente');
+      $('#garantia-detalle').text(
+        activo.garantia_fin
+          ? `La garantía vence el ${fmtFecha(activo.garantia_fin)}. La atención corresponde al proveedor.`
+          : 'La atención corresponde al proveedor.'
+      );
+      return;
+    }
+
+    // Sin garantía vigente → atención interna por OTI.
+    modalidad.val('INTERNA_OTI');
+    grupoTecnico.removeClass('d-none');
+    tecnico.prop('required', true);
+
+    $('#alerta-garantia').removeClass('alert-success alert-warning alert-danger').addClass('alert-secondary');
+    $('#garantia-titulo').text('Activo sin garantía vigente');
+    $('#garantia-detalle').text(
+      activo.garantia_fin
+        ? `La garantía venció el ${fmtFecha(activo.garantia_fin)}. La atención será realizada por OTI.`
+        : 'No tiene una garantía registrada. La atención será realizada por OTI.'
     );
+  }
+
+  $('#nuevo-activo').on('change', actualizarAtencionPorActivo);
+
+  function inicializarSelect2Nuevo() {
+    const opciones = [
+      { selector: '#nuevo-activo', placeholder: 'Seleccione un activo...' },
+      { selector: '#nuevo-tecnico', placeholder: 'Seleccione un técnico...' },
+      { selector: '#nuevo-solicitante', placeholder: 'No especificado' }
+    ];
+
+    opciones.forEach(configuracion => {
+      const select = $(configuracion.selector);
+      if (!select.length || !$.fn.select2 || select.hasClass('select2-hidden-accessible')) return;
+
+      select.select2({
+        dropdownParent: modalNuevo,
+        width: '100%',
+        placeholder: configuracion.placeholder,
+        allowClear: true
+      });
+    });
+  }
+
+  modalNuevo.on('shown.bs.modal', function () {
+    inicializarSelect2Nuevo();
+    actualizarAtencionPorActivo();
+  });
+
+  formNuevo.on('submit', function (event) {
+    event.preventDefault();
+    limpiarErroresNuevo();
+
+    const formulario = this;
+    const idActivoUtilizado = $('#nuevo-activo').val();
+
+    btnGuardar.prop('disabled', true);
+    spinnerGuardar.removeClass('d-none');
+
+    $.ajax({
+      url: window.routesMant.store,
+      type: 'POST',
+      data: formNuevo.serialize(),
+      headers: { 'X-CSRF-TOKEN': csrf() },
+      success: response => {
+        aplicarRespuesta(response, 'modalNuevoMantenimiento');
+
+        // El activo deja de ser elegible: ahora tiene un mantenimiento abierto.
+        if (idActivoUtilizado) {
+          $('#nuevo-activo').find(`option[value="${idActivoUtilizado}"]`).remove();
+        }
+
+        formulario.reset();
+        $('#nuevo-activo').val(null).trigger('change');
+        $('#nuevo-tecnico').val(null).trigger('change');
+        $('#nuevo-solicitante').val(null).trigger('change');
+        $('#nuevo-modalidad').val('');
+        $('#nuevo-tipo').val('');
+        actualizarAtencionPorActivo();
+      },
+      error: xhr => {
+        if (xhr.status === 422 && xhr.responseJSON?.errors) {
+          mostrarErroresNuevo(xhr.responseJSON.errors);
+          return;
+        }
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: xhr.responseJSON?.message || 'No se pudo registrar el mantenimiento.'
+        });
+      },
+      complete: () => {
+        btnGuardar.prop('disabled', false);
+        spinnerGuardar.addClass('d-none');
+      }
+    });
+  });
+
+  function mostrarErroresNuevo(errors) {
+    const mapa = {
+      id_activo: '#nuevo-activo',
+      tipo_mantenimiento: '#nuevo-tipo',
+      tecnico_responsable: '#nuevo-tecnico',
+      proveedor: '#nuevo-proveedor',
+      fecha_reporte: '#nuevo-fecha',
+      solicitado_por: '#nuevo-solicitante',
+      descripcion: '#nuevo-descripcion'
+    };
+
+    Object.entries(errors).forEach(([campo, mensajes]) => {
+      const selector = mapa[campo];
+      if (!selector) return;
+
+      const input = $(selector);
+      const mensaje = mensajes[0];
+      input.addClass('is-invalid');
+
+      if (input.hasClass('select2-hidden-accessible')) {
+        input.next('.select2-container').find('.select2-selection').addClass('border-danger');
+        input.siblings('.invalid-feedback').addClass('d-block').text(mensaje);
+        return;
+      }
+      input.siblings('.invalid-feedback').text(mensaje);
+    });
+  }
+
+  modalNuevo.on('hidden.bs.modal', function () {
+    const formulario = formNuevo[0];
+    formulario?.reset();
+    $('#nuevo-activo').val(null).trigger('change');
+    $('#nuevo-tecnico').val(null).trigger('change');
+    $('#nuevo-solicitante').val(null).trigger('change');
+    $('#nuevo-modalidad').val('');
+    $('#nuevo-tipo').val('');
+    limpiarErroresNuevo();
+    actualizarAtencionPorActivo();
+    btnGuardar.prop('disabled', false);
+    spinnerGuardar.addClass('d-none');
   });
 
   // ═══════════════════════════════════════════
   // DETALLE
   // ═══════════════════════════════════════════
-  function extensionIcono(ext) {
-    if (ext === 'pdf') return ['bxs-file-pdf', 'bg-label-danger'];
-    if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) return ['bx-image', 'bg-label-primary'];
-    if (['xls', 'xlsx'].includes(ext)) return ['bx-spreadsheet', 'bg-label-success'];
-    return ['bx-file', 'bg-label-info'];
+  function renderAvances(avances) {
+    if (!avances || !avances.length) {
+      return '<p class="text-muted mb-0">Sin avances registrados.</p>';
+    }
+    return avances
+      .map((av, i) => {
+        const docs = (av.documentos ?? [])
+          .map(d => {
+            const [icono, color] = extensionIcono(d.extension);
+            return `<a href="${d.url_descarga}" class="btn btn-sm btn-outline-primary me-1 mb-1"><i class="bx ${icono} me-1"></i>${d.nombre_original ?? 'Evidencia'}</a>`;
+          })
+          .join('');
+        return `
+          <div class="border rounded p-3 mb-2">
+            <div class="d-flex justify-content-between align-items-start mb-1">
+              <strong>Avance ${i + 1}</strong>
+              <small class="text-muted">${av.fecha ?? ''}${av.registrado_por ? ' · ' + av.registrado_por : ''}</small>
+            </div>
+            ${av.diagnostico ? `<div class="small mb-1"><span class="text-muted">Diagnóstico:</span> ${av.diagnostico}</div>` : ''}
+            <div class="small mb-1"><span class="text-muted">Actividad:</span> ${av.actividad_realizada ?? '—'}</div>
+            ${av.observacion ? `<div class="small mb-1"><span class="text-muted">Observación:</span> ${av.observacion}</div>` : ''}
+            ${av.costo !== null && av.costo !== undefined && av.costo !== '' ? `<div class="small mb-1"><span class="text-muted">Costo:</span> ${fmtCosto(av.costo)}</div>` : ''}
+            ${docs ? `<div class="mt-2">${docs}</div>` : ''}
+          </div>`;
+      })
+      .join('');
   }
 
   $(document).on('click', '.btn-detalle-mant', function () {
@@ -397,14 +574,23 @@ $(function () {
     if (!m) return;
 
     $('#det-codigo').text(m.codigo);
-    $('#det-tipo').attr('class', `badge mb-2 ${tipoBadge[m.tipo] ?? 'bg-label-secondary'}`).text(legible(m.tipo));
+    $('#det-tipo')
+      // .attr('class', `badge mb-2 fw-bold ${tipoBadge[m.tipo] ?? 'bg-label-secondary'}`)
+      .text(legible(tipoTexto[m.tipo]));
     $('#det-titulo').text(m.descripcion ? m.descripcion.split('\n')[0].slice(0, 80) : m.codigo);
     $('#det-subtitulo').text(
-      `Reportado el ${fmtFecha(m.fecha_reporte) ?? '—'} · Origen: ${origenTexto[m.origen] ?? '—'}`
+      // `Reportado el ${fmtFecha(m.fecha_reporte) ?? '—'} · Modalidad: ${modalidadTexto[m.modalidad] ?? '—'}`
+      `${fmtFecha(m.fecha_reporte) ?? '—'}`
     );
-    $('#det-prioridad').text(legible(m.prioridad));
+    $('#det-modalidad')
+      // .attr('class', `badge ${modalidadBadge[m.modalidad] ?? 'bg-label-secondary'}`)
+      .text(modalidadTexto[m.modalidad] ?? legible(m.modalidad));
 
-    $('#det-activo-modelo').text(m.activo_modelo || m.activo_codigo || '—');
+    $('#icon-category').attr('class', `bx ${m.activo_categoria_icono ?? 'bx-package'}`);
+
+    $('#det-activo-modelo').text(
+      `${m.activo_categoria ?? 'Sin categoría'} ${m.activo_modelo || m.activo_codigo || '—'}`
+    );
     $('#det-activo-codigo').text(`Código interno: ${m.activo_codigo ?? '—'}`);
     $('#det-activo-patrimonial').text(`Código patrimonial: ${m.activo_patrimonial ?? '—'}`);
     $('#det-activo-responsable').text(
@@ -416,8 +602,15 @@ $(function () {
     $('#det-diagnostico').text(m.diagnostico || 'Pendiente de diagnóstico.');
     $('#det-resultado').text(m.resultado || 'Pendiente de resultado.');
 
-    $('#det-estado').attr('class', `badge ${estadoBadge[m.estado] ?? 'bg-label-secondary'}`).text(estadoTexto[m.estado] ?? legible(m.estado));
-    $('#det-origen').text(origenTexto[m.origen] ?? '—');
+    $('#det-estado')
+      .attr('class', `badge ${estadoBadge[m.estado] ?? 'bg-label-secondary'}`)
+      .text(estadoTexto[m.estado] ?? legible(m.estado));
+    $('#det-resultado-atencion')
+      .attr('class', `badge ${resultadoBadge[m.resultado_atencion] ?? 'bg-label-secondary'}`)
+      .text(
+        m.resultado_atencion ? (resultadoTexto[m.resultado_atencion] ?? legible(m.resultado_atencion)) : 'Pendiente'
+      );
+
     $('#det-solicitante').text(m.solicitado_por || '—');
     $('#det-tecnico').text(m.tecnico || 'Por asignar');
     $('#det-proveedor').text(m.proveedor || '—');
@@ -428,7 +621,10 @@ $(function () {
     $('#det-fecha-inicio').text(fmtFecha(m.fecha_inicio) ?? 'No iniciado');
     $('#det-fecha-fin').text(fmtFecha(m.fecha_fin) ?? 'En curso');
 
-    // Evidencias
+    // Historial de avances
+    $('#det-historial-avances').html(renderAvances(m.avances));
+
+    // Evidencias generales del mantenimiento
     const docs = m.documentos ?? [];
     $('#det-evidencias').html(
       docs.length
@@ -458,11 +654,17 @@ $(function () {
     // Acciones rápidas contextuales
     const acciones = [];
     if (ABIERTOS.includes(m.estado)) {
-      acciones.push(`<button class="btn btn-primary btn-avance-mant" data-id="${m.id_mantenimiento}" data-bs-dismiss="modal"><i class="bx bx-edit me-1"></i> Avance técnico</button>`);
-      acciones.push(`<button class="btn btn-outline-success btn-finalizar-mant" data-id="${m.id_mantenimiento}" data-bs-dismiss="modal"><i class="bx bx-check me-1"></i> Finalizar</button>`);
-      acciones.push(`<button class="btn btn-outline-danger btn-cancelar-mant" data-id="${m.id_mantenimiento}" data-bs-dismiss="modal"><i class="bx bx-x-circle me-1"></i> Cancelar</button>`);
-    } else if (RESULTADOS.includes(m.estado)) {
-      acciones.push(`<button class="btn btn-primary btn-cerrar-mant" data-id="${m.id_mantenimiento}" data-bs-dismiss="modal"><i class="bx bx-lock me-1"></i> Cerrar mantenimiento</button>`);
+      acciones.push(
+        `<button class="btn btn-primary btn-avance-mant" data-id="${m.id_mantenimiento}" data-bs-dismiss="modal"><i class="bx bx-edit me-1"></i> Avance técnico</button>`
+      );
+      if (m.estado === 'EN_ATENCION') {
+        acciones.push(
+          `<button class="btn btn-outline-success btn-finalizar-mant" data-id="${m.id_mantenimiento}" data-bs-dismiss="modal"><i class="bx bx-check me-1"></i> Finalizar</button>`
+        );
+      }
+      acciones.push(
+        `<button class="btn btn-outline-danger btn-cancelar-mant" data-id="${m.id_mantenimiento}" data-bs-dismiss="modal"><i class="bx bx-x-circle me-1"></i> Cancelar</button>`
+      );
     } else {
       acciones.push('<p class="text-muted mb-0">Proceso finalizado: sin acciones disponibles.</p>');
     }
@@ -481,25 +683,21 @@ $(function () {
     if (!m) return;
     idAvance = m.id_mantenimiento;
 
+    const form = document.getElementById('form-avance');
+    form.reset();
+
     $('#avance-codigo').text(m.codigo);
-    const opciones = (AVANCES[m.estado] ?? [])
-      .map(e => `<option value="${e}">${estadoTexto[e]}</option>`)
-      .join('');
-    $('#avance-estado').html(opciones);
+    // El diagnóstico principal se prellena como punto de partida; el resto queda en blanco.
     $('#avance-diagnostico').val(m.diagnostico ?? '');
-    $('#avance-proveedor').val(m.proveedor ?? '');
-    $('#avance-costo').val(m.costo ?? '');
-    $('#avance-tecnico').val(m.id_tecnico ?? '');
 
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalAvance')).show();
   });
 
   $('#form-avance').on('submit', function (e) {
     e.preventDefault();
-    enviar(
+    enviarFormData(
       window.routesMant.avanzar.replace('{id}', idAvance),
-      'PUT',
-      $(this).serialize(),
+      this,
       'modalAvance',
       'No se pudo registrar el avance.'
     );
@@ -515,52 +713,49 @@ $(function () {
     if (!m) return;
     idFinalizar = m.id_mantenimiento;
 
+    const form = document.getElementById('form-finalizar');
+    form.reset();
+
     $('#fin-codigo').text(m.codigo);
-    $('#fin-estado').val('ATENDIDO').trigger('change');
+    $('#fin-resultado-atencion').val('OPERATIVO').trigger('change');
     $('#fin-diagnostico').val(m.diagnostico ?? '');
     $('#fin-resultado').val('');
-    $('#fin-costo').val(m.costo ?? '');
+    $('#fin-costo').val('');
 
     bootstrap.Modal.getOrCreateInstance(document.getElementById('modalFinalizar')).show();
   });
 
-  $('#fin-estado').on('change', function () {
-    $('#fin-alerta-baja').toggleClass('d-none', $(this).val() !== 'RECOMENDADO_BAJA');
+  $('#fin-resultado-atencion').on('change', function () {
+    const esBaja = $(this).val() === 'RECOMENDADO_BAJA';
+    $('#fin-alerta-baja').toggleClass('d-none', !esBaja);
+    // La condición resultante solo aplica si el equipo queda operativo; si se
+    // recomienda baja, la condición pasa a MALO automáticamente.
+    $('#fin-condicion-wrap').toggleClass('d-none', esBaja);
+    $('#fin-condicion').prop('required', !esBaja);
+    if (esBaja) $('#fin-condicion').val('');
   });
 
   $('#form-finalizar').on('submit', function (e) {
     e.preventDefault();
-    enviar(
+    enviarFormData(
       window.routesMant.finalizar.replace('{id}', idFinalizar),
-      'PUT',
-      $(this).serialize(),
+      this,
       'modalFinalizar',
-      'No se pudo finalizar el mantenimiento.'
+      'No se pudo finalizar el mantenimiento.',
+      res => {
+        // Si el resultado fue RECOMENDADO_BAJA, abrir el modal de propuesta de baja
+        // precargado. La baja NO se crea automáticamente: el usuario debe confirmar.
+        if (res.abrir_modal_baja && res.baja_prefill) {
+          prefillBajaDesdeMantenimiento(res.baja_prefill);
+        }
+      }
     );
   });
 
   // ═══════════════════════════════════════════
-  // CERRAR / CANCELAR
+  // CANCELAR
   // ═══════════════════════════════════════════
-  $(document).on('click', '.btn-cerrar-mant', function () {
-    const m = buscar(parseInt($(this).data('id')));
-    if (!m) return;
-
-    Swal.fire({
-      icon: 'question',
-      title: `¿Cerrar ${m.codigo}?`,
-      text: 'El cierre valida el resultado registrado y termina el proceso. No se puede reabrir.',
-      showCancelButton: true,
-      confirmButtonText: 'Sí, cerrar',
-      cancelButtonText: 'Volver',
-      customClass: { confirmButton: 'btn btn-primary me-2', cancelButton: 'btn btn-outline-secondary' },
-      buttonsStyling: false
-    }).then(r => {
-      if (!r.isConfirmed) return;
-      enviar(window.routesMant.cerrar.replace('{id}', m.id_mantenimiento), 'PUT', {}, null, 'No se pudo cerrar el mantenimiento.');
-    });
-  });
-
+  // Nota: la acción "Cerrar mantenimiento" fue eliminada (FINALIZADO es terminal).
   $(document).on('click', '.btn-cancelar-mant', function () {
     const m = buscar(parseInt($(this).data('id')));
     if (!m) return;

@@ -3,10 +3,10 @@ import { initTooltips } from '../../plugins/bootstrap-tooltips';
 
 const tipoBadge = {
   ADMINISTRATIVO: 'bg-label-primary',
-  DOCENTE:        'bg-label-info',
-  TECNICO:        'bg-label-warning',
-  PRACTICANTE:    'bg-label-success',
-  EXTERNO:        'bg-label-secondary',
+  DOCENTE: 'bg-label-info',
+  TECNICO: 'bg-label-warning',
+  PRACTICANTE: 'bg-label-success',
+  EXTERNO: 'bg-label-secondary'
 };
 
 $(function () {
@@ -15,6 +15,7 @@ $(function () {
     serverSide: false,
     processing: false,
     ajax: null,
+    order: [],
     data: window.colaboradores,
     columns: [
       {
@@ -24,13 +25,11 @@ $(function () {
       {
         data: null,
         render: function (row) {
-          const foto = row.per_foto
-            ? `${window.storageUrl}/${row.per_foto}`
-            : window.avatarDefault;
+          const foto = row.per_foto ? `${window.storageUrl}/${row.per_foto}` : window.avatarDefault;
           const nombre = `${row.per_nombre} ${row.per_apepat} ${row.per_apemat ?? ''}`.trim();
           return `
             <div class="d-flex align-items-center">
-              <div class="avatar avatar-sm me-3">
+              <div class="avatar avatar-sm me-3" style="flex-shrink:0;">
                 <img src="${foto}" class="rounded-circle" style="object-fit:cover;">
               </div>
               <div>
@@ -43,7 +42,7 @@ $(function () {
       { data: 'nro_documento' },
       {
         data: 'cargo',
-        render: c => c ? `<span class="text-uppercase">${c}</span>` : '<span class="text-muted">—</span>'
+        render: c => (c ? `<span class="text-uppercase">${c}</span>` : '<span class="text-muted">—</span>')
       },
       {
         data: 'sede_dependencia',
@@ -62,24 +61,26 @@ $(function () {
       },
       {
         data: 'estado',
-        render: e => e === 'ACTIVO'
-          ? '<span class="badge bg-success fw-bold">Activo</span>'
-          : '<span class="badge bg-danger fw-bold">Inactivo</span>'
+        render: e =>
+          e === 'ACTIVO'
+            ? '<span class="badge bg-success fw-bold">Activo</span>'
+            : '<span class="badge bg-danger fw-bold">Inactivo</span>'
       },
       {
         data: null,
         orderable: false,
         searchable: false,
         render: function (row) {
-          const urlEdit   = window.routesColab.edit.replace('{id}', row.id_colaborador);
+          const urlEdit = window.routesColab.edit.replace('{id}', row.id_colaborador);
           const urlToggle = window.routesColab.toggleEstado.replace('{id}', row.id_colaborador);
 
-          const btnToggle = row.estado === 'ACTIVO'
-            ? `<button type="button" class="btn-action-icon action-deactivate btn-toggle-colab"
+          const btnToggle =
+            row.estado === 'ACTIVO'
+              ? `<button type="button" class="btn-action-icon action-deactivate btn-toggle-colab"
                  data-id="${row.id_colaborador}" data-estado="ACTIVO" data-url="${urlToggle}"
                  data-bs-toggle="tooltip" title="Desactivar">
                  <i class="bx bx-power-off"></i></button>`
-            : `<button type="button" class="btn-action-icon action-activate btn-toggle-colab"
+              : `<button type="button" class="btn-action-icon action-activate btn-toggle-colab"
                  data-id="${row.id_colaborador}" data-estado="INACTIVO" data-url="${urlToggle}"
                  data-bs-toggle="tooltip" title="Activar">
                  <i class="bx bx-check-shield"></i></button>`;

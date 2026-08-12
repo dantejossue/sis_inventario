@@ -395,10 +395,11 @@ $(function () {
   const MOV_CONFIG = {
     PRESTAMO: {
       colaborador: 'req',
-      ubicacion: false,
+      ubicacion: 'opt',
       devolucion: true,
       regulariza: false,
-      ayuda: 'Préstamo temporal; requiere fecha estimada de devolución. El activo queda EN PRÉSTAMO.'
+      ayuda:
+        'Préstamo temporal; permite cambiar la ubicación física y requiere fecha estimada de devolución. El activo queda EN PRÉSTAMO.'
     },
     TRANSFERENCIA: {
       colaborador: 'req',
@@ -445,7 +446,9 @@ $(function () {
   }
 
   function ocultarCamposMover() {
-    $('#mover-colaborador-wrap, #mover-ubicacion-wrap, #mover-devolucion-wrap, #mover-condicion-wrap, #mover-situacion-wrap').addClass('d-none');
+    $(
+      '#mover-colaborador-wrap, #mover-ubicacion-wrap, #mover-devolucion-wrap, #mover-condicion-wrap, #mover-situacion-wrap'
+    ).addClass('d-none');
     $('#mover-tipo-ayuda').text('');
   }
 
@@ -572,7 +575,10 @@ $(function () {
         return;
       }
       if (!colabDest && !ubicDest && !condReg && !sitReg) {
-        marcarError('#mover-motivo', 'Indica al menos un dato a regularizar (responsable, ubicación, condición o situación).');
+        marcarError(
+          '#mover-motivo',
+          'Indica al menos un dato a regularizar (responsable, ubicación, condición o situación).'
+        );
         return;
       }
     }

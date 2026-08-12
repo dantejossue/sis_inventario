@@ -17,6 +17,11 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class ActivoController extends Controller
 {
@@ -123,11 +128,17 @@ class ActivoController extends Controller
     public function show(int $id)
     {
         $activo = Activo::with([
-            'modelo.marca', 'modelo.categoriaActivo', 'categoria',
-            'responsable.sedeDependencia.dependencia', 'responsable.sedeDependencia.sede',
-            'ubicacion.sede', 'activoTecnico',
-            'creadoPor.colaborador', 'actualizadoPor.colaborador',
+            'modelo.marca',
+            'modelo.categoriaActivo',
+            'categoria',
+            'responsable.sedeDependencia.dependencia',
+            'responsable.sedeDependencia.sede',
+            'ubicacion.sede',
+            'activoTecnico',
+            'creadoPor.colaborador',
+            'actualizadoPor.colaborador',
             'documentos.subidoPor.colaborador',
+            'historialCondicion.registradoPor.colaborador',
         ])->findOrFail($id);
 
         // Garantiza que el activo tenga token QR para la etiqueta de la ficha.
@@ -140,8 +151,10 @@ class ActivoController extends Controller
         // Historial de movimientos del activo (más reciente primero).
         $movimientos = DetalleMovimientoActivo::with([
             'movimiento.registradoPor.colaborador',
-            'responsableOrigen', 'responsableDestino',
-            'ubicacionOrigen', 'ubicacionDestino',
+            'responsableOrigen',
+            'responsableDestino',
+            'ubicacionOrigen',
+            'ubicacionDestino',
         ])
             ->where('id_activo', $id)
             ->get()
@@ -160,7 +173,12 @@ class ActivoController extends Controller
         $eventos = $this->lineaDeTiempo($activo, $movimientos, $mantenimientos, $bajas);
 
         return view('content.activos.ver', compact(
-            'activo', 'rutaUbicacion', 'movimientos', 'mantenimientos', 'bajas', 'eventos'
+            'activo',
+            'rutaUbicacion',
+            'movimientos',
+            'mantenimientos',
+            'bajas',
+            'eventos'
         ));
     }
 
@@ -181,6 +199,7 @@ class ActivoController extends Controller
         ];
         $eventos->push([
             'fecha'   => $activo->creado_en,
+            'tipo'    => 'registro',
             'titulo'  => $origenes[$activo->origen_registro] ?? 'Activo registrado',
             'detalle' => 'Registrado por ' . $nombreUsuario($activo->creadoPor),
             'icono'   => 'bx-plus-circle',
@@ -194,22 +213,33 @@ class ActivoController extends Controller
             }
             $origen  = $det->responsableOrigen?->nombre_completo ?: ($det->ubicacionOrigen?->nombre ?: 'Almacén');
             $destino = $det->responsableDestino?->nombre_completo ?: ($det->ubicacionDestino?->nombre ?: '—');
+            // Detalle enriquecido: condición de salida → retorno, si se registró.
+            $condMov = $det->condicion_salida
+                ? (Activo::CONDICION_LABELS[$det->condicion_salida] ?? $det->condicion_salida)
+                . ($det->condicion_retorno ? ' → ' . (Activo::CONDICION_LABELS[$det->condicion_retorno] ?? $det->condicion_retorno) : '')
+                : null;
             $eventos->push([
                 'fecha'   => $mov->fecha_registro,
+                'tipo'    => 'movimiento',
                 'titulo'  => 'Movimiento ' . ($mov->codigo_movimiento ?: '#' . $mov->id_movimiento)
                     . ' · ' . ucfirst(strtolower(str_replace('_', ' ', $mov->tipo))),
-                'detalle' => "De {$origen} hacia {$destino}. Registrado por " . $nombreUsuario($mov->registradoPor),
+                'detalle' => "De {$origen} hacia {$destino}. Registrado por " . $nombreUsuario($mov->registradoPor)
+                    . ($condMov ? ' · Condición: ' . $condMov : ''),
                 'icono'   => 'bx-transfer-alt',
                 'color'   => 'warning',
             ]);
         }
 
         foreach ($mantenimientos ?? [] as $mant) {
+            $resultadoMant = $mant->resultado_atencion
+                ? ' · Resultado: ' . ucfirst(strtolower(str_replace('_', ' ', $mant->resultado_atencion)))
+                : '';
             $eventos->push([
                 'fecha'   => $mant->creado_en,
+                'tipo'    => 'mantenimiento',
                 'titulo'  => "Mantenimiento {$mant->codigo} · " . ucfirst(strtolower(str_replace('_', ' ', $mant->tipo_mantenimiento))),
                 'detalle' => \Illuminate\Support\Str::limit($mant->descripcion, 120)
-                    . ' · Estado: ' . ucfirst(strtolower(str_replace('_', ' ', $mant->estado))),
+                    . ' · Estado: ' . ucfirst(strtolower(str_replace('_', ' ', $mant->estado))) . $resultadoMant,
                 'icono'   => 'bx-wrench',
                 'color'   => 'danger',
             ]);
@@ -218,6 +248,7 @@ class ActivoController extends Controller
         foreach ($bajas ?? [] as $baja) {
             $eventos->push([
                 'fecha'   => $baja->creado_en,
+                'tipo'    => 'baja',
                 'titulo'  => "Propuesta de baja {$baja->codigo} · " . ucfirst(strtolower(str_replace('_', ' ', $baja->causal_baja))),
                 'detalle' => \Illuminate\Support\Str::limit($baja->motivo, 120)
                     . ' · Estado: ' . ucfirst(strtolower(str_replace('_', ' ', $baja->estado))),
@@ -227,6 +258,7 @@ class ActivoController extends Controller
             if ($baja->fecha_baja) {
                 $eventos->push([
                     'fecha'   => $baja->fecha_baja,
+                    'tipo'    => 'baja',
                     'titulo'  => "Baja ejecutada ({$baja->codigo})",
                     'detalle' => 'El activo quedó DADO DE BAJA formalmente.',
                     'icono'   => 'bx-x-circle',
@@ -238,6 +270,7 @@ class ActivoController extends Controller
         foreach ($activo->documentos as $doc) {
             $eventos->push([
                 'fecha'   => $doc->creado_en,
+                'tipo'    => 'documento',
                 'titulo'  => 'Documento adjuntado: ' . $doc->tipo_documento,
                 'detalle' => ($doc->nombre_original ?: basename((string) $doc->archivo))
                     . ' · Subido por ' . $nombreUsuario($doc->subidoPor),
@@ -246,9 +279,29 @@ class ActivoController extends Controller
             ]);
         }
 
+        // Cambios de condición física (edición manual y regularización): los demás
+        // ya quedan implícitos en sus eventos (devolución, mantenimiento, baja).
+        foreach ($activo->historialCondicion as $hc) {
+            if (! in_array($hc->origen, ['EDICION_MANUAL', 'REGULARIZACION', 'OTRO'], true)) {
+                continue;
+            }
+            $de = $hc->condicion_anterior
+                ? (Activo::CONDICION_LABELS[$hc->condicion_anterior] ?? $hc->condicion_anterior) . ' → '
+                : '';
+            $eventos->push([
+                'fecha'   => $hc->creado_en,
+                'tipo'    => 'condicion',
+                'titulo'  => 'Cambio de condición: ' . $de . (Activo::CONDICION_LABELS[$hc->condicion_nueva] ?? $hc->condicion_nueva),
+                'detalle' => ($hc->motivo ? $hc->motivo . ' · ' : '') . 'Registrado por ' . $nombreUsuario($hc->registradoPor),
+                'icono'   => 'bx-pulse',
+                'color'   => 'info',
+            ]);
+        }
+
         if ($activo->actualizado_en && $activo->actualizado_en != $activo->creado_en) {
             $eventos->push([
                 'fecha'   => $activo->actualizado_en,
+                'tipo'    => 'edicion',
                 'titulo'  => 'Datos del activo actualizados',
                 'detalle' => 'Última modificación por ' . $nombreUsuario($activo->actualizadoPor),
                 'icono'   => 'bx-edit',
@@ -388,12 +441,26 @@ class ActivoController extends Controller
 
         $modelo = Modelo::findOrFail($request->id_modelo);
 
+        // Motivo obligatorio solo si cambia la condición física (alimenta el historial).
+        $condicionCambia = $request->condicion_actual !== $activo->condicion_actual;
+        if ($condicionCambia) {
+            $request->validate(
+                ['motivo_condicion' => 'required|string|max:500'],
+                ['motivo_condicion.required' => 'Indica el motivo del cambio de condición.'],
+            );
+        }
+
         $imagen = $activo->imagen;
         if ($request->hasFile('imagen')) {
             if ($imagen) {
                 Storage::disk('public')->delete($imagen);
             }
             $imagen = $request->file('imagen')->store('activos', 'public');
+        }
+
+        // Traza de condición: edición manual (con motivo) si cambió la condición.
+        if ($condicionCambia) {
+            $activo->marcarOrigenCondicion('EDICION_MANUAL', null, null, trim((string) $request->motivo_condicion));
         }
 
         $activo->update([
@@ -641,6 +708,188 @@ class ActivoController extends Controller
     }
 
     /**
+     * Exporta el inventario completo de activos a Excel (.xlsx) con TODAS las
+     * columnas de detalle: identificación, modelo/categoría, responsable,
+     * ubicación (con ruta jerárquica), adquisición, datos patrimoniales SIGA,
+     * ficha técnica y trazabilidad. A diferencia del export de la tabla (que
+     * solo vuelca las columnas visibles), este genera el archivo íntegro en el
+     * servidor con PhpSpreadsheet, incluyendo todos los activos.
+     */
+    public function exportarExcel()
+    {
+        $ubicacionesPorId = Ubicacion::get(['id_ubicacion', 'id_ubicacion_padre', 'nombre'])
+            ->keyBy('id_ubicacion');
+
+        $activos = Activo::with([
+            'modelo.marca',
+            'modelo.categoriaActivo',
+            'responsable.sedeDependencia.dependencia',
+            'ubicacion.sede',
+            'activoTecnico',
+            'creadoPor.colaborador',
+            'actualizadoPor.colaborador',
+        ])
+            ->orderBy('codigo_patrimonial')
+            ->get();
+
+        $estadoSigaLabels = [
+            'NO_APLICA'               => 'No aplica',
+            'PENDIENTE_ACTUALIZACION' => 'Pendiente de actualización',
+            'REGISTRADO'              => 'Registrado',
+            'OBSERVADO'               => 'Observado',
+        ];
+        $origenLabels = [
+            'EXCEL'          => 'Excel',
+            'MANUAL'         => 'Manual',
+            'REGULARIZACION' => 'Regularización',
+        ];
+
+        $encabezados = [
+            'ID',
+            'Código patrimonial',
+            'Código interno',
+            'Número de serie',
+            'Categoría',
+            'Marca',
+            'Modelo',
+            'Condición',
+            'Situación',
+            'Responsable',
+            'Cargo del responsable',
+            'Dependencia',
+            'Sede',
+            'Dirección de sede',
+            'Ubicación',
+            'Tipo de ubicación',
+            'Código de ubicación',
+            'Ruta de ubicación',
+            'Descripción',
+            'Fecha de adquisición',
+            'Fecha de asignación',
+            'Valor de compra',
+            'Proveedor',
+            'Garantía inicio',
+            'Garantía fin',
+            'Observaciones',
+            'Código SIGA',
+            'Número PECOSA',
+            'Número orden de compra',
+            'Fecha alta SIGA',
+            'Estado SIGA',
+            'Procesador',
+            'Memoria RAM',
+            'Almacenamiento',
+            'Tipo de almacenamiento',
+            'Sistema operativo',
+            'Dirección MAC',
+            'Dirección IP',
+            'Nombre de equipo',
+            'Dominio',
+            'Licencia Office',
+            'Antivirus',
+            'Accesorios',
+            'Observaciones técnicas',
+            'Estado operativo',
+            'Origen de registro',
+            'Creado por',
+            'Creado en',
+            'Actualizado por',
+            'Actualizado en',
+        ];
+
+        $nombreUsuario = fn($u) => $u?->colaborador?->nombre_completo ?: ($u?->nombre_usuario ?? null);
+        $fecha         = fn($d) => $d ? \Carbon\Carbon::parse($d)->format('Y-m-d') : null;
+        $fechaHora     = fn($d) => $d ? \Carbon\Carbon::parse($d)->format('Y-m-d H:i') : null;
+
+        $filas = $activos->map(function (Activo $a) use ($ubicacionesPorId, $estadoSigaLabels, $origenLabels, $nombreUsuario, $fecha, $fechaHora) {
+            $t    = $a->activoTecnico;
+            $resp = $a->responsable;
+            $ubic = $a->ubicacion;
+
+            return [
+                $a->id_activo,
+                $a->codigo_patrimonial,
+                $a->codigo_interno,
+                $a->numero_serie,
+                $a->modelo?->categoriaActivo?->nombre,
+                $a->modelo?->marca?->nombre,
+                $a->modelo?->nombre,
+                $a->condicionLabel(),
+                $a->situacionLabel(),
+                $resp?->nombre_completo,
+                $resp ? (Colaborador::CARGOS[$resp->cargo] ?? $resp->cargo) : null,
+                $resp?->sedeDependencia?->dependencia?->nombre_dependencia,
+                $ubic?->sede?->nombre_sede,
+                $ubic?->sede?->ubicacion,
+                $ubic?->nombre,
+                $ubic?->tipo,
+                $ubic?->codigo,
+                static::rutaUbicacion($ubic, $ubicacionesPorId),
+                $a->descripcion,
+                $fecha($a->fecha_adquisicion),
+                $fecha($a->fecha_asignacion),
+                $a->valor_compra !== null ? (float) $a->valor_compra : null,
+                $a->proveedor,
+                $fecha($a->garantia_inicio),
+                $fecha($a->garantia_fin),
+                $a->observaciones,
+                $a->codigo_siga,
+                $a->numero_pecosa,
+                $a->numero_orden_compra,
+                $fecha($a->fecha_alta_siga),
+                $estadoSigaLabels[$a->estado_siga] ?? $a->estado_siga,
+                $t?->procesador,
+                $t?->memoria_ram,
+                $t?->almacenamiento,
+                $t?->tipo_almacenamiento,
+                $t?->sistema_operativo,
+                $t?->direccion_mac,
+                $t?->direccion_ip,
+                $t?->nombre_equipo,
+                $t?->dominio,
+                $t?->licencia_office,
+                $t?->antivirus,
+                $t?->accesorios,
+                $t?->observaciones_tecnicas,
+                $t ? ucfirst(strtolower(str_replace('_', ' ', (string) $t->estado_operativo))) : null,
+                $origenLabels[$a->origen_registro] ?? $a->origen_registro,
+                $nombreUsuario($a->creadoPor),
+                $fechaHora($a->creado_en),
+                $nombreUsuario($a->actualizadoPor),
+                $fechaHora($a->actualizado_en),
+            ];
+        })->all();
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Activos');
+
+        $sheet->fromArray($encabezados, null, 'A1');
+        if ($filas) {
+            $sheet->fromArray($filas, null, 'A2');
+        }
+
+        $ultimaCol = Coordinate::stringFromColumnIndex(count($encabezados));
+        $sheet->getStyle("A1:{$ultimaCol}1")->getFont()->setBold(true);
+        $sheet->getStyle("A1:{$ultimaCol}1")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('D9E2F3');
+        $sheet->getStyle("A1:{$ultimaCol}1")->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->freezePane('A2');
+        $sheet->setAutoFilter("A1:{$ultimaCol}1");
+
+        for ($i = 1; $i <= count($encabezados); $i++) {
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setAutoSize(true);
+        }
+
+        $nombre = 'activos_inventario_' . now()->format('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet) {
+            IOFactory::createWriter($spreadsheet, 'Xlsx')->save('php://output');
+        }, $nombre, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    /**
      * Ruta jerárquica completa de la ubicación física (Edificio › Piso › Oficina…),
      * reconstruida subiendo por la cadena de padres a partir del mapa precargado.
      */
@@ -732,6 +981,12 @@ class ActivoController extends Controller
                 'observaciones_tecnicas' => $t->observaciones_tecnicas,
                 'estado_operativo'       => $t->estado_operativo,
             ] : null,
+            'ocs_url' => route(
+                'activos.ocs.show',
+                $a->id_activo
+            ),
+            'tiene_codigo_patrimonial' =>
+            ! empty($a->codigo_patrimonial),
         ];
     }
 }

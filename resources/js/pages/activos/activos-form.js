@@ -61,26 +61,131 @@ $(function () {
   $('#codigo_interno, #codigo_patrimonial').on('input', actualizarResumen);
   actualizarResumen();
 
-  // ── Lista de documentos seleccionados ─────────────────────────────────────
+  // ── Motivo del cambio de condición (solo edición) ─────────────────────────
+  // Se muestra y exige únicamente cuando la condición elegida difiere de la
+  // original del activo. El servidor lo valida igual (fuente de verdad).
+  const $condicion = $('#condicion_actual');
+  const $motivoWrap = $('#motivo-condicion-wrap');
+  const $motivo = $('#motivo_condicion');
+  if ($motivoWrap.length && $motivo.length) {
+    const condicionOriginal = String($motivo.data('condicion-original') ?? '');
+    const toggleMotivo = () => {
+      const cambia = String($condicion.val() ?? '') !== condicionOriginal;
+      $motivoWrap.toggleClass('d-none', !cambia);
+      $motivo.prop('required', cambia);
+      if (!cambia) $motivo.val('');
+    };
+    $condicion.on('change', toggleMotivo);
+    toggleMotivo(); // estado inicial (y tras validación fallida)
+  }
+
+  // ── Documentos del activo: arrastrar + acumular + quitar ───────────────────
+  // El <input type="file"> nativo REEMPLAZA su contenido en cada selección y no
+  // sabe recibir archivos arrastrados. Para poder (1) arrastrar a la zona y
+  // (2) ir sumando archivos en varias elecciones, usamos un DataTransfer propio
+  // ("bolsa") como fuente de verdad y lo reasignamos a input.files en cada
+  // cambio, que es lo que finalmente viaja en el POST del formulario.
   const inputDocs = document.getElementById('documentos_activo');
   const listaDocs = document.getElementById('listaDocumentos');
+  const zonaDocs = document.getElementById('zonaDocumentos');
+
   if (inputDocs && listaDocs) {
-    inputDocs.addEventListener('change', function () {
-      const files = Array.from(this.files || []);
-      if (!files.length) {
-        listaDocs.innerHTML = '';
-        return;
-      }
+    const bolsa = new DataTransfer();
+
+    // Deben coincidir con EXT_DOCUMENTOS y el límite del servidor (ActivoController).
+    const EXT_OK = ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'doc', 'docx', 'xls', 'xlsx', 'zip', 'rar'];
+    const MAX_KB = 5 * 1024; // 5 MB por archivo.
+
+    const claveArchivo = f => `${f.name}|${f.size}|${f.lastModified}`;
+    const formatoTamano = kb => (kb >= 1024 ? `${(kb / 1024).toFixed(1)} MB` : `${Math.round(kb)} KB`);
+
+    // Vuelca la bolsa al input real (setear .files NO dispara 'change').
+    function sincronizarInput() {
+      const dt = new DataTransfer();
+      Array.from(bolsa.files).forEach(f => dt.items.add(f));
+      inputDocs.files = dt.files;
+    }
+
+    function render() {
+      const files = Array.from(bolsa.files);
       listaDocs.innerHTML = files
         .map(
-          f =>
+          (f, i) =>
             `<div class="d-flex align-items-center justify-content-between border rounded p-2 mb-2">
                <span class="text-truncate"><i class="bx bx-file me-1"></i>${f.name}</span>
-               <small class="text-muted ms-2">${(f.size / 1024).toFixed(0)} KB</small>
+               <span class="d-flex align-items-center ms-2 flex-shrink-0">
+                 <small class="text-muted me-2">${formatoTamano(f.size / 1024)}</small>
+                 <button type="button" class="btn btn-sm btn-icon btn-text-danger p-0 btn-quitar-doc"
+                         data-index="${i}" title="Quitar">
+                   <i class="bx bx-x"></i>
+                 </button>
+               </span>
              </div>`
         )
         .join('');
+    }
+
+    function agregar(fileList) {
+      const rechazados = [];
+      Array.from(fileList || []).forEach(f => {
+        const ext = (f.name.split('.').pop() || '').toLowerCase();
+        if (!EXT_OK.includes(ext)) {
+          rechazados.push(`${f.name} — formato no permitido`);
+          return;
+        }
+        if (f.size / 1024 > MAX_KB) {
+          rechazados.push(`${f.name} — supera 5 MB`);
+          return;
+        }
+        const duplicado = Array.from(bolsa.files).some(x => claveArchivo(x) === claveArchivo(f));
+        if (!duplicado) bolsa.items.add(f);
+      });
+      sincronizarInput();
+      render();
+      if (rechazados.length) {
+        window.alert('No se adjuntaron estos archivos:\n\n' + rechazados.join('\n'));
+      }
+    }
+
+    // Selección por diálogo: el input trae SOLO lo nuevo → lo sumamos a la bolsa.
+    inputDocs.addEventListener('change', function () {
+      agregar(this.files);
     });
+
+    // Quitar un archivo puntual de la lista antes de guardar.
+    listaDocs.addEventListener('click', function (e) {
+      const btn = e.target.closest('.btn-quitar-doc');
+      if (!btn) return;
+      bolsa.items.remove(parseInt(btn.dataset.index, 10));
+      sincronizarInput();
+      render();
+    });
+
+    // Arrastrar y soltar sobre la zona (la etiqueta que abre el diálogo).
+    if (zonaDocs) {
+      const resaltar = on => {
+        zonaDocs.style.borderColor = on ? 'var(--bs-primary, #696cff)' : '';
+        zonaDocs.style.opacity = on ? '0.85' : '';
+      };
+      ['dragenter', 'dragover'].forEach(ev =>
+        zonaDocs.addEventListener(ev, e => {
+          e.preventDefault();
+          e.stopPropagation();
+          resaltar(true);
+        })
+      );
+      ['dragleave', 'dragend', 'drop'].forEach(ev =>
+        zonaDocs.addEventListener(ev, e => {
+          e.preventDefault();
+          e.stopPropagation();
+          resaltar(false);
+        })
+      );
+      zonaDocs.addEventListener('drop', e => {
+        const soltados = e.dataTransfer?.files;
+        if (soltados && soltados.length) agregar(soltados);
+      });
+    }
   }
 });
 

@@ -32,14 +32,23 @@
     </div>
   </div>
   <script>
-    (function () {
+    (function() {
       function tick() {
         var el = document.getElementById('navbar-reloj');
         if (!el) return;
         var now = new Date();
-        var opts = { timeZone: 'America/Lima' };
-        var fecha = now.toLocaleDateString('es-PE', Object.assign({ weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' }, opts));
-        var hora = now.toLocaleTimeString('es-PE', Object.assign({ hour12: false }, opts));
+        var opts = {
+          timeZone: 'America/Lima'
+        };
+        var fecha = now.toLocaleDateString('es-PE', Object.assign({
+          weekday: 'short',
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        }, opts));
+        var hora = now.toLocaleTimeString('es-PE', Object.assign({
+          hour12: false
+        }, opts));
         el.textContent = fecha + ' · ' + hora;
       }
       tick();
@@ -50,9 +59,13 @@
   <ul class="navbar-nav flex-row align-items-center ms-auto">
     <!-- Place this tag where you want the button to render. -->
     <li class="nav-item lh-1 me-4">
-      <a class="github-button" href="{{ config('variables.repository') }}" data-icon="octicon-star" data-size="large"
+      @php
+        $usuario = auth()->user()->colaborador?->nombre_completo ?? auth()->user()->nombre_usuario;
+      @endphp
+      <span class="text-secondary"> {{ $usuario }} </span>
+      {{-- <a class="github-button" href="{{ config('variables.repository') }}" data-icon="octicon-star" data-size="large"
         data-show-count="true"
-        aria-label="Star themeselection/sneat-html-laravel-admin-template-free on GitHub">Star</a>
+        aria-label="Star themeselection/sneat-html-laravel-admin-template-free on GitHub">Star</a> --}}
     </li>
 
     <!-- User -->

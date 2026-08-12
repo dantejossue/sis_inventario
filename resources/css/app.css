@@ -150,7 +150,6 @@ div.dt-buttons {
 .select2-container--default .select2-selection.is-invalid {
   border-color: #ff3e1d;
 }
-
 .swal2-title {
   line-height: 1.3 !important;
 }
@@ -162,3 +161,12 @@ div.dt-buttons {
 .swal2-actions {
   margin-top: 1rem !important;
 }
+
+/* #modalDetalleMantenimiento .modal-dialog {
+  max-height: 90vh;
+}
+
+#modalDetalleMantenimiento .modal-body {
+  overflow-y: auto;
+  max-height: calc(90vh - 130px); /* 130px ≈ header + footer 
+} */

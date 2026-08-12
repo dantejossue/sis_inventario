@@ -423,11 +423,12 @@ const Helpers = {
 
     if (!this._menuMouseEnter) {
       this._menuMouseEnter = () => {
-        if (this.isSmallScreen() || this._hasClass('layout-transitioning')) {
+        // Solo expandir al pasar el mouse cuando el sidebar está colapsado en desktop.
+        if (this.isSmallScreen() || this._hasClass('layout-transitioning') || !this.isCollapsed()) {
           return this._setMenuHoverState(false)
         }
 
-        return this._setMenuHoverState(false)
+        return this._setMenuHoverState(true)
       }
       layoutMenu.addEventListener('mouseenter', this._menuMouseEnter, false)
       layoutMenu.addEventListener('touchstart', this._menuMouseEnter, false)

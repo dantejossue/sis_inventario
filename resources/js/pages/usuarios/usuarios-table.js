@@ -7,6 +7,8 @@ const rolBadge = {
   ALMACEN:
     '<span class="badge bg-label-info d-flex justify-content-center align-items-center"><i class="bx bx-store me-1"></i>Almacén</span>',
   USG: '<span class="badge bg-label-warning d-flex justify-content-center align-items-center"><i class="bx bx-bar-chart-alt-2 me-1"></i>Servicios Generales</span>',
+  OPERADOR:
+    '<span class="badge bg-label-secondary d-flex justify-content-center align-items-center"><i class="bx bx-wrench me-1"></i>Operador</span>',
   PROVEEDOR:
     '<span class="badge bg-label-secondary d-flex justify-content-center align-items-center"><i class="bx bx-building me-1"></i>Proveedor</span>'
 };
@@ -18,6 +20,7 @@ $(function () {
     processing: false,
     ajax: null,
     data: window.usuarios,
+    order: [],
     columns: [
       {
         data: null,
@@ -29,7 +32,7 @@ $(function () {
           if (!col) return '<span class="text-muted">Sin datos</span>';
           return `
             <div class="d-flex align-items-center">
-              <div class="avatar avatar-sm me-3">
+              <div class="avatar avatar-sm me-3" style="flex-shrink:0;">
                 <img src="${window.avatarDefault}" class="rounded-circle">
               </div>
               <div>

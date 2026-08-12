@@ -32,9 +32,9 @@
       <table class="table table-hover" id="miTablaUbicaciones">
         <thead>
           <tr>
-            <th class="fw-bold">#</th>
+            {{-- <th class="fw-bold">#</th> --}}
+            {{-- <th class="fw-bold">Sede</th> --}}
             <th class="fw-bold">Ubicación</th>
-            <th class="fw-bold">Sede</th>
             <th class="fw-bold">Tipo</th>
             <th class="fw-bold">Activos</th>
             <th class="fw-bold">Estado</th>

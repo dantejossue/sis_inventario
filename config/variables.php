@@ -3,8 +3,8 @@
 return [
   "creatorName" => "OTI",
   "creatorUrl" => "https://undc.edu.pe",
-  "templateName" => "UNDC",
-  "templateSuffix" => "Sneat Bootstrap Dashboard FREE",
+  "templateName" => "SGAC",
+  "templateSuffix" => "UNDC",
   "templateVersion" => "2.0.0",
   "templateFree" => true,
   "templateDescription" => "Most Powerful & Comprehensive Bootstrap 5 + Laravel HTML Admin Dashboard Template built for developers!",

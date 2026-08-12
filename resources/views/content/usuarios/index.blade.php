@@ -3,11 +3,11 @@
 @section('title', 'Gestión de Usuarios - OTI')
 
 @section('content')
-  <h4 class="mb-4 fw-bold text-primary d-flex align-items-center">
+  <h4 class="mb-4 fw-bold text-secondary d-flex align-items-center">
     <i class="bx bx-shield-quarter me-2"></i> Gestión de Usuarios
   </h4>
   <!-- Tabla -->
-  <div class="card">
+  <div class="card rounded-4">
     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
       <h5 class="mb-0 fw-bold">Lista de Usuarios</h5>
       <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoUsuario">

@@ -68,4 +68,12 @@ class Colaborador extends Model
             substr($this->per_nombre, 0, 1) . substr($this->per_apepat, 0, 1)
         );
     }
+
+    public const CARGOS = [
+        'JEFE' => 'Jefe',
+        'ESPECIALISTA' => 'Especialista',
+        'TECNICO' => 'Técnico',
+        'ASISTENTE' => 'Asistente',
+        'OTRO' => 'Otro',
+    ];
 }

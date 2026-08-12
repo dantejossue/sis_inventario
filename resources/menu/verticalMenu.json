@@ -8,7 +8,8 @@
       "roles": [
         "ADMINISTRADOR",
         "ALMACEN",
-        "SERVICIOS_GENERALES"
+        "SERVICIOS_GENERALES",
+        "OPERADOR"
       ]
     },
     {
@@ -25,7 +26,8 @@
       "roles": [
         "ADMINISTRADOR",
         "ALMACEN",
-        "SERVICIOS_GENERALES"
+        "SERVICIOS_GENERALES",
+        "OPERADOR"
       ]
     },
     {
@@ -36,7 +38,8 @@
       "roles": [
         "ADMINISTRADOR",
         "ALMACEN",
-        "SERVICIOS_GENERALES"
+        "SERVICIOS_GENERALES",
+        "OPERADOR"
       ],
       "submenu": [
         {
@@ -70,7 +73,8 @@
       ],
       "roles": [
         "ADMINISTRADOR",
-        "ALMACEN"
+        "ALMACEN",
+        "OPERADOR"
       ],
       "submenu": [
         {
@@ -89,7 +93,8 @@
       "menuHeader": "Operaciones y Soporte",
       "roles": [
         "ADMINISTRADOR",
-        "ALMACEN"
+        "ALMACEN",
+        "OPERADOR"
       ]
     },
     {
@@ -98,7 +103,8 @@
       "slug": "movimientos",
       "roles": [
         "ADMINISTRADOR",
-        "ALMACEN"
+        "ALMACEN",
+        "OPERADOR"
       ],
       "submenu": [
         {
@@ -120,7 +126,8 @@
       "slug": "mantenimientos.index",
       "roles": [
         "ADMINISTRADOR",
-        "ALMACEN"
+        "ALMACEN",
+        "OPERADOR"
       ]
     },
     {
@@ -130,13 +137,15 @@
       "slug": "bajas.index",
       "roles": [
         "ADMINISTRADOR",
-        "ALMACEN"
+        "ALMACEN",
+        "OPERADOR"
       ]
     },
     {
       "menuHeader": "Organización Institucional",
       "roles": [
-        "ADMINISTRADOR"
+        "ADMINISTRADOR",
+        "OPERADOR"
       ]
     },
     {
@@ -148,12 +157,13 @@
         "ubicaciones"
       ],
       "roles": [
-        "ADMINISTRADOR"
+        "ADMINISTRADOR",
+        "OPERADOR"
       ],
       "submenu": [
         {
           "url": "sedes",
-          "name": "Sedes (Campus)",
+          "name": "Sedes",
           "slug": "sedes.index"
         },
         {
@@ -163,7 +173,7 @@
         },
         {
           "url": "ubicaciones",
-          "name": "Ubicaciones (Aulas/Oficinas)",
+          "name": "Ubicaciones físicas",
           "slug": "ubicaciones.index"
         }
       ]
@@ -173,7 +183,8 @@
       "icon": "menu-icon icon-base bx bx-group",
       "slug": "colaboradores",
       "roles": [
-        "ADMINISTRADOR"
+        "ADMINISTRADOR",
+        "OPERADOR"
       ],
       "submenu": [
         {
@@ -226,7 +237,8 @@
       "menuHeader": "Reportería y Auditoría",
       "roles": [
         "ADMINISTRADOR",
-        "SERVICIOS_GENERALES"
+        "SERVICIOS_GENERALES",
+        "OPERADOR"
       ]
     },
     {
@@ -236,7 +248,8 @@
       "slug": "reportes.index",
       "roles": [
         "ADMINISTRADOR",
-        "SERVICIOS_GENERALES"
+        "SERVICIOS_GENERALES",
+        "OPERADOR"
       ]
     },
     {

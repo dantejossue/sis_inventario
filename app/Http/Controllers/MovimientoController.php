@@ -32,21 +32,21 @@ class MovimientoController extends Controller
             'situacion' => 'EN_PRESTAMO',
             'origen'    => ['DISPONIBLE', 'EN_USO'],
             'colaborador' => true,
-            'ubicacion' => false,
+            'ubicacion' => true,
             'devolucion' => true,
         ],
         'TRANSFERENCIA' => [
             'situacion' => 'EN_USO',
             'origen'    => ['DISPONIBLE', 'EN_USO'],
             'colaborador' => true,
-            'ubicacion' => false,
+            'ubicacion' => true,
             'devolucion' => false,
         ],
         'REGULARIZACION' => [
             'situacion' => null, // se toma del input o se conserva
             'origen'    => ['DISPONIBLE', 'EN_USO', 'EN_PRESTAMO', 'EN_MANTENIMIENTO', 'EN_PROVEEDOR', 'OBSERVADO'],
             'colaborador' => false,
-            'ubicacion' => false,
+            'ubicacion' => true,
             'devolucion' => false,
         ],
     ];
@@ -175,17 +175,58 @@ class MovimientoController extends Controller
             ]);
         }
 
+        // -----------------------prueba1--------------------------
         // ── Atribución (registrado_por): si todos los activos comparten un mismo
         // responsable, el movimiento se registra a su nombre; si hay responsables
         // distintos, se atribuye al jefe de OTI. Fallback: quien opera el sistema.
-        $responsablesUnicos = $activos->pluck('id_responsable_actual')->unique()->values();
-        $registradoPor = $responsablesUnicos->count() === 1
-            ? ($this->usuarioDeColaborador($responsablesUnicos->first()) ?? $this->jefeOtiUsuarioId())
-            : $this->jefeOtiUsuarioId();
-        $registradoPor = $registradoPor ?: Auth::id();
+        // $responsablesUnicos = $activos->pluck('id_responsable_actual')->unique()->values();
+        // $registradoPor = $responsablesUnicos->count() === 1
+        //     ? ($this->usuarioDeColaborador($responsablesUnicos->first()) ?? $this->jefeOtiUsuarioId())
+        //     : $this->jefeOtiUsuarioId();
+        // $registradoPor = $registradoPor ?: Auth::id();
+
+        // ------------------- prueba2 -----------------------------
+        // $responsablesOrigen = $activos
+        //     ->pluck('id_responsable_actual')
+        //     ->filter()
+        //     ->unique()
+        //     ->values();
+
+        // if ($responsablesOrigen->count() === 1) {
+        //     /*
+        //     * Un activo o varios activos con el mismo responsable origen:
+        //     * el responsable del movimiento será ese mismo CAS.
+        //     */
+        //     $idColaboradorResponsable = (int) $responsablesOrigen->first();
+
+        //     $registradoPor = $this->usuarioDeColaborador(
+        //         $idColaboradorResponsable
+        //     );
+
+        //     if (! $registradoPor) {
+        //         throw ValidationException::withMessages([
+        //             'activo_ids' =>
+        //             'El responsable de origen no tiene un usuario activo vinculado.',
+        //         ]);
+        //     }
+        // } else {
+        //     /*
+        //     * Varios activos con responsables origen diferentes:
+        //     * el responsable del movimiento será el jefe de OTI.
+        //     */
+        //     $registradoPor = $this->jefeOtiUsuarioId();
+
+        //     if (! $registradoPor) {
+        //         throw ValidationException::withMessages([
+        //             'activo_ids' =>
+        //             'Los activos seleccionados tienen responsables diferentes, '
+        //                 . 'pero no se encontró un colaborador activo con cargo JEFE en OTI.',
+        //         ]);
+        //     }
+        // }
 
         $mov = null;
-        DB::transaction(function () use ($request, $tipo, $op, $colaboradorDestino, $ubicacionDestino, $activos, $registradoPor, &$mov) {
+        DB::transaction(function () use ($request, $tipo, $op, $colaboradorDestino, $ubicacionDestino, $activos, &$mov) {
             $mov = Movimiento::create([
                 'codigo_movimiento'         => 'TMP',
                 'tipo'                      => $tipo,
@@ -197,9 +238,10 @@ class MovimientoController extends Controller
                 'motivo'                    => $request->motivo ?: null,
                 'observaciones'             => $request->observaciones ?: null,
                 // registrado_por = responsable de los activos (o jefe OTI).
-                'registrado_por'            => $registradoPor,
-                'ejecutado_por'             => Auth::id(),
-                'fecha_ejecucion'           => now(),
+                // 'registrado_por'            => $registradoPor,
+                'registrado_por' => Auth::id(),
+                // 'ejecutado_por'             => Auth::id(),
+                // 'fecha_ejecucion'           => now(),
                 'requiere_tramite'          => false,
             ]);
 
@@ -236,6 +278,11 @@ class MovimientoController extends Controller
                     'observacion_salida'     => $request->observaciones ?: null,
                 ]);
 
+                // Traza de condición: solo la REGULARIZACION puede corregir la condición física.
+                if ($tipo === 'REGULARIZACION') {
+                    $activo->marcarOrigenCondicion('REGULARIZACION', 'MOVIMIENTO', $mov->id_movimiento, $request->motivo ?: null);
+                }
+
                 $activo->update([
                     'id_responsable_actual' => $respDestino,
                     'id_ubicacion_actual'   => $ubicDestino,
@@ -269,12 +316,26 @@ class MovimientoController extends Controller
     public function devolver(Request $request, int $id)
     {
         $request->validate([
-            'condicion_retorno'      => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
-            'estado_devolucion'      => ['required', 'in:DEVUELTO,DEVUELTO_OBSERVADO'],
+            // 'condicion_retorno'      => ['required', 'in:' . implode(',', Activo::CONDICIONES)],
+            'detalles' => [
+                'required',
+                'array',
+                'min:1',
+            ],
+            'detalles.*.condicion_retorno' => [
+                'required',
+                'in:' . implode(',', Activo::CONDICIONES),
+            ],
+            // 'estado_devolucion'      => ['required', 'in:DEVUELTO,DEVUELTO_OBSERVADO'],
             'observacion_devolucion' => 'nullable|string|max:500',
         ] + $this->reglaDocumentoSustento(), [
-            'condicion_retorno.required' => 'Indica en qué condición retorna el activo.',
-            'estado_devolucion.required' => 'Indica si la devolución es conforme u observada.',
+            // 'condicion_retorno.required' => 'Indica en qué condición retorna el activo.',
+            // 'estado_devolucion.required' => 'Indica si la devolución es conforme u observada.',
+            'detalles.required' =>
+            'Debes indicar la condición de retorno de los activos.',
+
+            'detalles.*.condicion_retorno.required' =>
+            'Indica en qué condición retorna cada activo.',
             'documento.required'         => 'Adjunta el documento de sustento de la devolución (acta de conformidad de retorno).',
         ]);
 
@@ -284,32 +345,67 @@ class MovimientoController extends Controller
             throw ValidationException::withMessages(['id' => 'Este movimiento no es un préstamo pendiente de devolución.']);
         }
 
-        $observado = $request->estado_devolucion === 'DEVUELTO_OBSERVADO';
+        // $observado = $request->estado_devolucion === 'DEVUELTO_OBSERVADO';
 
-        DB::transaction(function () use ($request, $mov, $observado) {
+        $detallesRetorno = collect($request->input('detalles'));
+
+        $existeActivoMalo = $detallesRetorno->contains(
+            fn($datos) => ($datos['condicion_retorno'] ?? null) === 'MALO'
+        );
+
+        $estadoGeneralDevolucion = $existeActivoMalo
+            ? 'DEVUELTO_OBSERVADO'
+            : 'DEVUELTO';
+
+        // $observado = $request->estado_devolucion === 'DEVUELTO_OBSERVADO';
+
+        DB::transaction(function () use ($request, $mov, $detallesRetorno, $estadoGeneralDevolucion) {
             $mov->update([
                 'fecha_devolucion_real'  => now()->toDateString(),
-                'estado_devolucion'      => $request->estado_devolucion,
+                // 'estado_devolucion'      => $request->estado_devolucion,
+                'estado_devolucion' => $estadoGeneralDevolucion,
                 'observacion_devolucion' => $request->observacion_devolucion ?: null,
             ]);
 
             foreach ($mov->detalles as $det) {
-                // Vuelve bien → DISPONIBLE; vuelve mal → OBSERVADO.
-                $situacionRetorno = $observado ? 'OBSERVADO' : 'EN_USO';
+                // Vuelve bien → EN USO; vuelve mal → OBSERVADO.
+                $datosRetorno = $detallesRetorno->get(
+                    (string) $det->getKey()
+                );
+
+                if (! $datosRetorno) {
+                    throw ValidationException::withMessages([
+                        'detalles' =>
+                        'Falta indicar la condición de retorno de uno de los activos.',
+                    ]);
+                }
+
+                $condicionRetorno = $datosRetorno['condicion_retorno'];
+                // Solo el activo que retorna MALO queda observado.
+                $activoObservado = $condicionRetorno === 'MALO';
+                $resultadoDetalle = $activoObservado
+                    ? 'DEVUELTO_OBSERVADO'
+                    : 'DEVUELTO';
+                $situacionRetorno = $activoObservado
+                    ? 'OBSERVADO'
+                    : 'EN_USO';
 
                 $det->update([
-                    'condicion_retorno'    => $request->condicion_retorno,
-                    'resultado'            => $observado ? 'DEVUELTO_OBSERVADO' : 'DEVUELTO',
+                    'condicion_retorno'    => $condicionRetorno,
+                    'resultado'            => $resultadoDetalle,
                     'situacion_resultante' => $situacionRetorno,
                     'observacion_retorno'  => $request->observacion_devolucion ?: null,
                 ]);
 
                 if ($activo = Activo::find($det->id_activo)) {
+                    // Traza de condición: la devolución puede cambiar la condición física.
+                    $activo->marcarOrigenCondicion('DEVOLUCION', 'MOVIMIENTO', $mov->id_movimiento, $request->observacion_devolucion ?: null);
                     $activo->update([
                         // El préstamo era temporal: el activo vuelve a manos de OTI.
                         'id_responsable_actual' => $det->id_responsable_origen,
+                        'id_ubicacion_actual'   => $det->id_ubicacion_origen,
                         'situacion_actual'      => $situacionRetorno,
-                        'condicion_actual'      => $request->condicion_retorno,
+                        'condicion_actual'      => $condicionRetorno,
                         'actualizado_por'       => Auth::id(),
                     ]);
                 }
@@ -323,14 +419,46 @@ class MovimientoController extends Controller
 
         AuditoriaCambio::registrar('MOVIMIENTO', $mov->id_movimiento, 'CERRAR', null, [
             'codigo'            => $mov->codigo_movimiento,
-            'estado_devolucion' => $request->estado_devolucion,
-            'condicion_retorno' => $request->condicion_retorno,
+            'estado_devolucion' => $estadoGeneralDevolucion,
+            'condiciones_retorno' => $detallesRetorno
+                ->map(fn($detalle) => $detalle['condicion_retorno'])
+                ->all(),
         ], $request->observacion_devolucion);
 
         return response()->json([
             'success' => true,
             'message' => 'Devolución del préstamo ' . $mov->codigo_movimiento . ' registrada.',
             'data'    => $this->activosRefrescados($ids),
+        ]);
+    }
+
+    public function datosDevolucion(int $id)
+    {
+        $mov = Movimiento::with([
+            'detalles.activo:id_activo,codigo_interno,codigo_patrimonial',
+        ])->findOrFail($id);
+
+        if (
+            $mov->tipo !== 'PRESTAMO'
+            || $mov->estado_devolucion !== 'PENDIENTE_DEVOLUCION'
+        ) {
+            throw ValidationException::withMessages([
+                'id' => 'Este movimiento no es un préstamo pendiente de devolución.',
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+
+            'data' => $mov->detalles->map(function ($detalle) {
+                return [
+                    'id_detalle'         => $detalle->getKey(),
+                    'codigo_interno'     => $detalle->activo?->codigo_interno,
+                    'codigo_patrimonial' => $detalle->activo?->codigo_patrimonial,
+                    'condicion_salida'   => $detalle->condicion_salida,
+                    'condicion_label'    => Activo::CONDICION_LABELS[$detalle->condicion_salida] ?? $detalle->condicion_salida,
+                ];
+            })->values(),
         ]);
     }
 
@@ -395,18 +523,48 @@ class MovimientoController extends Controller
     }
 
     /** Usuario del jefe de OTI (rol JEFE_AREA/ADMINISTRADOR en dependencia OTI), o null. */
+    // private function jefeOtiUsuarioId(): ?int
+    // {
+    //     $sdOti = DB::table('sede_dependencia')
+    //         ->whereIn('id_dependencia', $this->dependenciasOtiIds())
+    //         ->pluck('id_sede_dependencia');
+
+    //     return DB::table('usuarios')
+    //         ->join('colaboradores', 'usuarios.id_colaborador', '=', 'colaboradores.id_colaborador')
+    //         ->join('roles', 'usuarios.id_rol', '=', 'roles.id_rol')
+    //         ->whereIn('colaboradores.id_sede_dependencia', $sdOti)
+    //         ->whereIn('roles.nombre', ['JEFE_AREA', 'ADMINISTRADOR'])
+    //         ->orderByRaw("FIELD(roles.nombre,'JEFE_AREA','ADMINISTRADOR')")
+    //         ->value('usuarios.id_usuario');
+    // }
+    /**
+     * Obtiene el usuario activo vinculado al colaborador con cargo JEFE
+     * perteneciente a una dependencia de OTI.
+     */
     private function jefeOtiUsuarioId(): ?int
     {
-        $sdOti = DB::table('sede_dependencia')
-            ->whereIn('id_dependencia', $this->dependenciasOtiIds())
-            ->pluck('id_sede_dependencia');
+        $dependenciasOti = $this->dependenciasOtiIds();
 
         return DB::table('usuarios')
-            ->join('colaboradores', 'usuarios.id_colaborador', '=', 'colaboradores.id_colaborador')
-            ->join('roles', 'usuarios.id_rol', '=', 'roles.id_rol')
-            ->whereIn('colaboradores.id_sede_dependencia', $sdOti)
-            ->whereIn('roles.nombre', ['JEFE_AREA', 'ADMINISTRADOR'])
-            ->orderByRaw("FIELD(roles.nombre,'JEFE_AREA','ADMINISTRADOR')")
+            ->join(
+                'colaboradores',
+                'usuarios.id_colaborador',
+                '=',
+                'colaboradores.id_colaborador'
+            )
+            ->join(
+                'sede_dependencia',
+                'colaboradores.id_sede_dependencia',
+                '=',
+                'sede_dependencia.id_sede_dependencia'
+            )
+            ->whereIn(
+                'sede_dependencia.id_dependencia',
+                $dependenciasOti
+            )
+            ->whereRaw("UPPER(TRIM(colaboradores.cargo)) = 'JEFE'")
+            ->where('colaboradores.estado', 'ACTIVO')
+            ->where('usuarios.estado', 'ACTIVO')
             ->value('usuarios.id_usuario');
     }
 

@@ -3,11 +3,11 @@
 @section('title', 'Dependencias - OTI')
 
 @section('content')
-  <h4 class="mb-4 fw-bold text-primary d-flex align-items-center">
-    <i class="bx bx-sitemap me-2"></i> Gestión de Dependencias
+  <h4 class="mb-4 fw-bold text-secondary d-flex align-items-center">
+    <i class="bx bx-sitemap me-1"></i> Gestión de Dependencias
   </h4>
 
-  <div class="card">
+  <div class="card rounded-4">
     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
       <h5 class="mb-0 fw-bold">Lista de Dependencias</h5>
       <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevaDependencia">
@@ -127,16 +127,10 @@
   <script>
     window.dependencias = @json($dependencias);
     window.routes = {
-      store:        '{{ route('dependencias.store') }}',
-      update:       '/dependencias/{id}',
+      store: '{{ route('dependencias.store') }}',
+      update: '/dependencias/{id}',
       toggleEstado: '/dependencias/{id}/toggle-estado',
     };
   </script>
-  @vite([
-    'resources/js/vendors/index.js',
-    'resources/js/pages/dependencias/dependencias-table.js',
-    'resources/js/pages/dependencias/dependencias-create.js',
-    'resources/js/pages/dependencias/dependencias-edit.js',
-    'resources/js/pages/dependencias/dependencias-actions.js',
-  ])
+  @vite(['resources/js/vendors/index.js', 'resources/js/pages/dependencias/dependencias-table.js', 'resources/js/pages/dependencias/dependencias-create.js', 'resources/js/pages/dependencias/dependencias-edit.js', 'resources/js/pages/dependencias/dependencias-actions.js'])
 @endsection

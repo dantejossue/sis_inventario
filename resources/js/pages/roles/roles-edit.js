@@ -2,9 +2,9 @@ import $ from 'jquery';
 import Swal from 'sweetalert2';
 
 $(function () {
-  const modal   = $('#modalEditarRol');
-  const form    = $('#formEditarRol');
-  const btn     = $('#btnActualizarRol');
+  const modal = $('#modalEditarRol');
+  const form = $('#formEditarRol');
+  const btn = $('#btnActualizarRol');
   const spinner = btn.find('.spinner-border');
 
   $('#miTablaRoles').on('click', '.btn-editar', function () {
@@ -31,7 +31,7 @@ $(function () {
     spinner.removeClass('d-none');
 
     $.ajax({
-      url:  form.attr('action'),
+      url: form.attr('action'),
       type: 'POST',
       data: form.serialize() + '&_method=PUT',
 
@@ -42,14 +42,21 @@ $(function () {
 
         const row = encontrarFila(form.data('row-id'));
         if (row) {
-          const data       = row.data();
-          data.nombre      = res.data.nombre;
+          const data = row.data();
+          data.nombre = res.data.nombre;
           data.descripcion = res.data.descripcion;
-          row.data(data).draw(false);
+          row.invalidate().draw(false);
+
+          // row.data(data).draw(false);
         }
 
-        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2200, timerProgressBar: true })
-          .fire({ icon: 'success', title: res.message });
+        Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 2200,
+          timerProgressBar: true
+        }).fire({ icon: 'success', title: res.message });
       },
 
       error: function (xhr) {

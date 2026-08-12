@@ -450,36 +450,62 @@ table.dataTable thead td {
 }
 
 .maintenance-detail-header {
-  border: 1px solid #eceef1;
-  border-radius: 1rem;
-  padding: 1.25rem;
-  background: radial-gradient(circle at top right, rgba(255, 62, 29, 0.08), transparent 35%), #fff;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
+  // border: 1px solid #eceef1;
+  // border-radius: 1rem;
+  // padding: 1.25rem;
+  // background: radial-gradient(circle at top right, rgba(255, 62, 29, 0.08), transparent 35%), #fff;
+  // display: flex;
+  // align-items: flex-start;
+  // justify-content: space-between;
+  // gap: 1rem;
+  align-items: stretch;
 }
 
 .maintenance-detail-priority {
-  min-width: 110px;
-  border-radius: 1rem;
-  padding: 0.9rem;
+  // min-width: 110px;
+  // border-radius: 1rem;
+  // padding: 0.9rem;
+  // text-align: center;
+  // background: rgba(255, 62, 29, 0.1);
+  // color: #ff3e1d;
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+
+  border-radius: 0.75rem;
+  padding: 0.9rem 1rem;
   text-align: center;
+
   background: rgba(255, 62, 29, 0.1);
   color: #ff3e1d;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
-.maintenance-detail-priority span,
-.maintenance-detail-priority strong {
-  display: block;
-}
+// .maintenance-detail-priority span,
+// .maintenance-detail-priority strong {
+//   display: block;
+// }
+
+// .maintenance-detail-priority span {
+//   font-size: 0.75rem;
+// }
+
+// .maintenance-detail-priority strong {
+//   font-size: 1.1rem;
+// }
 
 .maintenance-detail-priority span {
+  display: block;
   font-size: 0.75rem;
+  margin-bottom: 0.25rem;
 }
 
 .maintenance-detail-priority strong {
-  font-size: 1.1rem;
+  display: block;
+  font-size: 0.875rem;
 }
 
 .maintenance-linked-asset {
@@ -1005,13 +1031,72 @@ table.dataTable thead td {
 }
 
 // Botón circular para contraer el sidebar
-.layout-menu .layout-menu-toggle {
+// .layout-menu .layout-menu-toggle {
+//   background-color: #2495e8 !important;
+//   border-color: #2b2c40 !important;
+//   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+//   i {
+//     color: #ffffff !important;
+//   }
+// }
+.layout-menu .app-brand .layout-menu-toggle {
+  display: block !important; // visible también en desktop, no solo responsive
+  border-radius: 50% !important;
   background-color: #2495e8 !important;
   border-color: #2b2c40 !important;
   box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
 
   i {
     color: #ffffff !important;
+  }
+}
+
+// Rota la flecha según el estado: expandido "<" (rotate 0) / colapsado ">" (rotate 180).
+html.layout-menu-collapsed .layout-menu .layout-menu-toggle i {
+  transform: rotate(180deg);
+}
+
+// Que la flecha se deslice PEGADA al borde del sidebar durante la animación.
+// Sneat ya reposiciona su inset-inline-start y la oculta con opacity:0 al colapsar
+// (y la muestra al hacer hover), pero sin transición: por eso saltaba.
+// IMPORTANTE: el sidebar anima su ancho con `ease` (transition: inline-size, sin
+// easing explícito = ease). Usamos EXACTAMENTE el mismo easing/duración para que la
+// flecha y el borde vayan sincronizados. NO usar display:none: rompe el fundido.
+.layout-menu .app-brand .layout-menu-toggle {
+  transition:
+    inset-inline-start 0.3s ease,
+    opacity 0.3s ease;
+}
+
+// ── Estado COLAPSADO en desktop (sin hover) ─────────────────────────────────
+// El .app-brand trae ~2rem de padding por lado, demasiado para la franja de
+// 5.25rem, y el texto con opacity:0 igual ocupa ancho y descentra el logo.
+// Aquí lo neutralizamos SOLO cuando está colapsado y sin hover.
+@media (min-width: 1200px) {
+  html.layout-menu-collapsed:not(.layout-menu-hover) .layout-menu {
+    .app-brand {
+      padding-inline: 0; // deja que el logo use toda la franja para centrarse
+    }
+    .app-brand-link {
+      inline-size: 100%;
+      justify-content: center; // centra el logo horizontalmente
+    }
+    // el texto no debe ocupar ancho (si no, empuja el logo a la izquierda)
+    .app-brand-logo ~ .app-brand-text {
+      display: none;
+    }
+  }
+
+  // Títulos de sección ("GESTIÓN PRINCIPAL", etc.): al colapsar, Sneat los corre
+  // y muestra una rayita ::before con `transition: all`, que al expandir en hover
+  // hace su propia animación de posición desincronizada del ancho del sidebar y el
+  // texto queda un instante pegado a la rayita. Les quitamos la transición propia
+  // para que aparezcan en su posición final y solo acompañen el ancho del sidebar.
+  html.layout-menu-collapsed.layout-menu-hover .layout-menu {
+    .menu-header,
+    .menu-header::before {
+      transition: none !important;
+    }
   }
 }
 
@@ -1067,9 +1152,15 @@ table.dataTable thead td {
   letter-spacing: 0.04rem;
 }
 
+.menu-header {
+  margin-bottom: 0;
+}
+
 // Línea pequeña al lado del encabezado
 .layout-menu .menu-header::before {
-  background-color: #55576b !important;
+  background-color: #7c7d945c !important;
+  // display: none;
+  opacity: 0.5;
 }
 
 // Submenu
@@ -1124,6 +1215,15 @@ table.dataTable thead td {
 // Scrollbar
 .layout-menu .ps__thumb-y {
   background-color: rgba(255, 255, 255, 0.25) !important;
+}
+
+// Ancla la barra activa (.menu-item.active::before, position:absolute) a este
+// contenedor, incluso si PerfectScrollbar se destruye y le quita su position.
+// IMPORTANTE: NO agregar overflow aquí. Eso activa el scrollbar NATIVO blanco que
+// parpadea al recargar. El overflow ya lo manejan PerfectScrollbar (.ps) y Sneat
+// (.overflow-auto) por su cuenta.
+.layout-menu .menu-inner {
+  position: relative;
 }
 
 // DOCUMENTOS Y EVIDENCIAS DEL REGISTRO DE ACTIVOS

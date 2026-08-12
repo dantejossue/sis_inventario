@@ -15,37 +15,55 @@
         <div class="modal-body">
           <div class="row g-3">
 
-            <div class="col-md-6">
-              <label class="form-label">Condición de retorno <span class="text-danger">*</span></label>
-              <select class="form-select" id="dev-condicion" name="condicion_retorno">
-                <option value="BUENO">Bueno</option>
-                <option value="NUEVO">Nuevo</option>
-                <option value="REGULAR">Regular</option>
-                <option value="MALO">Malo</option>
-              </select>
-              <div class="invalid-feedback"></div>
+            <div class="col-12">
+              <label class="form-label">
+                Condición de retorno de los activos
+                <span class="text-danger">*</span>
+              </label>
+
+              <div class="table-responsive border rounded">
+                <table class="table table-sm align-middle mb-0">
+                  <thead>
+                    <tr>
+                      <th>Activo</th>
+                      <th>Condición de salida</th>
+                      <th>Condición de retorno</th>
+                    </tr>
+                  </thead>
+
+                  <tbody id="dev-activos">
+                    <tr>
+                      <td colspan="3" class="text-center text-muted py-3">
+                        Selecciona un préstamo.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="invalid-feedback" id="dev-detalles-error"></div>
             </div>
 
-            <div class="col-md-6">
+            {{-- <div class="col-md-6">
               <label class="form-label">Resultado <span class="text-danger">*</span></label>
               <select class="form-select" id="dev-estado" name="estado_devolucion">
                 <option value="DEVUELTO">Conforme</option>
                 <option value="DEVUELTO_OBSERVADO">Observado</option>
               </select>
               <div class="invalid-feedback"></div>
-            </div>
+            </div> --}}
 
-            <div class="col-md-6">
+            <div class="col-md-12">
               <label class="form-label">Tipo de documento</label>
               <select class="form-select" id="dev-tipodoc" name="tipo_documento">
                 <option value="ACTA_RETORNO">Acta de conformidad de retorno</option>
-                <option value="ACTA_ENTREGA">Acta de entrega</option>
+                <option value="ACTA_DISCONFORMIDAD">Acta de disconformidad</option>
                 <option value="OFICIO">Oficio / memorando</option>
                 <option value="OTRO">Otro</option>
               </select>
             </div>
 
-            <div class="col-md-6">
+            <div class="col-md-12">
               <label class="form-label">Documento de sustento <span class="text-danger">*</span></label>
               <input type="file" class="form-control" id="dev-documento" name="documento"
                 accept=".pdf,.jpg,.jpeg,.png,.webp,.xls,.xlsx,.doc,.docx,.zip,.rar">

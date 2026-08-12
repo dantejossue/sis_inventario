@@ -8,11 +8,11 @@ $(function () {
     processing: false,
     ajax: null,
     data: window.sedes,
-    order: [[1, 'asc']],
+    order: [],
     columns: [
       {
         data: null,
-        orderable: false,
+        orderable: true,
         searchable: false,
         render: (_d, _t, _r, meta) => `<strong>${meta.row + 1}</strong>`
       },

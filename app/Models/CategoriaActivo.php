@@ -19,11 +19,28 @@ class CategoriaActivo extends Model
 
     /** Íconos Boxicons disponibles para representar tipos de activo. */
     public const ICONOS = [
-        'bx-laptop', 'bx-desktop', 'bx-server', 'bx-hdd', 'bx-chip',
-        'bx-network-chart', 'bx-wifi', 'bx-broadcast', 'bx-devices',
-        'bx-tv', 'bx-printer', 'bx-video-recording', 'bx-camera',
-        'bx-plug', 'bx-mobile', 'bx-tab', 'bx-headphone', 'bx-mouse',
-        'bx-keyboard', 'bx-projector', 'bx-microchip', 'bx-package',
+        'bx-laptop',
+        'bx-desktop',
+        'bxs-server',
+        'bxs-hdd',
+        'bxs-chip',
+        'bxs-network-chart',
+        'bx-wifi',
+        'bx-broadcast',
+        'bxs-devices',
+        'bxs-tv',
+        'bxs-printer',
+        'bxs-video-recording',
+        'bxs-camera',
+        'bxs-plug',
+        'bxs-mobile',
+        'bx-tab',
+        'bx-headphone',
+        'bxs-mouse',
+        'bxs-keyboard',
+        'bx-projector',
+        'bxs-microchip',
+        'bxs-package',
     ];
 
     /** Ícono efectivo (con fallback genérico). */

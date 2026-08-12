@@ -3,9 +3,9 @@ import Swal from 'sweetalert2';
 import { filtrarPadresPorSede, upsertOpcionPadre } from './ubicaciones-padre-filter';
 
 $(function () {
-  const modal   = $('#modalEditarUbicacion');
-  const form    = $('#formEditarUbicacion');
-  const btn     = $('#btnActualizarUbicacion');
+  const modal = $('#modalEditarUbicacion');
+  const form = $('#formEditarUbicacion');
+  const btn = $('#btnActualizarUbicacion');
   const spinner = btn.find('.spinner-border');
   const sedeSel = $('#edit-id_sede');
   const padreSel = $('#edit-id_ubicacion_padre');
@@ -44,26 +44,45 @@ $(function () {
   form.on('submit', function (e) {
     e.preventDefault();
     limpiar();
-    btn.prop('disabled', true); spinner.removeClass('d-none');
+    btn.prop('disabled', true);
+    spinner.removeClass('d-none');
 
     $.ajax({
-      url: form.attr('action'), type: 'POST',
+      url: form.attr('action'),
+      type: 'POST',
       data: form.serialize() + '&_method=PUT',
 
       success(res) {
-        btn.prop('disabled', false); spinner.addClass('d-none');
+        btn.prop('disabled', false);
+        spinner.addClass('d-none');
         modal.modal('hide');
         const row = encontrarFila(editId);
         if (row && res.data) {
-          row.data(res.data).draw(false);
+          const d = row.data();
+
+          d.id_sede = res.data.id_sede;
+          d.nombre = res.data.nombre;
+          d.tipo = res.data.tipo;
+          d.codigo = res.data.codigo;
+          d.descripcion = res.data.descripcion;
+          d.id_ubicacion_padre = res.data.id_ubicacion_padre;
+
+          row.invalidate().draw(false);
+
           upsertOpcionPadre(res.data);
         }
-        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2200, timerProgressBar: true })
-          .fire({ icon: 'success', title: res.message });
+        Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 2200,
+          timerProgressBar: true
+        }).fire({ icon: 'success', title: res.message });
       },
 
       error(xhr) {
-        btn.prop('disabled', false); spinner.addClass('d-none');
+        btn.prop('disabled', false);
+        spinner.addClass('d-none');
         if (xhr.status === 422) {
           const errors = xhr.responseJSON.errors;
           Object.keys(errors).forEach(c => {

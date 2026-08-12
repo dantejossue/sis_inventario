@@ -7,6 +7,7 @@ use App\Models\Sede;
 use App\Models\Sede_Dependencia;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
 
 class ColaboradorController extends Controller
 {
@@ -39,7 +40,18 @@ class ColaboradorController extends Controller
             'per_direccion'      => 'nullable|string|max:255',
             'per_foto'           => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
             'id_sede_dependencia' => 'nullable|exists:sede_dependencia,id_sede_dependencia',
-            'cargo'              => 'nullable|string|max:100',
+            'cargo' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::in([
+                    'JEFE',
+                    'ESPECIALISTA',
+                    'TECNICO',
+                    'ASISTENTE',
+                    'OTRO',
+                ]),
+            ],
             'tipo_colaborador'   => 'required|in:ADMINISTRATIVO,DOCENTE,TECNICO,PRACTICANTE,EXTERNO',
             'fecha_ingreso'      => 'nullable|date',
             'fecha_salida'       => 'nullable|date|after_or_equal:fecha_ingreso',

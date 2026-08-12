@@ -6,10 +6,11 @@ $(function () {
     ...dtDefaults,
     serverSide: false,
     processing: false,
+    order: [],
     ajax: null,
     data: window.dependencias,
     columns: [
-      { data: null, render: (_d, _t, _r, meta) => `<strong>${meta.row + 1}</strong>` },
+      { data: null, searchable: false, render: (_d, _t, _r, meta) => `<strong>${meta.row + 1}</strong>` },
       { data: 'nombre_dependencia', render: n => `<span class="fw-semibold">${n}</span>` },
       {
         data: 'descripcion',
@@ -28,7 +29,9 @@ $(function () {
             : '<span class="badge bg-danger fw-bold">Inactivo</span>'
       },
       {
-        data: null, orderable: false, searchable: false,
+        data: null,
+        orderable: false,
+        searchable: false,
         render: function (row) {
           const urlToggle = window.routes.toggleEstado.replace('{id}', row.id_dependencia);
           const btnToggle =

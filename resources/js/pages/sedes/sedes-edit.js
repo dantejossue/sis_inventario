@@ -2,9 +2,9 @@ import $ from 'jquery';
 import Swal from 'sweetalert2';
 
 $(function () {
-  const modal   = $('#modalEditarSede');
-  const form    = $('#formEditarSede');
-  const btn     = $('#btnActualizarSede');
+  const modal = $('#modalEditarSede');
+  const form = $('#formEditarSede');
+  const btn = $('#btnActualizarSede');
   const spinner = btn.find('.spinner-border');
 
   $('#miTablaSedes').on('click', '.btn-editar', function () {
@@ -22,28 +22,38 @@ $(function () {
   form.on('submit', function (e) {
     e.preventDefault();
     limpiar();
-    btn.prop('disabled', true); spinner.removeClass('d-none');
+    btn.prop('disabled', true);
+    spinner.removeClass('d-none');
 
     $.ajax({
-      url: form.attr('action'), type: 'POST',
+      url: form.attr('action'),
+      type: 'POST',
       data: form.serialize() + '&_method=PUT',
 
       success(res) {
-        btn.prop('disabled', false); spinner.addClass('d-none');
+        btn.prop('disabled', false);
+        spinner.addClass('d-none');
         modal.modal('hide');
         const row = encontrarFila(form.data('row-id'));
         if (row) {
           const d = row.data();
           d.nombre_sede = res.data.nombre_sede;
-          d.ubicacion   = res.data.ubicacion;
-          row.data(d).draw(false);
+          d.ubicacion = res.data.ubicacion;
+          // row.data(d).draw(false);
+          row.invalidate().draw(false);
         }
-        Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, timer: 2200, timerProgressBar: true })
-          .fire({ icon: 'success', title: res.message });
+        Swal.mixin({
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 2200,
+          timerProgressBar: true
+        }).fire({ icon: 'success', title: res.message });
       },
 
       error(xhr) {
-        btn.prop('disabled', false); spinner.addClass('d-none');
+        btn.prop('disabled', false);
+        spinner.addClass('d-none');
         if (xhr.status === 422) {
           const errors = xhr.responseJSON.errors;
           Object.keys(errors).forEach(c => {

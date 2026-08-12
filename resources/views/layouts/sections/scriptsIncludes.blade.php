@@ -1,6 +1,16 @@
 @php
 use Illuminate\Support\Facades\Vite;
 @endphp
+<!-- Restaurar el estado colapsado del sidebar antes del render (evita parpadeo al navegar) -->
+<script>
+  (function () {
+    try {
+      if (window.innerWidth >= 1200 && localStorage.getItem('menuCollapsed') === 'true') {
+        document.documentElement.classList.add('layout-menu-collapsed');
+      }
+    } catch (e) {}
+  })();
+</script>
 <!-- laravel style -->
 @vite(['resources/assets/vendor/js/helpers.js'])
 

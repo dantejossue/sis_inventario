@@ -41,6 +41,11 @@ const devolucionLabel = {
   VENCIDO: 'Vencido'
 };
 
+const estadoLabel = {
+  EJECUTADO: 'Ejecutado',
+  CANCELADO: 'Cancelado'
+};
+
 const dash = '<span class="text-muted">—</span>';
 
 $(function () {
@@ -58,7 +63,8 @@ $(function () {
       },
       {
         data: 'tipo',
-        render: t => `<span class="badge ${tipoBadge[t] ?? 'bg-label-secondary'}">${tipoLabel[t] ?? t}</span>`
+        render: t =>
+          `<span class="fw-semibold badge ${tipoBadge[t] ?? 'bg-label-secondary'}">${tipoLabel[t] ?? t}</span>`
       },
       {
         data: null,
@@ -73,7 +79,7 @@ $(function () {
       {
         data: 'estado',
         render: e =>
-          `<span class="badge ${estadoBadge[e] ?? 'bg-label-secondary'} fw-bold">${(e ?? '').replace(/_/g, ' ')}</span>`
+          `<span class="badge ${estadoBadge[e] ?? 'bg-label-secondary'} fw-semibold">${(estadoLabel[e] ?? '').replace(/_/g, ' ')}</span>`
       },
       {
         // Devolución (reemplaza la antigua columna SIGA, fuera de alcance)
@@ -86,7 +92,7 @@ $(function () {
             : row.fecha_devolucion_estimada
               ? `<small class="text-muted d-block">Est.: ${row.fecha_devolucion_estimada}</small>`
               : '';
-          return `<span class="badge ${cls} fw-bold">${devolucionLabel[e] ?? e}</span>${fechas}`;
+          return `<span class="badge ${cls} fw-semibold">${devolucionLabel[e] ?? e}</span>${fechas}`;
         }
       },
       {

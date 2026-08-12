@@ -85,7 +85,6 @@
     color: var(--bs-primary) !important;
   }
 }
-
 .form-floating
   .select2-container:not(.select2-container--open):not(.select2-container--focus):not(
     .select2-container--disabled
@@ -246,5 +245,64 @@
       color: var(--bs-primary) !important;
       font-weight: 600 !important;
     }
+  }
+}
+
+// =========================================================
+// Select2 en formularios CLÁSICOS (label arriba, NO floating)
+// Mismos colores/hover/focus del floating, pero altura de input normal
+// =========================================================
+.select2-container:not(.form-floating .select2-container) {
+  // 1. Dimensiones base y borde inactivo (igual que floating pero altura normal)
+  .select2-selection--single {
+    height: calc(1.5em + 0.75rem + 2px); // altura .form-control normal (no 3.5rem)
+    display: flex;
+    align-items: center;
+    border: 1px solid color-mix(in sRGB, var(--bs-base-color) 22%, var(--bs-paper-bg));
+    border-radius: var(--bs-border-radius);
+    background-color: var(--bs-paper-bg);
+    transition: all 0.2s ease-in-out;
+  }
+
+  // 2. Alineación del texto seleccionado (sin el padding-top del floating)
+  &.select2-container--default .select2-selection--single .select2-selection__rendered {
+    padding-left: 0.875rem;
+    padding-right: 0.875rem;
+    line-height: 1.5;
+    font-weight: lighter;
+    color: var(--bs-body-color);
+  }
+
+  // 3. Flechita (caret) a la altura del input normal
+  &.select2-container--default .select2-selection--single .select2-selection__arrow {
+    height: calc(1.5em + 0.75rem + 2px);
+    right: 0.5rem;
+  }
+
+  // 4. HOVER (mismo que tu floating)
+  &:not(.select2-container--open):not(.select2-container--focus):not(.select2-container--disabled):hover
+    .select2-selection--single {
+    border-color: $input-hover-border-color;
+  }
+
+  // 5. FOCO / ABIERTO → azul primary con glow (igual que floating)
+  &.select2-container--focus .select2-selection--single,
+  &.select2-container--open .select2-selection--single {
+    border-color: var(--bs-primary);
+    box-shadow: 0 0 0 1px var(--bs-primary);
+    color: var(--bs-heading-color) !important;
+  }
+}
+
+// 6. INVÁLIDO → rojo danger (refleja el .is-invalid del <select> oculto)
+.is-invalid + .select2-container {
+  .select2-selection--single {
+    border-color: var(--bs-danger) !important;
+  }
+
+  &.select2-container--focus .select2-selection--single,
+  &.select2-container--open .select2-selection--single {
+    border-color: var(--bs-danger) !important;
+    box-shadow: 0 0 0 1px var(--bs-danger) !important;
   }
 }

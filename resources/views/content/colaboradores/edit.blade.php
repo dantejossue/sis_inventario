@@ -4,7 +4,7 @@
 
 @section('content')
   <div class="d-flex align-items-center justify-content-between mb-4">
-    <div>
+    {{-- <div>
       <h4 class="mb-0 fw-bold text-primary">
         <i class="bx bx-edit-alt me-2"></i>Editar Colaborador
       </h4>
@@ -14,14 +14,23 @@
           <li class="breadcrumb-item active">{{ $colaborador->per_nombre }} {{ $colaborador->per_apepat }}</li>
         </ol>
       </nav>
-    </div>
+    </div> --}}
+    <h4 class="fw-bold mb-0">
+      <span class="text-secondary d-block d-md-inline">
+        <a class="text-secondary" href="{{ route('colaboradores.index') }}">Colaboradores</a>
+      </span>
+      <span class="d-none d-md-inline"> / </span>
+      <span class="d-block d-md-inline">
+        Editar{{-- : {{ $colaborador->per_nombre }} {{ $colaborador->per_apepat }} --}}
+      </span>
+    </h4>
     <a href="{{ route('colaboradores.index') }}" class="btn btn-label-secondary">
       <i class="bx bx-arrow-back me-1"></i> Volver
     </a>
   </div>
 
-  <form action="{{ route('colaboradores.update', $colaborador->id_colaborador) }}"
-        method="POST" enctype="multipart/form-data" id="formColaborador">
+  <form action="{{ route('colaboradores.update', $colaborador->id_colaborador) }}" method="POST"
+    enctype="multipart/form-data" id="formColaborador">
     @csrf
     @method('PUT')
 

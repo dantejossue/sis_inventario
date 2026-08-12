@@ -20,6 +20,8 @@ class DocumentoAdjunto extends Model
 
     protected $fillable = [
         'entidad_tipo', 'entidad_id',
+        // Referencia opcional al avance de mantenimiento dueño de la evidencia (nullable).
+        'id_avance',
         'tipo_documento', 'numero_documento', 'fecha_documento',
         'archivo', 'nombre_original', 'extension', 'tamano_kb',
         'descripcion', 'subido_por',

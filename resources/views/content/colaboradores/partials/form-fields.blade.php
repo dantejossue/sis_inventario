@@ -10,7 +10,7 @@
        COLUMNA IZQUIERDA — Datos personales
   ══════════════════════════════════════════════ --}}
   <div class="col-lg-7">
-    <div class="card h-100">
+    <div class="card h-100 rounded-4">
       <div class="card-header border-bottom">
         <h6 class="mb-0 fw-bold d-flex align-items-center"><i class="bx bx-id-card me-2 text-primary"></i>Datos Personales
         </h6>
@@ -116,7 +116,7 @@
   <div class="col-lg-5">
 
     {{-- Foto --}}
-    <div class="card mb-4">
+    <div class="card mb-4 rounded-4">
       <div class="card-header border-bottom">
         <h6 class="mb-0 fw-bold d-flex align-items-center"><i class="bx bx-image me-2 text-primary"></i>Foto del
           Colaborador</h6>
@@ -144,7 +144,7 @@
     </div>
 
     {{-- Datos laborales --}}
-    <div class="card">
+    <div class="card rounded-4">
       <div class="card-header border-bottom">
         <h6 class="mb-0 fw-bold d-flex align-items-center"><i class="bx bx-briefcase me-2 text-primary"></i>Datos
           Laborales</h6>
@@ -178,11 +178,33 @@
         </div>
 
         {{-- Cargo --}}
-        <div class="mb-3">
+        {{-- <div class="mb-3">
           <label class="form-label fw-semibold">Cargo</label>
           <input type="text" name="cargo"
             class="form-control text-uppercase @error('cargo') is-invalid @enderror"
             value="{{ old('cargo', $col?->cargo) }}" placeholder="Ej: DIRECTOR OTI">
+          @error('cargo')
+            <div class="invalid-feedback">{{ $message }}</div>
+          @enderror
+        </div> --}}
+
+        {{-- Cargo --}}
+        <div class="mb-3">
+          <label class="form-label fw-semibold">
+            Cargo <span class="text-danger">*</span>
+          </label>
+
+          <select name="cargo" class="form-select @error('cargo') is-invalid @enderror" required>
+
+            <option value="">Seleccione un cargo</option>
+
+            @foreach (['JEFE', 'ESPECIALISTA', 'TECNICO', 'ASISTENTE', 'OTRO'] as $cargo)
+              <option value="{{ $cargo }}" @selected(old('cargo', $col?->cargo) === $cargo)>
+                {{ $cargo }}
+              </option>
+            @endforeach
+          </select>
+
           @error('cargo')
             <div class="invalid-feedback">{{ $message }}</div>
           @enderror

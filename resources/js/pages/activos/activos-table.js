@@ -4,6 +4,26 @@ import { initTooltips } from '../../plugins/bootstrap-tooltips';
 $(function () {
   window.activosSeleccionados = new Set();
 
+  // Exportación a Excel del módulo de activos: en lugar del export del cliente
+  // (que solo vuelca las columnas visibles de la tabla), el botón "Excel"
+  // descarga el .xlsx COMPLETO generado en el servidor, con todas las columnas
+  // de detalle del activo. El resto de opciones (Copiar/CSV/PDF/Imprimir) se
+  // mantiene idéntico a los demás módulos y no se ve afectado.
+  const activosButtons = JSON.parse(JSON.stringify(dtDefaults.buttons));
+  const coleccionExport = activosButtons.find(b => Array.isArray(b.buttons));
+  if (coleccionExport) {
+    const idxExcel = coleccionExport.buttons.findIndex(b => b.extend === 'excelHtml5');
+    if (idxExcel !== -1) {
+      coleccionExport.buttons[idxExcel] = {
+        text: '<i class="bx bx-spreadsheet me-1"></i> Excel (todos los datos)',
+        className: 'buttons-excel',
+        action: function () {
+          window.location.href = window.routes.exportarExcel;
+        }
+      };
+    }
+  }
+
   const condicionBadge = {
     NUEVO: 'bg-label-primary',
     BUENO: 'bg-label-success',
@@ -53,6 +73,7 @@ $(function () {
 
   window.tablaActivos = $('#miTablaActivos').DataTable({
     ...dtDefaults,
+    buttons: activosButtons,
     data: window.activos,
     // order: [[1, 'asc']],
     order: [],
@@ -73,13 +94,13 @@ $(function () {
         data: 'codigo_patrimonial',
         render: (d, t, row) =>
           `<span class="fw-semibold d-block">${d ?? '—'}</span>` +
-          (row.codigo_interno ? `<small class="text-muted">Int.: ${row.codigo_interno}</small>` : '')
+          (row.codigo_interno ? `<small class="text-muted">cod: ${row.codigo_interno}</small>` : '')
       },
       {
         data: 'modelo_nombre',
         render: (d, t, row) =>
           `<div class="d-flex align-items-center gap-2">` +
-          `<span class="avatar avatar-sm flex-shrink-0"><span class="avatar-initial rounded bg-label-primary">` +
+          `<span class="avatar avatar-sm flex-shrink-0"><span class="avatar-initial rounded-circle bg-label-primary">` +
           `<i class="bx ${row.categoria_icono || 'bx-package'}"></i></span></span>` +
           `<div><span class="fw-semibold d-block">${d}</span>` +
           `<span class="badge bg-label-secondary me-1" style="margin-bottom:0.25rem">${row.marca_nombre}</span>` +
@@ -127,6 +148,26 @@ $(function () {
       {
         data: null,
         render: function (row) {
+          const accionOcs = row.codigo_patrimonial
+            ? `
+            <li>
+              <a
+                class="dropdown-item d-flex align-items-center"
+                href="${row.ocs_url}">
+                <i class="bx bx-server me-2"></i>
+                Consultar OCS Inventory
+              </a>
+            </li>
+          `
+            : `
+            <li>
+              <span
+                class="dropdown-item disabled d-flex align-items-center">
+                <i class="bx bx-server me-2"></i>
+                OCS: sin código patrimonial
+              </span>
+            </li>
+          `;
           return `
             <div class="dropdown">
               <button class="btn btn-sm btn-icon btn-text-secondary rounded-pill dropdown-toggle hide-arrow"
@@ -159,6 +200,7 @@ $(function () {
                     <i class="bx bx-qr me-1"></i> <span style="margin-top:3px">Ver etiqueta</span> 
                   </a>
                 </li>
+                ${accionOcs}
                 <li><hr class="dropdown-divider"></li>
                 <li>
                   <a class="dropdown-item text-danger btn-eliminar-activo d-flex align-items-center" href="javascript:void(0)"

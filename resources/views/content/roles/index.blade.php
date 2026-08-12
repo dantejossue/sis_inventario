@@ -3,11 +3,11 @@
 @section('title', 'Roles y Permisos - OTI')
 
 @section('content')
-  <h4 class="mb-4 fw-bold text-primary d-flex align-items-center">
+  <h4 class="mb-4 fw-bold text-secondary d-flex align-items-center">
     <i class="bx bx-shield-quarter me-2"></i> Gestión de Roles y Permisos
   </h4>
 
-  <div class="card">
+  <div class="card rounded-4">
     <div class="card-header border-bottom d-flex justify-content-between align-items-center">
       <h5 class="mb-0 fw-bold">Lista de Roles</h5>
       <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modalNuevoRol">
@@ -128,16 +128,10 @@
   <script>
     window.roles = @json($roles);
     window.routes = {
-      store:       '{{ route('roles.store') }}',
-      update:      '/roles/{id}',
-      toggleEstado:'/roles/{id}/toggle-estado',
+      store: '{{ route('roles.store') }}',
+      update: '/roles/{id}',
+      toggleEstado: '/roles/{id}/toggle-estado',
     };
   </script>
-  @vite([
-    'resources/js/vendors/index.js',
-    'resources/js/pages/roles/roles-table.js',
-    'resources/js/pages/roles/roles-create.js',
-    'resources/js/pages/roles/roles-edit.js',
-    'resources/js/pages/roles/roles-actions.js',
-  ])
+  @vite(['resources/js/vendors/index.js', 'resources/js/pages/roles/roles-table.js', 'resources/js/pages/roles/roles-create.js', 'resources/js/pages/roles/roles-edit.js', 'resources/js/pages/roles/roles-actions.js'])
 @endsection

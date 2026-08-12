@@ -61,11 +61,21 @@ export default defineConfig({
   ],
   server: {
     host: '0.0.0.0',
-    cors: true, // Permite que sneat.test lea los JS sin problemas
+    port: 5173,
+    origin: 'http://192.168.185.17:5173',
+    cors: true,
+
     hmr: {
-      host: '127.0.0.1' // tu IP local
+      host: '192.168.185.17',
+      port: 5173,
+      protocol: 'ws'
     }
   },
+  // server: {
+  //   host: '0.0.0.0',
+  //   port: 5173,
+  //   cors: true
+  // },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, 'resources')

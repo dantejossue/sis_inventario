@@ -2,13 +2,23 @@
 
 namespace App\Models;
 
+use App\Observers\ActivoObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
 
+#[ObservedBy([ActivoObserver::class])]
 class Activo extends Model
 {
     use SoftDeletes;
+
+    /**
+     * Contexto del PRÓXIMO cambio de condición (origen, hecho relacionado y
+     * motivo). Lo fija marcarOrigenCondicion() y lo consume el ActivoObserver.
+     * No es un atributo persistido: vive solo durante la petición.
+     */
+    protected ?array $contextoCondicion = null;
 
     protected $table      = 'activo';
     protected $primaryKey = 'id_activo';
@@ -50,6 +60,32 @@ class Activo extends Model
     public function situacionLabel(): string
     {
         return self::SITUACION_LABELS[$this->situacion_actual] ?? (string) $this->situacion_actual;
+    }
+
+    /**
+     * Marca el contexto del PRÓXIMO cambio de condición para que el
+     * ActivoObserver lo registre con precisión. Llamar justo antes del save/
+     * update que cambia condicion_actual. Se consume una sola vez.
+     */
+    public function marcarOrigenCondicion(string $origen, ?string $entidadTipo = null, ?int $entidadId = null, ?string $motivo = null): static
+    {
+        $this->contextoCondicion = [
+            'origen'       => $origen,
+            'entidad_tipo' => $entidadTipo,
+            'entidad_id'   => $entidadId,
+            'motivo'       => $motivo,
+        ];
+
+        return $this;
+    }
+
+    /** Devuelve y limpia el contexto de condición marcado (o null si no hay). */
+    public function consumirContextoCondicion(): ?array
+    {
+        $ctx = $this->contextoCondicion;
+        $this->contextoCondicion = null;
+
+        return $ctx;
     }
 
     protected $fillable = [
@@ -122,6 +158,12 @@ class Activo extends Model
     {
         return $this->hasMany(DocumentoAdjunto::class, 'entidad_id', 'id_activo')
             ->where('entidad_tipo', 'ACTIVO');
+    }
+
+    /** Historial de transiciones de la condición física del activo. */
+    public function historialCondicion()
+    {
+        return $this->hasMany(HistorialCondicionActivo::class, 'id_activo', 'id_activo');
     }
 
     public function creadoPor()

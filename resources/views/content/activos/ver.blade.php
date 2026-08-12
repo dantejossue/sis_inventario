@@ -33,19 +33,19 @@
       'REGISTRADO' => 'success',
       'OBSERVADO' => 'danger',
   ];
-  $iconoCategoria = [
-      'LAPTOP' => 'bx-laptop',
-      'CPU' => 'bx-desktop',
-      'MONITOR' => 'bx-tv',
-      'IMPRESORA' => 'bx-printer',
-      'PROYECTOR' => 'bx-video',
-      'SWITCH' => 'bx-network-chart',
-      'ROUTER' => 'bx-wifi',
-      'ACCESS POINT' => 'bx-broadcast',
-      'SERVIDOR' => 'bx-server',
-      'UPS' => 'bx-plug',
-      'ESTABILIZADOR' => 'bx-plug',
-  ];
+  // $iconoCategoria = [
+  //     'LAPTOP' => 'bx-laptop',
+  //     'CPU' => 'bx-desktop',
+  //     'MONITOR' => 'bx-tv',
+  //     'IMPRESORA' => 'bx-printer',
+  //     'PROYECTOR' => 'bx-video',
+  //     'SWITCH' => 'bx-network-chart',
+  //     'ROUTER' => 'bx-wifi',
+  //     'ACCESS POINT' => 'bx-broadcast',
+  //     'SERVIDOR' => 'bx-server',
+  //     'UPS' => 'bx-plug',
+  //     'ESTABILIZADOR' => 'bx-plug',
+  // ];
   $iconoDoc = [
       'pdf' => ['bxs-file-pdf', 'danger'],
       'jpg' => ['bx-image', 'primary'],
@@ -69,16 +69,34 @@
       trim(($categoria ? $tipoLegible($categoria->nombre) . ' ' : '') . $marcaModelo) ?:
       'Activo #' . $activo->id_activo;
   $condicion = $activo->condicion_actual
-      ? (object) ['codigo' => $activo->condicion_actual, 'nombre' => \App\Models\Activo::CONDICION_LABELS[$activo->condicion_actual] ?? $activo->condicion_actual]
+      ? (object) [
+          'codigo' => $activo->condicion_actual,
+          'nombre' => \App\Models\Activo::CONDICION_LABELS[$activo->condicion_actual] ?? $activo->condicion_actual,
+      ]
       : null;
   $situacion = $activo->situacion_actual
-      ? (object) ['codigo' => $activo->situacion_actual, 'nombre' => \App\Models\Activo::SITUACION_LABELS[$activo->situacion_actual] ?? $activo->situacion_actual]
+      ? (object) [
+          'codigo' => $activo->situacion_actual,
+          'nombre' => \App\Models\Activo::SITUACION_LABELS[$activo->situacion_actual] ?? $activo->situacion_actual,
+      ]
       : null;
   $responsable = $activo->responsable;
   $dependencia = $responsable?->sedeDependencia?->dependencia?->nombre_dependencia;
   $sedeResp = $responsable?->sedeDependencia?->sede?->nombre_sede;
   $tec = $activo->activoTecnico;
   $documentos = $activo->documentos->sortByDesc('creado_en')->values();
+
+  $historialCondicion = $activo->historialCondicion->sortByDesc('creado_en')->values();
+  $origenCondicionLabel = [
+      'REGISTRO' => 'Registro inicial',
+      'EDICION_MANUAL' => 'Edición manual',
+      'DEVOLUCION' => 'Devolución de préstamo',
+      'MANTENIMIENTO' => 'Mantenimiento',
+      'BAJA' => 'Propuesta de baja',
+      'INVENTARIO' => 'Inventario físico',
+      'REGULARIZACION' => 'Regularización',
+      'OTRO' => 'Otro',
+  ];
 
   $garantiaFin = $activo->garantia_fin ? Carbon::parse($activo->garantia_fin) : null;
   $garantiaVigente = $garantiaFin ? $garantiaFin->endOfDay()->isFuture() : null;
@@ -129,7 +147,7 @@
   @php $bajaVigente = $bajas->first(fn($b) => in_array($b->estado, \App\Models\BajaActivo::ESTADOS_ABIERTOS) || $b->estado === 'EJECUTADA'); @endphp
   @if ($bajaVigente)
     <div
-      class="alert {{ $bajaVigente->estado === 'EJECUTADA' ? 'alert-danger' : 'alert-warning' }} d-flex align-items-start"
+      class="alert rounded-4 {{ $bajaVigente->estado === 'EJECUTADA' ? 'alert-danger' : 'alert-warning' }} d-flex align-items-center"
       role="alert">
       <i class="bx bx-down-arrow-circle fs-4 me-2"></i>
       <div>
@@ -138,12 +156,12 @@
           ({{ $bajaVigente->codigo }})
         </strong>
         <p class="mb-0">
-          Causal: {{ ucfirst(strtolower(str_replace('_', ' ', $bajaVigente->causal_baja))) }}
-          · Estado: {{ ucfirst(strtolower(str_replace('_', ' ', $bajaVigente->estado))) }}
+          <b>Causal:</b> {{ ucfirst(strtolower(str_replace('_', ' ', $bajaVigente->causal_baja))) }}
+          · <b>Estado:</b> {{ ucfirst(strtolower(str_replace('_', ' ', $bajaVigente->estado))) }}
           @if ($bajaVigente->fecha_baja)
             · Ejecutada el {{ $bajaVigente->fecha_baja->format('d/m/Y') }}
           @endif
-          — gestiona el proceso en
+          , gestiona el proceso en
           <a href="{{ route('bajas.index') }}" class="alert-link">Bajas de activos</a>.
         </p>
       </div>
@@ -163,8 +181,7 @@
               class="rounded-4 mb-3 mx-auto d-block" style="max-height: 110px; max-width: 100%; object-fit: contain;">
           @else
             <div class="rounded-5 p-4 d-inline-flex bg-label-primary mx-auto mb-3">
-              <i class="bx {{ $iconoCategoria[strtoupper($categoria?->nombre ?? '')] ?? 'bx-devices' }}"
-                style="font-size: 3rem;"></i>
+              <i class="bx {{ $categoria?->icono ?: 'bx-package' }}" style="font-size: 3rem;"></i>
             </div>
           @endif
 
@@ -344,7 +361,7 @@
   </div>
 
   <!-- Pestañas principales -->
-  <div class="card">
+  <div class="card rounded-5">
 
     <div class="card-header py-4 border-bottom ">
       <ul class="nav nav-pills card-header-pills flex-column flex-md-row gap-2" role="tablist">
@@ -382,6 +399,15 @@
             <i class="bx bx-wrench me-1"></i>
             Mantenimientos
             <span class="badge bg-label-primary ms-1">{{ $mantenimientos->count() }}</span>
+          </button>
+        </li>
+
+        <li class="nav-item">
+          <button type="button" class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-condicion"
+            role="tab">
+            <i class="bx bx-pulse me-1"></i>
+            Condición
+            <span class="badge bg-label-primary ms-1">{{ $historialCondicion->count() }}</span>
           </button>
         </li>
 
@@ -644,9 +670,9 @@
 
               <div class="col-lg-4">
                 <div class="section-card h-100">
-                  <div class="section-card-header">
-                    <h6 class="mb-0">
-                      <i class="bx bx-check-shield me-1"></i>
+                  <div class="section-card-header d-flex align-items-center">
+                    <i class="bx bx-check-shield me-1" style="line-height:1"></i>
+                    <h6 class="m-0" style="line-height: 1;">
                       Estado operativo
                     </h6>
                   </div>
@@ -683,9 +709,9 @@
               @if ($tec->observaciones_tecnicas)
                 <div class="col-12">
                   <div class="section-card">
-                    <div class="section-card-header">
-                      <h6 class="mb-0">
-                        <i class="bx bx-message-square-detail me-1"></i>
+                    <div class="section-card-header d-flex align-items-center">
+                      <i class="bx bx-message-square-detail me-1"></i>
+                      <h6 class="mb-0" style="line-height: 1;">
                         Observaciones técnicas
                       </h6>
                     </div>
@@ -733,7 +759,7 @@
             </div>
           @else
             <div class="table-responsive">
-              <table class="table table-hover">
+              <table class="table table-hover" id="tabla-movimientos" style="width:100%">
                 <thead>
                   <tr>
                     <th>Código</th>
@@ -833,7 +859,7 @@
             </div>
           @else
             <div class="table-responsive">
-              <table class="table table-hover">
+              <table class="table table-hover" id="tabla-mantenimientos" style="width:100%">
                 <thead>
                   <tr>
                     <th>Código</th>
@@ -858,8 +884,7 @@
                       <td>
                         <span class="d-block">{{ \Illuminate\Support\Str::limit($mant->descripcion, 60) }}</span>
                         @if ($mant->diagnostico)
-                          <small
-                            class="text-muted">{{ \Illuminate\Support\Str::limit($mant->diagnostico, 60) }}</small>
+                          <small class="text-muted">{{ \Illuminate\Support\Str::limit($mant->diagnostico, 60) }}</small>
                         @endif
                       </td>
                       <td>{{ $mant->tecnicoResponsable?->nombre_completo ?? ($mant->proveedor ?: 'Por asignar') }}</td>
@@ -917,10 +942,19 @@
               </p>
             </div>
           @else
-            <div class="row g-4">
+            <div class="mb-3">
+              <div class="input-group input-group-merge" style="max-width: 420px;">
+                <span class="input-group-text"><i class="bx bx-search"></i></span>
+                <input type="text" class="form-control" id="docs-buscar"
+                  placeholder="Buscar documento (tipo, archivo, número)...">
+              </div>
+            </div>
+
+            <div class="row g-4" id="docs-grid">
               @foreach ($documentos as $doc)
                 @php [$dIcono, $dColor] = $iconoDoc[$doc->extension] ?? ['bx-file', 'secondary']; @endphp
-                <div class="col-md-6 col-lg-4">
+                <div class="col-md-6 col-lg-4 doc-item"
+                  data-search="{{ strtolower(trim(($doc->tipo_documento ?? '') . ' ' . ($doc->numero_documento ?? '') . ' ' . ($doc->nombre_original ?? '') . ' ' . ($doc->extension ?? ''))) }}">
                   <div class="document-card">
                     <div class="document-icon bg-label-{{ $dColor }}">
                       <i class="bx {{ $dIcono }}"></i>
@@ -953,10 +987,94 @@
                 </div>
               @endforeach
             </div>
+
+            <div class="text-center text-muted py-4 d-none" id="docs-sin-resultados">
+              <i class="bx bx-search-alt bx-sm d-block mb-2"></i>
+              No hay documentos que coincidan con la búsqueda.
+            </div>
+
+            <div class="text-center mt-3 d-none" id="docs-vermas-wrap">
+              <button type="button" class="btn btn-outline-primary btn-sm" id="docs-vermas">
+                <i class="bx bx-chevron-down me-1"></i> Ver más (<span id="docs-restantes"></span>)
+              </button>
+            </div>
           @endif
 
         </div>
         <!-- / TAB DOCUMENTOS -->
+
+        <!-- TAB CONDICIÓN -->
+        <div class="tab-pane fade" id="tab-condicion" role="tabpanel">
+
+          <div
+            class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
+            <div>
+              <h5 class="mb-1">Historial de condición física</h5>
+              <p class="text-muted mb-0">
+                Cada cambio de condición (Nuevo, Bueno, Regular, Malo), con su origen y responsable.
+              </p>
+            </div>
+
+            @if ($condicion)
+              <span class="badge bg-label-{{ $badgeCondicion[$condicion->codigo] ?? 'primary' }} fs-6">
+                Actual: {{ $condicion->nombre }}
+              </span>
+            @endif
+          </div>
+
+          @if ($historialCondicion->isEmpty())
+            <div class="text-center py-5">
+              <div class="rounded-5 p-4 d-inline-flex bg-label-secondary mb-3">
+                <i class="bx bx-pulse" style="font-size: 2.5rem;"></i>
+              </div>
+              <h5 class="mb-1">Sin cambios de condición registrados</h5>
+              <p class="text-muted mb-0">
+                El historial registra las transiciones de condición desde ahora en adelante.
+              </p>
+            </div>
+          @else
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0" id="tabla-condicion" style="width:100%">
+                <thead>
+                  <tr>
+                    <th>Fecha</th>
+                    <th>Cambio</th>
+                    <th>Origen</th>
+                    <th>Motivo</th>
+                    <th>Responsable</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @foreach ($historialCondicion as $h)
+                    <tr>
+                      <td class="text-nowrap">
+                        {{ $h->creado_en ? \Carbon\Carbon::parse($h->creado_en)->format('d/m/Y H:i') : '—' }}
+                      </td>
+                      <td>
+                        <div class="d-flex align-items-center flex-wrap gap-2">
+                          @if ($h->condicion_anterior)
+                            <span class="badge bg-label-{{ $badgeCondicion[$h->condicion_anterior] ?? 'primary' }}">
+                              {{ \App\Models\Activo::CONDICION_LABELS[$h->condicion_anterior] ?? $h->condicion_anterior }}
+                            </span>
+                            <i class="bx bx-right-arrow-alt text-muted"></i>
+                          @endif
+                          <span class="badge bg-label-{{ $badgeCondicion[$h->condicion_nueva] ?? 'primary' }}">
+                            {{ \App\Models\Activo::CONDICION_LABELS[$h->condicion_nueva] ?? $h->condicion_nueva }}
+                          </span>
+                        </div>
+                      </td>
+                      <td>{{ $origenCondicionLabel[$h->origen] ?? $h->origen }}</td>
+                      <td class="text-muted">{{ $h->motivo ?: '—' }}</td>
+                      <td>{{ $nombreUsuario($h->registradoPor) }}</td>
+                    </tr>
+                  @endforeach
+                </tbody>
+              </table>
+            </div>
+          @endif
+
+        </div>
+        <!-- / TAB CONDICIÓN -->
 
         <!-- TAB TRAZABILIDAD -->
         <div class="tab-pane fade" id="tab-trazabilidad" role="tabpanel">
@@ -964,10 +1082,36 @@
           <div class="row">
 
             <div class="col-lg-8">
+
+              @if ($eventos->isNotEmpty())
+                <div class="row g-2 mb-3">
+                  <div class="col-sm-7">
+                    <div class="input-group input-group-merge">
+                      <span class="input-group-text"><i class="bx bx-search"></i></span>
+                      <input type="text" class="form-control" id="traza-buscar"
+                        placeholder="Buscar en la trazabilidad...">
+                    </div>
+                  </div>
+                  <div class="col-sm-5">
+                    <select class="form-select" id="traza-tipo">
+                      <option value="">Todos los eventos</option>
+                      <option value="movimiento">Movimientos</option>
+                      <option value="mantenimiento">Mantenimientos</option>
+                      <option value="baja">Bajas</option>
+                      <option value="condicion">Cambios de condición</option>
+                      <option value="documento">Documentos</option>
+                      <option value="registro">Registro</option>
+                      <option value="edicion">Ediciones</option>
+                    </select>
+                  </div>
+                </div>
+              @endif
+
               <div class="timeline-wrapper">
 
                 @forelse ($eventos as $evento)
-                  <div class="timeline-item">
+                  <div class="timeline-item traza-item" data-tipo="{{ $evento['tipo'] ?? 'otro' }}"
+                    data-search="{{ strtolower(($evento['titulo'] ?? '') . ' ' . ($evento['detalle'] ?? '')) }}">
                     <div class="timeline-icon bg-label-{{ $evento['color'] }}">
                       <i class="bx {{ $evento['icono'] }}"></i>
                     </div>
@@ -983,6 +1127,18 @@
                 @endforelse
 
               </div>
+
+              <div class="text-center text-muted py-4 d-none" id="traza-sin-resultados">
+                <i class="bx bx-search-alt bx-sm d-block mb-2"></i>
+                No hay eventos que coincidan con el filtro.
+              </div>
+
+              <div class="text-center mt-3 d-none" id="traza-vermas-wrap">
+                <button type="button" class="btn btn-outline-primary btn-sm" id="traza-vermas">
+                  <i class="bx bx-chevron-down me-1"></i> Ver más (<span id="traza-restantes"></span>)
+                </button>
+              </div>
+
             </div>
 
             <div class="col-lg-4">
