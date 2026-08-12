@@ -442,8 +442,8 @@
             <div class="col-lg-6">
               <div class="section-card">
                 <div class="section-card-header d-flex align-items-center">
-                  <i class="bx bx-id-card me-1"></i>
-                  <h6 class="mb-0">Identificación</h6>
+                  <i class="bx bx-id-card me-1 fw-bold"></i>
+                  <h6 class="mb-0 fw-bold">Identificación</h6>
                 </div>
 
                 <div class="section-card-body">
@@ -485,8 +485,8 @@
             <div class="col-lg-6">
               <div class="section-card">
                 <div class="section-card-header d-flex align-items-center">
-                  <i class="bx bx-category me-1"></i>
-                  <h6 class="mb-0">Clasificación</h6>
+                  <i class="bx bx-category me-1 fw-bold"></i>
+                  <h6 class="mb-0 fw-bold fw-bold">Clasificación</h6>
                 </div>
 
                 <div class="section-card-body">
@@ -533,8 +533,8 @@
             <div class="col-lg-6">
               <div class="section-card">
                 <div class="section-card-header d-flex align-items-center">
-                  <i class="bx bx-user me-1"></i>
-                  <h6 class="mb-0">Responsable y ubicación</h6>
+                  <i class="bx bx-user me-1 fw-bold"></i>
+                  <h6 class="mb-0 fw-bold">Responsable y ubicación</h6>
                 </div>
 
                 <div class="section-card-body">
@@ -571,8 +571,8 @@
             <div class="col-lg-6">
               <div class="section-card">
                 <div class="section-card-header d-flex align-items-center">
-                  <i class="bx bx-purchase-tag me-1"></i>
-                  <h6 class="mb-0">Compra y garantía</h6>
+                  <i class="bx bx-purchase-tag me-1 fw-bold"></i>
+                  <h6 class="mb-0 fw-bold">Compra y garantía</h6>
                 </div>
 
                 <div class="section-card-body">
@@ -616,8 +616,8 @@
               <div class="col-12">
                 <div class="section-card">
                   <div class="section-card-header d-flex align-items-center">
-                    <i class="bx bx-message-square-detail me-1"></i>
-                    <h6 class="mb-0">Observaciones</h6>
+                    <i class="bx bx-message-square-detail me-1 fw-bold"></i>
+                    <h6 class="mb-0 fw-bold">Observaciones</h6>
                   </div>
                   <div class="section-card-body">
                     <p class="mb-0 text-muted">{{ $activo->observaciones }}</p>
@@ -640,8 +640,8 @@
               <div class="col-lg-8">
                 <div class="section-card">
                   <div class="section-card-header d-flex justify-content-between align-items-center">
-                    <h6 class="d-flex align-items-center m-0">
-                      <i class="bx bx-chip me-1"></i>
+                    <h6 class="d-flex align-items-center m-0 fw-bold">
+                      <i class="bx bx-chip me-1 fw-bold"></i>
                       Especificaciones técnicas internas
                     </h6>
 
@@ -671,8 +671,8 @@
               <div class="col-lg-4">
                 <div class="section-card h-100">
                   <div class="section-card-header d-flex align-items-center">
-                    <i class="bx bx-check-shield me-1" style="line-height:1"></i>
-                    <h6 class="m-0" style="line-height: 1;">
+                    <i class="bx bx-check-shield me-1 fw-bold" style="line-height:1"></i>
+                    <h6 class="m-0 fw-bold" style="line-height: 1;">
                       Estado operativo
                     </h6>
                   </div>
@@ -735,7 +735,7 @@
           <div
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
             <div>
-              <h5 class="mb-1">Historial de movimientos</h5>
+              <h5 class="mb-1 fw-bold">Historial de movimientos</h5>
               <p class="text-muted mb-0">
                 Préstamos, transferencias y regularizaciones.
               </p>
@@ -835,7 +835,7 @@
           <div
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
             <div>
-              <h5 class="mb-1">Historial de mantenimientos</h5>
+              <h5 class="mb-1 fw-bold">Historial de mantenimientos</h5>
               <p class="text-muted mb-0">
                 Preventivos, correctivos, garantías y revisiones técnicas del activo.
               </p>
@@ -919,7 +919,7 @@
           <div
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
             <div>
-              <h5 class="mb-1">Documentos adjuntos</h5>
+              <h5 class="mb-1 fw-bold">Documentos adjuntos</h5>
               <p class="text-muted mb-0">
                 Actas, guías, fotos, informes, trámites y evidencias del activo.
               </p>
@@ -1009,7 +1009,7 @@
           <div
             class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
             <div>
-              <h5 class="mb-1">Historial de condición física</h5>
+              <h5 class="mb-1 fw-bold">Historial de condición física</h5>
               <p class="text-muted mb-0">
                 Cada cambio de condición (Nuevo, Bueno, Regular, Malo), con su origen y responsable.
               </p>
@@ -1144,7 +1144,7 @@
             <div class="col-lg-4">
               <div class="section-card">
                 <div class="section-card-header">
-                  <h6 class="mb-0">
+                  <h6 class="mb-0 fw-bold d-flex align-items-center">
                     <i class="bx bx-bar-chart me-1"></i>
                     Resumen de trazabilidad
                   </h6>

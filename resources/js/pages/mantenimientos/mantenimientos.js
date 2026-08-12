@@ -555,9 +555,12 @@ $(function () {
           .join('');
         return `
           <div class="border rounded p-3 mb-2">
-            <div class="d-flex justify-content-between align-items-start mb-1">
+            <div class="d-flex flex-column flex-sm-row justify-content-sm-between align-items-sm-start gap-1 mb-1">
               <strong>Avance ${i + 1}</strong>
-              <small class="text-muted">${av.fecha ?? ''}${av.registrado_por ? ' · ' + av.registrado_por : ''}</small>
+              <small class="text-muted d-flex flex-column flex-sm-row gap-sm-1">
+                <span>${av.fecha ?? ''}</span>
+                ${av.registrado_por ? `<span>${av.registrado_por}</span>` : ''}
+              </small>
             </div>
             ${av.diagnostico ? `<div class="small mb-1"><span class="text-muted">Diagnóstico:</span> ${av.diagnostico}</div>` : ''}
             <div class="small mb-1"><span class="text-muted">Actividad:</span> ${av.actividad_realizada ?? '—'}</div>

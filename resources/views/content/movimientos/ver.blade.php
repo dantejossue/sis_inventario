@@ -164,11 +164,11 @@
               </small>
             </div>
 
-            <div class="avatar">
+            {{-- <div class="avatar">
               <span class="avatar-initial rounded-4 bg-label-{{ $tipoBadge[$mov->tipo] ?? 'primary' }}">
                 <i class="bx {{ $tipoIcon[$mov->tipo] ?? 'bx-transfer' }} fs-4"></i>
               </span>
-            </div>
+            </div> --}}
           </div>
         </div>
 
@@ -530,6 +530,7 @@
             </tr>
           </thead>
 
+
           <tbody>
 
             @forelse ($mov->detalles as $detalle)
@@ -537,6 +538,7 @@
                 $activo = $detalle->activo;
 
                 $modelo = trim(($activo?->modelo?->marca?->nombre ?? '') . ' ' . ($activo?->modelo?->nombre ?? ''));
+
                 $categoriaIcono = $activo?->categoria?->icono ?? 'bx-desktop';
 
                 $responsableOrigen = $nombreColab($detalle->responsableOrigen);
@@ -546,16 +548,17 @@
                 $ubicacionDestino = $detalle->ubicacionDestino?->nombre ?? '—';
 
                 $mismoResponsable = $detalle->id_responsable_origen === $detalle->id_responsable_destino;
+
                 $mismaUbicacion = $detalle->id_ubicacion_origen === $detalle->id_ubicacion_destino;
               @endphp
 
               <tr>
 
                 {{-- Activo --}}
-                <td style="min-width: 190px;">
-                  <div class="d-flex align-items-center gap-3">
+                <td>
+                  <div class="d-flex align-items-start gap-3">
 
-                    <div class="avatar avatar-sm">
+                    <div class="avatar avatar-sm flex-shrink-0">
                       <span class="avatar-initial rounded bg-label-primary">
                         <i class="bx {{ $categoriaIcono }}"></i>
                       </span>
@@ -570,7 +573,7 @@
                         Patrimonial: {{ $activo?->codigo_patrimonial ?? '—' }}
                       </small>
 
-                      <small class="text-muted">
+                      <small class="text-muted d-block">
                         {{ $modelo ?: 'Sin modelo registrado' }}
                       </small>
                     </div>
@@ -579,34 +582,34 @@
                 </td>
 
                 {{-- Responsable --}}
-                <td style="min-width: 220px;">
+                <td>
                   @if ($mismoResponsable)
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="avatar avatar-xs">
-                        <span class="avatar-initial rounded-circle bg-label-secondary">
-                          <i class="bx bx-user"></i>
-                        </span>
-                      </span>
+                    <small class="text-muted d-block mb-1">
+                      Responsable
+                    </small>
+
+                    <span class="fw-semibold d-block">
+                      {{ $responsableOrigen }}
+                    </span>
+
+                    <small class="text-muted">
+                      Sin cambio
+                    </small>
+                  @else
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-1">
+                        Origen
+                      </small>
 
                       <span class="fw-semibold">
                         {{ $responsableOrigen }}
                       </span>
                     </div>
 
-                    <small class="text-muted">
-                      Sin cambio de responsable
-                    </small>
-                  @else
-                    <div class="small text-muted mb-1">
-                      Origen
-                    </div>
-
-                    <div class="fw-semibold mb-2">
-                      {{ $responsableOrigen }}
-                    </div>
-
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="bx bx-right-arrow-alt text-primary"></i>
+                    <div>
+                      <small class="text-muted d-block mb-1">
+                        Destino
+                      </small>
 
                       <span class="fw-semibold text-primary">
                         {{ $responsableDestino }}
@@ -616,26 +619,34 @@
                 </td>
 
                 {{-- Ubicación --}}
-                <td style="min-width: 200px;">
+                <td>
                   @if ($mismaUbicacion)
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="bx bx-map text-muted"></i>
+                    <small class="text-muted d-block mb-1">
+                      Ubicación
+                    </small>
+
+                    <span class="fw-semibold d-block">
+                      {{ $ubicacionOrigen }}
+                    </span>
+
+                    <small class="text-muted">
+                      Sin cambio
+                    </small>
+                  @else
+                    <div class="mb-3">
+                      <small class="text-muted d-block mb-1">
+                        Origen
+                      </small>
 
                       <span class="fw-semibold">
                         {{ $ubicacionOrigen }}
                       </span>
                     </div>
 
-                    <small class="text-muted">
-                      Sin cambio de ubicación
-                    </small>
-                  @else
-                    <div class="small text-muted mb-1">
-                      {{ $ubicacionOrigen }}
-                    </div>
-
-                    <div class="d-flex align-items-center gap-2">
-                      <i class="bx bx-right-arrow-alt text-primary"></i>
+                    <div>
+                      <small class="text-muted d-block mb-1">
+                        Destino
+                      </small>
 
                       <span class="fw-semibold text-primary">
                         {{ $ubicacionDestino }}
@@ -645,26 +656,30 @@
                 </td>
 
                 {{-- Condición --}}
-                <td style="min-width: 170px;">
-                  <div class="d-flex align-items-center flex-wrap gap-2">
+                <td>
+
+                  <div class="mb-3">
+                    <small class="text-muted d-block mb-1">
+                      Salida
+                    </small>
 
                     <span class="badge bg-label-{{ $condBadge[$detalle->condicion_salida] ?? 'secondary' }}">
                       {{ Activo::CONDICION_LABELS[$detalle->condicion_salida] ?? ($detalle->condicion_salida ?? '—') }}
                     </span>
+                  </div>
 
-                    @if ($detalle->condicion_retorno)
-                      <i class="bx bx-right-arrow-alt text-muted"></i>
+                  @if ($detalle->condicion_retorno)
+                    <div>
+                      <small class="text-muted d-block mb-1">
+                        Retorno
+                      </small>
 
                       <span class="badge bg-label-{{ $condBadge[$detalle->condicion_retorno] ?? 'secondary' }}">
                         {{ Activo::CONDICION_LABELS[$detalle->condicion_retorno] ?? $detalle->condicion_retorno }}
                       </span>
-                    @endif
+                    </div>
+                  @endif
 
-                  </div>
-
-                  <small class="text-muted d-block mt-1">
-                    {{ $detalle->condicion_retorno ? 'Salida → retorno' : 'Condición de salida' }}
-                  </small>
                 </td>
 
                 {{-- Resultado --}}
@@ -679,7 +694,6 @@
                   @if ($activo)
                     <a href="{{ route('activos.ver', $activo->id_activo) }}"
                       class="btn btn-sm btn-icon btn-outline-primary" title="Ver activo">
-
                       <i class="bx bx-show"></i>
                     </a>
                   @else
@@ -688,7 +702,9 @@
                 </td>
 
               </tr>
+
             @empty
+
               <tr>
                 <td colspan="6" class="text-center py-5">
 
@@ -698,7 +714,9 @@
                     </span>
                   </div>
 
-                  <h6 class="mb-1">Sin activos registrados</h6>
+                  <h6 class="mb-1">
+                    Sin activos registrados
+                  </h6>
 
                   <p class="text-muted mb-0">
                     El movimiento no tiene activos asociados.
@@ -714,6 +732,8 @@
     </div>
 
   </div>
+
+
 
   @include('content.movimientos.partials.modal-devolucion')
 

@@ -594,6 +594,10 @@ table.dataTable thead td {
   height: 100%;
 }
 
+.maintenance-file-card .flex-grow-1 {
+  min-width: 0;
+}
+
 .maintenance-file-icon {
   width: 48px;
   height: 48px;

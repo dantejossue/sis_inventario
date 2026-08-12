@@ -781,19 +781,25 @@
     <div class="modal-dialog modal-xl">
       <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
 
-        <div class="modal-header py-4 border-bottom border-sw">
-          <div>
-            <h5 class="modal-title d-flex align-items-center fw-bold" style="color:#084b8a;">
-              <i class="bx bxs-wrench me-1"></i>
-              Detalle del mantenimiento: &nbsp; <span id="det-codigo" style="color: brown;"></span>
+        <div class="modal-header py-4 border-bottom border-sw position-relative">
+          <div class="pe-4 w-100">
+
+            <h5 class="modal-title fw-bold d-flex flex-wrap align-items-center gap-1" style="color:#084b8a;">
+              <i class="bx bxs-wrench"></i>
+
+              <span>Detalle del mantenimiento:</span>
+
+              <span id="det-codigo" style="color:brown;"></span>
             </h5>
-            <small class="d-block text-muted">
+
+            <small class="text-muted d-block mt-1">
               Diagnóstico, atención técnica, evidencias, costos y trazabilidad.
             </small>
+
           </div>
 
-          <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3"
-            data-bs-dismiss="modal"></button>
+          <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal">
+          </button>
         </div>
 
 
@@ -1069,9 +1075,31 @@
   <!-- Modal avance técnico -->
   <div class="modal fade" id="modalAvance" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
 
-        <div class="modal-header">
+        <div class="modal-header py-4 border-bottom border-sw position-relative">
+          <div class="pe-4 w-100">
+
+            <h5 class="modal-title fw-bold d-flex flex-wrap align-items-center gap-1" style="color:#084b8a;">
+              <i class="bx bxs-edit"></i>
+
+              <span>Avance técnico: </span>
+
+              <span id="avance-codigo" style="color:brown;"></span>
+            </h5>
+
+            <small class="text-light d-block mt-1">
+              Registra un avance del diagnóstico y la atención. El activo pasará a
+              atención (interna o proveedor según la modalidad definida al registrar).
+            </small>
+
+          </div>
+
+          <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal">
+          </button>
+        </div>
+
+        {{-- <div class="modal-header">
           <div>
             <h5 class="modal-title d-flex align-items-center">
               <i class="bx bx-edit me-1"></i>
@@ -1084,10 +1112,10 @@
           </div>
 
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
+        </div> --}}
 
-        <form id="form-avance" enctype="multipart/form-data">
-          <div class="modal-body">
+        <form id="form-avance" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1 overflow-hidden">
+          <div class="modal-body overflow-auto">
 
             <div class="row g-3">
 
@@ -1139,7 +1167,7 @@
 
           </div>
 
-          <div class="modal-footer">
+          <div class="modal-footer border-top py-4">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
               Cancelar
             </button>
@@ -1160,9 +1188,29 @@
   <!-- Modal finalizar mantenimiento -->
   <div class="modal fade" id="modalFinalizar" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
-      <div class="modal-content">
+      <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
+        <div class="modal-header py-4 border-bottom border-sw position-relative">
+          <div class="pe-4 w-100">
 
-        <div class="modal-header">
+            <h5 class="modal-title fw-bold d-flex flex-wrap align-items-center gap-1" style="color:#084b8a;">
+              <i class="bx bxs-check-circle"></i>
+
+              <span>Finalizar mantenimiento: </span>
+
+              <span id="fin-codigo" style="color:brown;"></span>
+            </h5>
+
+            <small class="text-light d-block mt-1">
+              Exige diagnóstico y resultado. El activo volverá a su situación operativa o quedará pendiente de baja.
+            </small>
+
+          </div>
+
+          <button type="button" class="btn-close position-absolute top-0 end-0 mt-3 me-3" data-bs-dismiss="modal">
+          </button>
+        </div>
+
+        {{-- <div class="modal-header">
           <div>
             <h5 class="modal-title">
               <i class="bx bx-check-circle me-1"></i>
@@ -1174,10 +1222,10 @@
           </div>
 
           <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-        </div>
+        </div> --}}
 
-        <form id="form-finalizar" enctype="multipart/form-data">
-          <div class="modal-body">
+        <form id="form-finalizar" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1 overflow-hidden">
+          <div class="modal-body overflow-auto">
 
             <div class="row g-3">
 
@@ -1263,14 +1311,14 @@
 
           </div>
 
-          <div class="modal-footer">
+          <div class="modal-footer border-top py-4">
             <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
               Cancelar
             </button>
 
             <button type="submit" class="btn btn-primary">
               <i class="bx bx-check me-1"></i>
-              Finalizar mantenimiento
+              Finalizar
             </button>
           </div>
         </form>

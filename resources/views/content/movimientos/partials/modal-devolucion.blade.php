@@ -1,18 +1,34 @@
 {{-- Modal de devolución de préstamo (reutilizable en lista y detalle) --}}
 <div class="modal fade" id="modalDevolucion" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <div>
-          <h5 class="modal-title"><i class="bx bx-undo me-1"></i> Devolución de préstamo <span id="dev-codigo"></span></h5>
-          <small class="text-muted">Registra el retorno del activo y adjunta el acta de conformidad.</small>
+  <div class="modal-dialog">
+    <div class="modal-content" style="max-height: 90vh; display: flex; flex-direction: column;">
+
+      <div class="modal-header py-4 border-bottom border-sw position-relative">
+        <div class="pe-4 w-100">
+
+          <h5 class="modal-title fw-bold d-flex flex-wrap align-items-center gap-1" style="color:#084b8a;">
+            <i class="bx bx-undo"></i>
+
+            <span>Devolución de préstamo: </span>
+
+            <span id="dev-codigo" style="color:brown;"></span>
+          </h5>
+
+          <small class="text-muted d-block mt-1">
+            Registra el retorno del activo y adjunta el acta de conformidad.
+          </small>
+
         </div>
+        {{-- <div>
+          <h5 class="modal-title"><i class="bx bx-undo me-1"></i> Devolución de préstamo <span id="dev-codigo"></span>
+          </h5>
+          <small class="text-muted">Registra el retorno del activo y adjunta el acta de conformidad.</small>
+        </div> --}}
         <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
       </div>
-
-      <form id="formDevolucion" enctype="multipart/form-data">
+      <form id="formDevolucion" enctype="multipart/form-data" class="d-flex flex-column flex-grow-1 overflow-hidden">
         <input type="hidden" id="dev-id">
-        <div class="modal-body">
+        <div class="modal-body overflow-auto">
           <div class="row g-3">
 
             <div class="col-12">
@@ -26,7 +42,7 @@
                   <thead>
                     <tr>
                       <th>Activo</th>
-                      <th>Condición de salida</th>
+                      <th class="w-20">Condición de salida</th>
                       <th>Condición de retorno</th>
                     </tr>
                   </thead>
@@ -78,7 +94,7 @@
           </div>
         </div>
 
-        <div class="modal-footer">
+        <div class="modal-footer border-top py-4">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
           <button type="submit" class="btn btn-success" id="btnDevolucion">
             <span class="spinner-border spinner-border-sm d-none me-1" role="status"></span>

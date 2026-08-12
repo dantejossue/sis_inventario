@@ -20,8 +20,8 @@
 
 
     /* Modal de mover: pegado arriba; si el contenido excede la pantalla, hace
-                                                                                                                                       scroll el overlay completo (comportamiento estándar; el modal-dialog-scrollable
-                                                                                                                                       de este build de Sneat dejaba parte del modal fuera de pantalla sin scroll). */
+                                                                                                                                             scroll el overlay completo (comportamiento estándar; el modal-dialog-scrollable
+                                                                                                                                             de este build de Sneat dejaba parte del modal fuera de pantalla sin scroll). */
     #modalMover.modal {
       overflow-y: auto !important;
     }
@@ -32,7 +32,7 @@
     }
   </style>
 
-  <h4 class="fw-bold mb-0">
+  <h4 class="fw-bold mb-1 lh-1">
     <span class="text-secondary d-block d-md-inline">
       Gestión Principal
     </span>

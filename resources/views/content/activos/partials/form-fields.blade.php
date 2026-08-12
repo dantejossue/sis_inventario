@@ -131,7 +131,8 @@
                 @error('motivo_condicion')
                   <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
-                <small class="text-muted">Requerido solo si cambias la condición física. Queda registrado en el historial del activo.</small>
+                <small class="text-muted">Requerido solo si cambias la condición física. Queda registrado en el
+                  historial del activo.</small>
               </div>
             </div>
           @endif
@@ -163,7 +164,7 @@
 
     {{-- Card 2: Responsable y ubicación física --}}
     <div class="card mb-4 rounded-4">
-      <div class="card-header border-bottom d-flex align-items-center py-4">
+      <div class="card-header border-bottom d-flex align-items-center py-4 bg-label-primary rounded-top-4">
         <i class="bx bx-map-pin me-2 text-primary"></i>
         <h6 class="mb-0 fw-bold d-flex align-items-center">Responsable y ubicación física</h6>
       </div>
@@ -317,7 +318,7 @@
      El JS (activos-form.js) muestra/oculta esta card según el modelo elegido. --}}
     @php $tec = $activo?->activoTecnico; @endphp
     <div class="card mb-4 rounded-4" id="ficha-tecnica-wrap">
-      <div class="card-header border-bottom py-4">
+      <div class="card-header border-bottom py-4 bg-label-primary rounded-top-4">
         <h6 class="mb-0 fw-bold d-flex align-items-center"><i class="bx bx-chip me-2 text-primary"></i>Ficha Técnica
           TI
         </h6>
@@ -443,7 +444,7 @@
 
     {{-- Card 4. Datos patrimoniales --}}
     <div class="card mb-4 rounded-4">
-      <div class="card-header border-bottom d-flex align-items-center py-4">
+      <div class="card-header border-bottom d-flex align-items-center py-4 bg-label-primary rounded-top-4">
         <i class="bx bx-data me-2 text-primary"></i>
         <h6 class="mb-0 fw-bold d-flex align-items-center">Datos patrimoniales</h6>
       </div>
@@ -595,7 +596,7 @@
 
     {{-- Card 5. Documentos y evidencias --}}
     <div class="card mb-4 rounded-4">
-      <div class="card-header border-bottom d-flex align-items-center py-4">
+      <div class="card-header border-bottom d-flex align-items-center py-4 bg-label-primary rounded-top-4">
         <i class="bx bx-paperclip me-2 text-primary"></i>
         <h6 class="mb-0 fw-bold">Documentos y evidencias</h6>
       </div>

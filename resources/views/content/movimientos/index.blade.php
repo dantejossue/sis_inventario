@@ -3,7 +3,7 @@
 @section('title', 'Movimientos - OTI')
 
 @section('content')
-  <h4 class="fw-bold mb-0">
+  <h4 class="fw-bold mb-1 lh-1">
     <span class="text-secondary d-block d-md-inline">
       Gestión Principal
     </span>
