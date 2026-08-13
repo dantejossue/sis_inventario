@@ -42,7 +42,7 @@
               <h5 class="card-title text-primary mb-2">¡Hola, {{ $usuario }}! 👋</h5>
               <p class="mb-3">
                 Este es el panel de control del inventario de activos tecnológicos.
-                Tienes <strong>{{ $totalActivos }}</strong> activos registrados y
+                Se tiene <strong>{{ $totalActivos }}</strong> activos registrados y
                 <strong>{{ $prestamosVigentes }}</strong> préstamos pendientes de devolución.
               </p>
               <a href="{{ route('activos.index') }}" class="btn btn-sm btn-outline-primary">
@@ -355,7 +355,8 @@
                   @php $dias = \Carbon\Carbon::today()->diffInDays($act->garantia_fin, false); @endphp
                   <tr>
                     <td class="fw-semibold">{{ $act->codigo_patrimonial ?: '—' }}</td>
-                    <td>{{ trim(($act->modelo?->marca?->nombre ?? '') . ' ' . ($act->modelo?->nombre ?? '')) ?: '—' }}</td>
+                    <td>{{ trim(($act->modelo?->marca?->nombre ?? '') . ' ' . ($act->modelo?->nombre ?? '')) ?: '—' }}
+                    </td>
                     <td>{{ $act->garantia_fin->format('d/m/Y') }}</td>
                     <td>
                       <span class="badge {{ $dias <= 30 ? 'bg-label-danger' : 'bg-label-warning' }}">
@@ -393,18 +394,50 @@
       const catEl = document.querySelector('#categoriaChart');
       if (catEl) {
         new ApexCharts(catEl, {
-          chart: { type: 'bar', height: 320, toolbar: { show: false } },
-          series: [{ name: 'Activos', data: @json($categoriaChart['data']) }],
-          plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true } },
-          dataLabels: { enabled: true },
-          legend: { show: false },
+          chart: {
+            type: 'bar',
+            height: 320,
+            toolbar: {
+              show: false
+            }
+          },
+          series: [{
+            name: 'Activos',
+            data: @json($categoriaChart['data'])
+          }],
+          plotOptions: {
+            bar: {
+              horizontal: true,
+              borderRadius: 6,
+              barHeight: '60%',
+              distributed: true
+            }
+          },
+          dataLabels: {
+            enabled: true
+          },
+          legend: {
+            show: false
+          },
           colors: paleta,
           xaxis: {
             categories: @json($categoriaChart['labels']),
-            labels: { style: { colors: ejeColor } }
+            labels: {
+              style: {
+                colors: ejeColor
+              }
+            }
           },
-          yaxis: { labels: { style: { colors: ejeColor } } },
-          grid: { borderColor: 'rgba(0,0,0,.06)' }
+          yaxis: {
+            labels: {
+              style: {
+                colors: ejeColor
+              }
+            }
+          },
+          grid: {
+            borderColor: 'rgba(0,0,0,.06)'
+          }
         }).render();
       }
 
@@ -412,13 +445,29 @@
       const sitEl = document.querySelector('#situacionChart');
       if (sitEl) {
         new ApexCharts(sitEl, {
-          chart: { type: 'donut', height: 260 },
+          chart: {
+            type: 'donut',
+            height: 260
+          },
           series: @json($situacionChart['data']),
           labels: @json($situacionChart['labels']),
           colors: paleta,
-          legend: { position: 'bottom', labels: { colors: ejeColor } },
-          dataLabels: { enabled: true },
-          plotOptions: { pie: { donut: { size: '65%' } } }
+          legend: {
+            position: 'bottom',
+            labels: {
+              colors: ejeColor
+            }
+          },
+          dataLabels: {
+            enabled: true
+          },
+          plotOptions: {
+            pie: {
+              donut: {
+                size: '65%'
+              }
+            }
+          }
         }).render();
       }
 
@@ -426,13 +475,29 @@
       const condEl = document.querySelector('#condicionChart');
       if (condEl) {
         new ApexCharts(condEl, {
-          chart: { type: 'donut', height: 260 },
+          chart: {
+            type: 'donut',
+            height: 260
+          },
           series: @json($condicionChart['data']),
           labels: @json($condicionChart['labels']),
           colors: ['#71dd37', '#03c3e3', '#ffab00', '#ff3e1d'],
-          legend: { position: 'bottom', labels: { colors: ejeColor } },
-          dataLabels: { enabled: true },
-          plotOptions: { pie: { donut: { size: '65%' } } }
+          legend: {
+            position: 'bottom',
+            labels: {
+              colors: ejeColor
+            }
+          },
+          dataLabels: {
+            enabled: true
+          },
+          plotOptions: {
+            pie: {
+              donut: {
+                size: '65%'
+              }
+            }
+          }
         }).render();
       }
 
@@ -440,23 +505,63 @@
       const actEl = document.querySelector('#actividadChart');
       if (actEl) {
         new ApexCharts(actEl, {
-          chart: { type: 'line', height: 320, toolbar: { show: false } },
-          series: [
-            { name: 'Altas de activos', data: @json($actividadChart['altas']) },
-            { name: 'Movimientos', data: @json($actividadChart['movimientos']) },
-            { name: 'Mantenimientos', data: @json($actividadChart['mantenimientos']) }
+          chart: {
+            type: 'line',
+            height: 320,
+            toolbar: {
+              show: false
+            }
+          },
+          series: [{
+              name: 'Altas de activos',
+              data: @json($actividadChart['altas'])
+            },
+            {
+              name: 'Movimientos',
+              data: @json($actividadChart['movimientos'])
+            },
+            {
+              name: 'Mantenimientos',
+              data: @json($actividadChart['mantenimientos'])
+            }
           ],
           colors: ['#696cff', '#03c3e3', '#ffab00'],
-          stroke: { curve: 'smooth', width: 3 },
-          markers: { size: 4 },
-          dataLabels: { enabled: false },
-          legend: { position: 'top', labels: { colors: ejeColor } },
+          stroke: {
+            curve: 'smooth',
+            width: 3
+          },
+          markers: {
+            size: 4
+          },
+          dataLabels: {
+            enabled: false
+          },
+          legend: {
+            position: 'top',
+            labels: {
+              colors: ejeColor
+            }
+          },
           xaxis: {
             categories: @json($actividadChart['labels']),
-            labels: { style: { colors: ejeColor } }
+            labels: {
+              style: {
+                colors: ejeColor
+              }
+            }
           },
-          yaxis: { labels: { style: { colors: ejeColor } }, min: 0, forceNiceScale: true },
-          grid: { borderColor: 'rgba(0,0,0,.06)' }
+          yaxis: {
+            labels: {
+              style: {
+                colors: ejeColor
+              }
+            },
+            min: 0,
+            forceNiceScale: true
+          },
+          grid: {
+            borderColor: 'rgba(0,0,0,.06)'
+          }
         }).render();
       }
 
@@ -464,13 +569,29 @@
       const movTipoEl = document.querySelector('#movTipoChart');
       if (movTipoEl) {
         new ApexCharts(movTipoEl, {
-          chart: { type: 'donut', height: 260 },
+          chart: {
+            type: 'donut',
+            height: 260
+          },
           series: @json($movTipoChart['data']),
           labels: @json($movTipoChart['labels']),
           colors: ['#03c3e3', '#696cff', '#8592a3'],
-          legend: { position: 'bottom', labels: { colors: ejeColor } },
-          dataLabels: { enabled: true },
-          plotOptions: { pie: { donut: { size: '65%' } } }
+          legend: {
+            position: 'bottom',
+            labels: {
+              colors: ejeColor
+            }
+          },
+          dataLabels: {
+            enabled: true
+          },
+          plotOptions: {
+            pie: {
+              donut: {
+                size: '65%'
+              }
+            }
+          }
         }).render();
       }
 
@@ -478,18 +599,50 @@
       const respEl = document.querySelector('#topResponsablesChart');
       if (respEl) {
         new ApexCharts(respEl, {
-          chart: { type: 'bar', height: 320, toolbar: { show: false } },
-          series: [{ name: 'Activos', data: @json($topResponsablesChart['data']) }],
-          plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true } },
-          dataLabels: { enabled: true },
-          legend: { show: false },
+          chart: {
+            type: 'bar',
+            height: 320,
+            toolbar: {
+              show: false
+            }
+          },
+          series: [{
+            name: 'Activos',
+            data: @json($topResponsablesChart['data'])
+          }],
+          plotOptions: {
+            bar: {
+              horizontal: true,
+              borderRadius: 6,
+              barHeight: '60%',
+              distributed: true
+            }
+          },
+          dataLabels: {
+            enabled: true
+          },
+          legend: {
+            show: false
+          },
           colors: paleta,
           xaxis: {
             categories: @json($topResponsablesChart['labels']),
-            labels: { style: { colors: ejeColor } }
+            labels: {
+              style: {
+                colors: ejeColor
+              }
+            }
           },
-          yaxis: { labels: { style: { colors: ejeColor } } },
-          grid: { borderColor: 'rgba(0,0,0,.06)' }
+          yaxis: {
+            labels: {
+              style: {
+                colors: ejeColor
+              }
+            }
+          },
+          grid: {
+            borderColor: 'rgba(0,0,0,.06)'
+          }
         }).render();
       }
 
@@ -497,39 +650,111 @@
       const ubiEl = document.querySelector('#topUbicacionesChart');
       if (ubiEl) {
         new ApexCharts(ubiEl, {
-          chart: { type: 'bar', height: 320, toolbar: { show: false } },
-          series: [{ name: 'Activos', data: @json($topUbicacionesChart['data']) }],
-          plotOptions: { bar: { horizontal: true, borderRadius: 6, barHeight: '60%', distributed: true } },
-          dataLabels: { enabled: true },
-          legend: { show: false },
+          chart: {
+            type: 'bar',
+            height: 320,
+            toolbar: {
+              show: false
+            }
+          },
+          series: [{
+            name: 'Activos',
+            data: @json($topUbicacionesChart['data'])
+          }],
+          plotOptions: {
+            bar: {
+              horizontal: true,
+              borderRadius: 6,
+              barHeight: '60%',
+              distributed: true
+            }
+          },
+          dataLabels: {
+            enabled: true
+          },
+          legend: {
+            show: false
+          },
           colors: paleta,
           xaxis: {
             categories: @json($topUbicacionesChart['labels']),
-            labels: { style: { colors: ejeColor } }
+            labels: {
+              style: {
+                colors: ejeColor
+              }
+            }
           },
-          yaxis: { labels: { style: { colors: ejeColor } } },
-          grid: { borderColor: 'rgba(0,0,0,.06)' }
+          yaxis: {
+            labels: {
+              style: {
+                colors: ejeColor
+              }
+            }
+          },
+          grid: {
+            borderColor: 'rgba(0,0,0,.06)'
+          }
         }).render();
       }
 
       // ── Valor del inventario por categoría (barras) ──────────────────────
       const valCatEl = document.querySelector('#valorCategoriaChart');
       if (valCatEl) {
-        const soles = val => 'S/ ' + Number(val).toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        const soles = val => 'S/ ' + Number(val).toLocaleString('es-PE', {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2
+        });
         new ApexCharts(valCatEl, {
-          chart: { type: 'bar', height: 320, toolbar: { show: false } },
-          series: [{ name: 'Valor (S/)', data: @json($valorCategoriaChart['data']) }],
-          plotOptions: { bar: { horizontal: false, borderRadius: 6, columnWidth: '45%', distributed: true } },
-          dataLabels: { enabled: false },
-          legend: { show: false },
+          chart: {
+            type: 'bar',
+            height: 320,
+            toolbar: {
+              show: false
+            }
+          },
+          series: [{
+            name: 'Valor (S/)',
+            data: @json($valorCategoriaChart['data'])
+          }],
+          plotOptions: {
+            bar: {
+              horizontal: false,
+              borderRadius: 6,
+              columnWidth: '45%',
+              distributed: true
+            }
+          },
+          dataLabels: {
+            enabled: false
+          },
+          legend: {
+            show: false
+          },
           colors: paleta,
           xaxis: {
             categories: @json($valorCategoriaChart['labels']),
-            labels: { style: { colors: ejeColor } }
+            labels: {
+              style: {
+                colors: ejeColor
+              }
+            }
           },
-          yaxis: { labels: { style: { colors: ejeColor }, formatter: soles } },
-          tooltip: { y: { formatter: soles } },
-          grid: { borderColor: 'rgba(0,0,0,.06)' }
+          yaxis: {
+            labels: {
+              style: {
+                colors: ejeColor
+              },
+              formatter: soles
+            }
+          },
+          tooltip: {
+            y: {
+              formatter: soles
+            }
+          },
+          grid: {
+            borderColor: 'rgba(0,0,0,.06)'
+          }
         }).render();
       }
     })();

@@ -176,11 +176,6 @@ $(function () {
               </button>
               <ul class="dropdown-menu dropdown-menu-end">
                 <li>
-                  <a class="dropdown-item btn-ficha-rapida d-flex align-items-center" href="javascript:void(0)" data-id="${row.id_activo}">
-                    <i class="bx bx-show me-1"></i> <span style="margin-top:3px">Ver ficha rápida</span> 
-                  </a>
-                </li>
-                <li>
                   <a class="dropdown-item btn-mas-info d-flex align-items-center" href="${window.routes.ver.replace('{id}', row.id_activo)}"">
                     <i class="bx bx-detail me-1"></i> <span style="margin-top:3px">Ficha completa</span> 
                   </a>

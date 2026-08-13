@@ -131,7 +131,7 @@
           <div class="dropdown-divider my-1"></div>
         </li>
 
-        <li>
+        {{-- <li>
           <a class="dropdown-item" href="javascript:void(0);">
             <i class="icon-base bx bx-user icon-md me-3"></i>
             <span>My Profile</span>
@@ -161,11 +161,11 @@
 
             </span>
           </a>
-        </li>
+        </li> --}}
 
-        <li>
+        {{-- <li>
           <div class="dropdown-divider my-1"></div>
-        </li>
+        </li> --}}
 
         <li>
           <a class="dropdown-item" href="{{ route('logout') }}"
