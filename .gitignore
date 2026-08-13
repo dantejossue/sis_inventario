@@ -1,6 +1,7 @@
 /.phpunit.cache
 /node_modules
 
+/.claude/settings.local.json
 /public/build
 /public/hot
 /public/storage
