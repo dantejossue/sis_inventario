@@ -1,42 +1,59 @@
 # syntax=docker/dockerfile:1
 
 # ============================================================
-# ETAPA 1: Runtime PHP base
+# ETAPA 1: Runtime PHP
 # ============================================================
-FROM php:8.3-fpm-bookworm AS php-base
+FROM php:8.3-fpm-bookworm AS php-runtime
 
 WORKDIR /var/www/html
 
-RUN apt-get update \
-  && apt-get install -y --no-install-recommends \
+RUN set -eux; \
+  apt-get update; \
+  apt-get install -y --no-install-recommends \
+  libfreetype6 \
+  libjpeg62-turbo \
+  libpng16-16 \
+  libicu72 \
+  libonig5 \
+  libzip4 \
   libfreetype6-dev \
   libjpeg62-turbo-dev \
   libpng-dev \
   libicu-dev \
   libonig-dev \
   libzip-dev \
-  unzip \
-  git \
-  curl \
-  && docker-php-ext-configure gd \
+  ; \
+  docker-php-ext-configure gd \
   --with-freetype \
-  --with-jpeg \
-  && docker-php-ext-install -j$(nproc) \
+  --with-jpeg; \
+  docker-php-ext-install -j"$(nproc)" \
   bcmath \
   gd \
   intl \
   mbstring \
   opcache \
   pdo_mysql \
-  zip \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+  zip; \
+  apt-get purge -y --auto-remove \
+  libfreetype6-dev \
+  libjpeg62-turbo-dev \
+  libpng-dev \
+  libicu-dev \
+  libonig-dev \
+  libzip-dev; \
+  rm -rf /var/lib/apt/lists/*
 
 
 # ============================================================
 # ETAPA 2: Composer + Laravel
 # ============================================================
-FROM php-base AS app-build
+FROM php-runtime AS app-build
+
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+  git \
+  unzip \
+  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
@@ -63,7 +80,7 @@ RUN composer check-platform-reqs
 
 
 # ============================================================
-# ETAPA 3: Build frontend
+# ETAPA 3: Frontend Vite
 # ============================================================
 FROM node:22-bookworm-slim AS frontend-build
 
@@ -81,9 +98,13 @@ RUN pnpm run build
 
 
 # ============================================================
-# ETAPA 4: Runtime
+# ETAPA 4: Runtime final
 # ============================================================
-FROM app-build AS runtime
+FROM php-runtime AS runtime
+
+WORKDIR /var/www/html
+
+COPY --from=app-build /var/www/html /var/www/html
 
 COPY --from=frontend-build \
   /app/public/build \
@@ -99,4 +120,4 @@ RUN mkdir -p \
   storage \
   bootstrap/cache
 
-CMD ["php-fpm"]
+CMD ["php-fpm"] 
