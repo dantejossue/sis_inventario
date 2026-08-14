@@ -98,17 +98,37 @@ RUN pnpm run build
 
 
 # ============================================================
-# ETAPA 4: Runtime final
+# ETAPA 4: Artefactos finales de la aplicación
+# ============================================================
+FROM app-build AS app-artifacts
+
+COPY --from=frontend-build \
+  /app/public/build \
+  /var/www/html/public/build
+
+# ============================================================
+# ETAPA 5: Servidor web Nginx
+# ============================================================
+FROM nginx:alpine AS web
+
+WORKDIR /var/www/html
+
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+
+COPY --from=app-artifacts \
+  /var/www/html/public \
+  /var/www/html/public
+
+# ============================================================
+# ETAPA 6: Runtime PHP final
 # ============================================================
 FROM php-runtime AS runtime
 
 WORKDIR /var/www/html
 
-COPY --from=app-build /var/www/html /var/www/html
-
-COPY --from=frontend-build \
-  /app/public/build \
-  /var/www/html/public/build
+COPY --from=app-artifacts \
+  /var/www/html \
+  /var/www/html
 
 RUN mkdir -p \
   storage/framework/cache/data \
@@ -120,4 +140,4 @@ RUN mkdir -p \
   storage \
   bootstrap/cache
 
-CMD ["php-fpm"] 
+CMD ["php-fpm"]
