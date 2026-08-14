@@ -34,19 +34,14 @@ RUN apt-get update \
 
 
 # ============================================================
-# ETAPA 2: Dependencias PHP + aplicación Laravel
+# ETAPA 2: Composer + Laravel
 # ============================================================
 FROM php-base AS app-build
 
-# Composer proviene de su imagen oficial.
-# No lo descargamos mediante scripts arbitrarios.
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
-# Primero copiamos únicamente los manifiestos de Composer.
 COPY composer.json composer.lock ./
 
-# Instalamos dependencias sin ejecutar scripts de Laravel todavía,
-# porque el código fuente aún no ha sido copiado.
 RUN composer install \
   --no-dev \
   --prefer-dist \
@@ -55,11 +50,8 @@ RUN composer install \
   --no-scripts \
   --no-autoloader
 
-# Ahora copiamos la aplicación.
 COPY . .
 
-# Generamos el autoload optimizado y ejecutamos los scripts
-# normales definidos por Composer/Laravel.
 RUN composer install \
   --no-dev \
   --prefer-dist \
@@ -67,7 +59,44 @@ RUN composer install \
   --no-progress \
   --optimize-autoloader
 
-# Verificación adicional de requisitos PHP.
 RUN composer check-platform-reqs
+
+
+# ============================================================
+# ETAPA 3: Build frontend
+# ============================================================
+FROM node:22-bookworm-slim AS frontend-build
+
+WORKDIR /app
+
+RUN npm install --global pnpm@10.27.0
+
+COPY package.json pnpm-lock.yaml ./
+
+RUN pnpm install --frozen-lockfile
+
+COPY . .
+
+RUN pnpm run build
+
+
+# ============================================================
+# ETAPA 4: Runtime
+# ============================================================
+FROM app-build AS runtime
+
+COPY --from=frontend-build \
+  /app/public/build \
+  /var/www/html/public/build
+
+RUN mkdir -p \
+  storage/framework/cache/data \
+  storage/framework/sessions \
+  storage/framework/views \
+  storage/logs \
+  bootstrap/cache \
+  && chown -R www-data:www-data \
+  storage \
+  bootstrap/cache
 
 CMD ["php-fpm"]
