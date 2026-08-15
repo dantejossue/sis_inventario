@@ -11,7 +11,6 @@ class DatabaseSeeder extends Seeder
         // El orden importa: roles antes que usuarios
         $this->call([
             RolSeeder::class,
-            AdminSeeder::class,
         ]);
     }
 }
