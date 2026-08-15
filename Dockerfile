@@ -106,6 +106,9 @@ COPY --from=frontend-build \
   /app/public/build \
   /var/www/html/public/build
 
+RUN rm -rf /var/www/html/public/storage \
+  && ln -s /var/www/html/storage/app/public /var/www/html/public/storage
+
 # ============================================================
 # ETAPA 5: Servidor web Nginx
 # ============================================================
