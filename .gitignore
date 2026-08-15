@@ -13,6 +13,7 @@
 .env.production
 .phpunit.result.cache
 .env.docker
+.env.docker.production
 
 docker-compose.override.yml
 
