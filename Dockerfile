@@ -134,6 +134,12 @@ COPY --from=app-artifacts \
   /var/www/html
 
 RUN mkdir -p \
+  storage/app/private/documentos/activo \
+  storage/app/private/documentos/baja \
+  storage/app/private/documentos/mantenimiento \
+  storage/app/private/documentos/movimiento \
+  storage/app/public/activos \
+  storage/app/public/colaboradores \
   storage/framework/cache/data \
   storage/framework/sessions \
   storage/framework/views \

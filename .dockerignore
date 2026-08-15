@@ -17,10 +17,14 @@ public/build
 public/hot
 public/storage
 
+storage/app/**
+
 storage/logs/*
 storage/framework/cache/*
 storage/framework/sessions/*
 storage/framework/views/*
+
+backups/
 
 phpunit.cache
 .phpunit.result.cache
