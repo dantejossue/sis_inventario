@@ -31,6 +31,11 @@ class User extends Authenticatable
         'contrasena',
     ];
 
+    public function getAuthPasswordName(): string
+    {
+        return 'contrasena';
+    }
+
     // Laravel usa este método para verificar la contraseña en Auth::login / Hash::check
     public function getAuthPassword(): string
     {

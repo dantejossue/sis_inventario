@@ -30,3 +30,9 @@ yarn-error.log
 !/public/assets/*
 /public/css
 /public/js
+
+# Docker - configuración local con secretos
+.env.docker
+
+# Backups locales
+/backups/
