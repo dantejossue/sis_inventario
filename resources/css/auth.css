@@ -32,3 +32,607 @@
   mask-repeat: no-repeat;
   mask-size: 100% 100%;
 }
+
+/* =========================================================
+   LOGIN - SISTEMA DE INVENTARIO OTI
+   ========================================================= */
+
+/* html,
+body {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  overflow-x: hidden;
+} */
+
+/* =========================================================
+   CONTENEDOR GENERAL
+   ========================================================= */
+
+.login-page {
+  min-height: 100vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #fff;
+}
+
+/* =========================================================
+   CONTENIDO PRINCIPAL
+   ========================================================= */
+
+.login-main {
+  flex: 1;
+
+  display: grid;
+  grid-template-columns: minmax(430px, 34%) 1fr;
+
+  min-height: 0;
+}
+
+/* =========================================================
+   PANEL IZQUIERDO
+   ========================================================= */
+
+.login-panel {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ffffff;
+
+  padding: 45px 55px;
+  z-index: 2;
+
+  box-shadow: 8px 0 30px rgba(15, 46, 89, 0.07);
+}
+
+.login-content {
+  width: 100%;
+  max-width: 440px;
+}
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.login-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  margin-bottom: 24px;
+}
+
+.login-logo img {
+  width: 100%;
+  max-width: 120px;
+  height: auto;
+  object-fit: contain;
+}
+
+/* =========================================================
+   DIVISOR
+   ========================================================= */
+
+.login-divider {
+  width: 100%;
+  height: 1px;
+
+  background: #e5e7eb;
+
+  margin: 8px 0 26px;
+}
+
+/* =========================================================
+   ENCABEZADO
+   ========================================================= */
+
+.login-heading {
+  margin-bottom: 28px;
+  text-align: center;
+}
+
+.login-heading h1 {
+  margin: 0 0 5px;
+
+  font-size: 2rem;
+  font-weight: 700;
+
+  color: #1261b5;
+}
+
+.login-heading p {
+  margin: 0;
+
+  font-size: 0.95rem;
+
+  color: #697586;
+}
+
+/* =========================================================
+   FORMULARIO
+   ========================================================= */
+
+.login-field {
+  margin-bottom: 20px;
+}
+
+.login-field .form-label {
+  display: block;
+
+  margin-bottom: 8px;
+
+  font-size: 0.9rem;
+  font-weight: 600;
+
+  color: #344054;
+}
+
+/* =========================================================
+   INPUT GROUP
+   ========================================================= */
+
+.login-input-group {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+}
+
+.login-input-icon {
+  position: absolute;
+
+  left: 16px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #667085;
+
+  font-size: 1.25rem;
+
+  pointer-events: none;
+
+  z-index: 2;
+}
+
+.login-input-group .form-control {
+  width: 100%;
+  height: 54px;
+
+  padding: 0 48px 0 48px;
+
+  /* border: 1px solid #d0d5dd;
+  border-radius: 8px;
+
+  background: #ffffff;
+
+  color: #344054;
+
+  font-size: 0.95rem;
+
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease; */
+}
+
+/* .login-input-group .form-control::placeholder {
+  color: #98a2b3;
+}
+
+.login-input-group .form-control:hover {
+  border-color: #98a2b3;
+} */
+
+/* .login-input-group .form-control:focus {
+  border-color: #1774cf;
+
+  box-shadow: 0 0 0 3px rgba(23, 116, 207, 0.12);
+
+  outline: none;
+} */
+
+/* =========================================================
+   ERROR INPUT
+   ========================================================= */
+
+.login-input-group .form-control.is-invalid {
+  border-color: #dc3545;
+}
+
+.login-error {
+  margin-top: 6px;
+
+  font-size: 0.82rem;
+
+  color: #dc3545;
+}
+
+/* =========================================================
+   MOSTRAR CONTRASEÑA
+   ========================================================= */
+
+.login-password-toggle {
+  position: absolute;
+
+  right: 10px;
+
+  width: 38px;
+  height: 38px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  border: none;
+  border-radius: 6px;
+
+  background: transparent;
+
+  color: #667085;
+
+  font-size: 1.25rem;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.login-password-toggle:hover {
+  background: #f2f4f7;
+
+  color: #1261b5;
+}
+
+/* =========================================================
+   OPCIONES
+   ========================================================= */
+
+.login-options {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: center;
+
+  gap: 15px;
+
+  margin-top: 4px;
+  margin-bottom: 25px;
+}
+
+.login-options .form-check-label {
+  color: #475467;
+
+  font-size: 0.9rem;
+
+  cursor: pointer;
+}
+
+.login-options .form-check-input {
+  cursor: pointer;
+}
+
+.login-forgot {
+  font-size: 0.9rem;
+  font-weight: 500;
+
+  color: #1261b5;
+
+  text-decoration: none;
+}
+
+.login-forgot:hover {
+  text-decoration: underline;
+}
+
+/* =========================================================
+   BOTÓN INGRESAR
+   ========================================================= */
+
+.btn-login {
+  width: 100%;
+  height: 52px;
+
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 10px;
+
+  border: 0;
+  border-radius: 7px;
+
+  background: #1268bd;
+
+  color: #ffffff;
+
+  font-size: 1rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 10px rgba(18, 104, 189, 0.22);
+
+  transition:
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.1s ease;
+}
+
+.btn-login:hover {
+  background: #0e5aa6;
+
+  box-shadow: 0 6px 14px rgba(18, 104, 189, 0.28);
+}
+
+.btn-login:active {
+  transform: translateY(1px);
+}
+
+.btn-login:disabled {
+  opacity: 0.7;
+
+  cursor: not-allowed;
+}
+
+/* =========================================================
+   INFORMACIÓN DE SEGURIDAD
+   ========================================================= */
+
+.login-help {
+  margin-top: 24px;
+}
+
+.login-help-item {
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  gap: 8px;
+
+  color: #667085;
+
+  font-size: 0.82rem;
+}
+
+.login-help-item i {
+  font-size: 1.1rem;
+
+  color: #1261b5;
+}
+
+/* =========================================================
+   PANEL DERECHO
+   ========================================================= */
+
+.login-cover {
+  position: relative;
+
+  min-width: 0;
+
+  display: flex;
+
+  align-items: flex-end;
+
+  padding: 65px;
+
+  overflow: hidden;
+
+  /* background-image: url('/assets/img/undc/campus.jpeg'); */
+
+  background-size: cover;
+
+  background-position: center;
+
+  background-repeat: no-repeat;
+}
+
+/* Capa sobre fotografía */
+
+.login-cover-overlay {
+  position: absolute;
+
+  inset: 0;
+
+  background: linear-gradient(180deg, rgba(0, 74, 139, 0.05) 10%, rgba(1, 50, 98, 0.2) 55%, rgba(1, 31, 70, 0.72) 100%);
+}
+
+/* Texto encima de la fotografía */
+
+.login-cover-content {
+  position: relative;
+
+  max-width: 650px;
+
+  color: #ffffff;
+
+  z-index: 1;
+}
+
+.login-cover-badge {
+  display: inline-flex;
+
+  margin-bottom: 14px;
+
+  padding: 7px 14px;
+
+  border: 1px solid rgba(255, 255, 255, 0.45);
+
+  border-radius: 30px;
+
+  background: rgba(0, 51, 102, 0.35);
+
+  backdrop-filter: blur(5px);
+
+  font-size: 0.8rem;
+
+  font-weight: 600;
+
+  letter-spacing: 0.4px;
+}
+
+.login-cover-content h2 {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: clamp(2rem, 3vw, 3.2rem);
+
+  font-weight: 700;
+
+  line-height: 1.15;
+
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+}
+
+.login-cover-content p {
+  margin: 12px 0 0;
+
+  color: rgba(255, 255, 255, 0.9);
+
+  font-size: 1rem;
+}
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.login-footer {
+  min-height: 65px;
+
+  display: flex;
+
+  justify-content: center;
+  align-items: center;
+
+  padding: 15px 30px;
+
+  background: #0757aa;
+
+  text-align: center;
+}
+
+.login-footer p {
+  margin: 0;
+
+  color: #ffffff;
+
+  font-size: 0.9rem;
+}
+
+/* =========================================================
+   TABLET
+   ========================================================= */
+
+@media (max-width: 1100px) {
+  .login-main {
+    grid-template-columns: minmax(400px, 45%) 1fr;
+  }
+
+  .login-panel {
+    padding: 40px 35px;
+  }
+
+  .login-cover {
+    padding: 45px;
+  }
+}
+
+/* =========================================================
+   MÓVIL
+   ========================================================= */
+
+@media (max-width: 768px) {
+  .login-main {
+    display: block;
+  }
+
+  .login-panel {
+    min-height: calc(100vh - 58px);
+
+    padding: 35px 24px;
+  }
+
+  .login-content {
+    max-width: 430px;
+  }
+
+  .login-logo img {
+    max-width: 50px;
+  }
+
+  .login-heading h1 {
+    font-size: 1.65rem;
+  }
+
+  /*
+   * En celular ocultamos la fotografía,
+   * porque deja muy poco espacio al formulario.
+   */
+  .login-cover {
+    display: none;
+  }
+
+  .login-footer {
+    min-height: 58px;
+
+    padding: 12px 20px;
+  }
+
+  .login-footer p {
+    font-size: 0.78rem;
+  }
+}
+
+/* =========================================================
+   MÓVILES PEQUEÑOS
+   ========================================================= */
+
+@media (max-width: 430px) {
+  .login-panel {
+    align-items: flex-start;
+
+    padding: 28px 18px;
+  }
+
+  .login-logo img {
+    max-width: 70px;
+  }
+
+  .login-divider {
+    margin-bottom: 22px;
+  }
+
+  .login-heading {
+    margin-bottom: 24px;
+  }
+
+  .login-heading h1 {
+    font-size: 1.5rem;
+  }
+
+  .login-heading p {
+    font-size: 0.86rem;
+  }
+
+  .login-options {
+    align-items: flex-start;
+
+    flex-direction: column;
+
+    gap: 10px;
+  }
+}
